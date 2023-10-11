@@ -5,158 +5,453 @@ project(llvm_mcjit C CXX)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
-set(LLVM_INCLUDE_TESTS OFF CACHE BOOL "" FORCE)
-set(LLVM_INCLUDE_RUNTIMES OFF CACHE BOOL "" FORCE)
-set(LLVM_INCLUDE_EXAMPLES OFF CACHE BOOL "" FORCE)
-set(LLVM_BUILD_TOOLS OFF CACHE BOOL "" FORCE)
-set(LLVM_BUILD_UTILS OFF CACHE BOOL "" FORCE)
-set(LLVM_BUILD_RUNTIMES OFF CACHE BOOL "" FORCE)
-set(LLVM_BUILD_RUNTIME OFF CACHE BOOL "" FORCE)
-set(LLVM_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-set(LLVM_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-set(LLVM_BUILD_BENCHMARKS OFF CACHE BOOL "" FORCE)
-set(LLVM_INCLUDE_BENCHMARKS OFF CACHE BOOL "" FORCE)
-set(LLVM_BUILD_DOCS OFF CACHE BOOL "" FORCE)
-set(LLVM_INCLUDE_DOCS OFF CACHE BOOL "" FORCE)
-set(LLVM_ENABLE_DOXYGEN OFF CACHE BOOL "" FORCE)
-set(LLVM_ENABLE_SPHINX OFF CACHE BOOL "" FORCE)
-set(LLVM_ENABLE_OCAMLDOC OFF CACHE BOOL "" FORCE)
-set(LLVM_ENABLE_BINDINGS OFF CACHE BOOL "" FORCE)
-set(LLVM_BUILD_EXTERNAL_COMPILER_RT OFF CACHE BOOL "" FORCE)
-set(LLVM_VERSION_PRINTER_SHOW_HOST_TARGET_INFO ON CACHE BOOL "" FORCE)
-set(LLVM_BUILD_LLVM_C_DYLIB OFF CACHE BOOL "" FORCE)
-set(LLVM_OPTIMIZED_TABLEGEN ON CACHE BOOL "" FORCE)
-set(LLVM_USE_OPROFILE ON CACHE BOOL "" FORCE)
+function(FIND_LIBS)
+  set(out_var_set FALSE)
+  set(out_var FALSE)
+  set(out_dir_set FALSE)
+  set(out_dir FALSE)
+  set(out_libs_set FALSE)
+  unset(${out_var})
+  unset(${out_var} CACHE)
+
+  include(FindPackageHandleStandardArgs)
+
+  foreach(arg IN ITEMS ${ARGN})
+    if (NOT out_var_set)
+        set(out_var ${arg})
+        set(out_var_set TRUE)
+        set(${out_var}_FOUND FALSE)
+        set(${out_var}_FOUND_ALL FALSE)
+    else()
+      if (NOT out_dir_set)
+          set(out_dir ${arg})
+          set(out_dir_set TRUE)
+      else()
+        if (NOT out_libs_set)
+            set(out_libs_set TRUE)
+            set(${out_var}_FOUND FALSE PARENT_SCOPE)
+            set(${out_var}_FOUND_ALL TRUE PARENT_SCOPE)
+        endif()
+      endif()
+    endif()
+
+    if (out_libs_set)
+      set(out libs ${arg})
+      unset(LIBRARY)
+      unset(LIBRARY CACHE)
+      find_library(
+        LIBRARY
+        NAMES ${arg}
+        PATHS ${out_dir}
+        NO_DEFAULT_PATH NO_PACKAGE_ROOT_PATH
+        NO_CMAKE_PATH NO_CMAKE_ENVIRONMENT_PATH
+        NO_SYSTEM_ENVIRONMENT_PATH NO_CMAKE_SYSTEM_PATH
+        NO_CMAKE_FIND_ROOT_PATH
+      )
+      if ("${LIBRARY}" STREQUAL "LIBRARY-NOTFOUND")
+        message(STATUS "LIBRARY NOT FOUND : ${arg}")
+        set(${out_var}_FOUND FALSE PARENT_SCOPE)
+        set(${out_var}_FOUND_ALL FALSE PARENT_SCOPE)
+      else()
+        message(STATUS "LIBRARY FOUND : ${arg}")
+        set(${out_var}_FOUND TRUE PARENT_SCOPE)
+        list(APPEND ${out_var} ${LIBRARY})
+      endif()
+    endif()
+  endforeach()
+
+  set(${out_var} ${${out_var}} PARENT_SCOPE)
+endfunction()
+
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMAArch64AsmParser)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMAArch64CodeGen)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMAArch64Desc)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMAArch64Disassembler)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMAArch64Info)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMAArch64Utils)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMAggressiveInstCombine)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMAnalysis)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMARMAsmParser)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMARMCodeGen)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMARMDesc)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMARMDisassembler)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMARMInfo)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMARMUtils)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMAsmParser)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMAsmPrinter)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMBinaryFormat)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMBitReader)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMBitstreamReader)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMBitWriter)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMCFGuard)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMCodeGen)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMCore)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMCoroutines)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMCoverage)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMDebugInfoCodeView)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMDebuginfod)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMDebugInfoDWARF)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMDebugInfoGSYM)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMDebugInfoLogicalView)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMDebugInfoMSF)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMDebugInfoPDB)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMDemangle)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMDWARFLinker)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMDWP)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMExecutionEngine)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMExtensions)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMFileCheck)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMFrontendHLSL)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMFrontendOpenACC)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMFrontendOpenMP)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMGlobalISel)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMInstCombine)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMInstrumentation)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMInterfaceStub)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMInterpreter)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMIPO)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMIRPrinter)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMIRReader)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMJITLink)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMLineEditor)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMLinker)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMLTO)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMMC)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMMCA)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMMCDisassembler)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMMCJIT)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMMCParser)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMMIRParser)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMObjCARC)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMObjCopy)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMObject)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMObjectYAML)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMOption)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMOrcJIT)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMOrcShared)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMOrcTargetProcess)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMPasses)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMProfileData)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMRemarks)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMRuntimeDyld)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMScalar)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMScalarOpts)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMSelectionDAG)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMSupport)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMSymbolize)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMTableGen)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMTableGenGlobalISel)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMTarget)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMTargetParser)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMTextAPI)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMTransformUtils)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMVectorize)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMWindowsDriver)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMWindowsManifest)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMX86AsmParser)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMX86CodeGen)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMX86Desc)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMX86Disassembler)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMX86Info)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMX86TargetMCA)
+list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMXRay)
+
+if(CMAKE_SYSTEM_NAME MATCHES "Linux" )
+
+  include(CheckIncludeFile)
+  check_include_file("opagent.h" HAVE_OPAGENT_H)
+
+  set(LLVM_USE_OPROFILE ON CACHE BOOL "" FORCE)
+  if (HAVE_OPAGENT_H)
+    list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMOProfileJIT)
+  endif()
+
+  set(LLVM_USE_PERF ON CACHE BOOL "" FORCE)
+  list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMPerfJITEvents)
+
+endif()
 
 if(CMAKE_SYSTEM_NAME MATCHES "Windows" OR CMAKE_SYSTEM_NAME MATCHES "Linux" )
   set(LLVM_USE_INTEL_JITEVENTS ON CACHE BOOL "" FORCE)
+  list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMIntelJITEvents)
 endif()
 
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-  set(LLVM_UNREACHABLE_OPTIMIZE OFF CACHE BOOL "" FORCE)
-endif()
-
-add_library(llvm_mcjit_core STATIC empty.c)
-target_include_directories(llvm_mcjit_core PUBLIC llvm/include)
-target_include_directories(llvm_mcjit_core PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/llvm/include)
-
-if(CMAKE_SYSTEM_NAME MATCHES "Linux" )
-  set(LLVM_USE_PERF ON CACHE BOOL "" FORCE)
-  include(CheckIncludeFile)
-  check_include_file("opagent.h" HAVE_OPAGENT_H)
-endif()
-
-add_subdirectory(llvm)
-
-if(CMAKE_SYSTEM_NAME MATCHES "Windows" OR CMAKE_SYSTEM_NAME MATCHES "Linux" )
-  if( LLVM_USE_INTEL_JITEVENTS )
-    target_link_libraries(llvm_mcjit_core PRIVATE LLVMIntelJITEvents)
-  endif( LLVM_USE_INTEL_JITEVENTS )
-endif()
-
-if(CMAKE_SYSTEM_NAME MATCHES "Linux" )
-  if (HAVE_OPAGENT_H)
-    target_link_libraries(llvm_mcjit_core PRIVATE LLVMOProfileJIT)
-  endif()
-
-  if( LLVM_USE_PERF )
-    target_link_libraries(llvm_mcjit_core PRIVATE LLVMPerfJITEvents)
-  endif( LLVM_USE_PERF )
-endif()
-
-target_link_libraries(llvm_mcjit_core PRIVATE
-  LLVMSupportBlake3
-  LLVMDemangle
-  LLVMSupport
-  LLVMTarget
-  LLVMBinaryFormat
-  LLVMCore
-  LLVMIRPrinter
-  LLVMIRReader
-  LLVMWindowsDriver
-  LLVMX86CodeGen
-  LLVMX86AsmParser
-  LLVMX86Disassembler
-  LLVMX86TargetMCA
-  LLVMARMUtils
-  LLVMARMInfo
-  LLVMARMDesc
-  LLVMARMCodeGen
-  LLVMARMAsmParser
-  LLVMARMDisassembler
-  LLVMAArch64Utils
-  LLVMAArch64Info
-  LLVMAArch64Desc
-  LLVMAArch64CodeGen
-  LLVMAArch64AsmParser
-  LLVMAArch64Disassembler
-  LLVMCodeGen
-  LLVMSelectionDAG
-  LLVMAsmPrinter
-  LLVMMIRParser
-  # NOTE: the 'llvm-tblgen' executable uses 'LLVMTableGenGlobalISel', NOT 'LLVMGlobalISel'
-  LLVMGlobalISel
-  LLVMTargetParser
-  LLVMIPO
-  LLVMScalar
-  LLVMObjCARC
-  LLVMMC
-  LLVMMCDisassembler
-  LLVMMCA
-  LLVMOption
-  LLVMFrontendOpenMP
-  LLVMLinker
-  LLVMVectorize
-  LLVMObject
-  LLVMObjectYAML
-  LLVMInstrumentation
-  LLVMCoroutines
-  LLVMCFGuard
-  LLVMDebugInfoDWARF
-  LLVMDebugInfoMSF
-  LLVMDebugInfoPDB
-  LLVMDebuginfod
-  LLVMDebugInfoGSYM
-  LLVMDebugInfoCodeView
-  LLVMDebugInfoLogicalView
-  LLVMDWARFLinker
-  #LLVMDWARFLinkerParallel # currently empty namespace in LLVM 16
-  LLVMDWP # merges DWARF 5 Split DWARF .dwo files into .dwp (DWARF package files)
-  LLVMCoverage
-  LLVMInterfaceStub
-  LLVMObjCopy
-  LLVMBitReader
-  LLVMBitWriter
-  LLVMBitstreamReader
-  LLVMProfileData
-  LLVMAggressiveInstCombine
-  LLVMInstCombine
-  LLVMRemarks
-  LLVMTransformUtils
-  LLVMAnalysis
-  LLVMPasses
-  LLVMLTO
-  LLVMLineEditor
-  LLVMSymbolize
-  LLVMTextAPI
-  LLVMXRay
-  LLVMAsmParser
-  LLVMFrontendOpenMP
-  LLVMFrontendOpenACC
-  LLVMFrontendHLSL
-  LLVMFileCheck
-  LLVMWindowsManifest
-  LLVMWindowsDriver
-  LLVMExtensions
-  LLVMExecutionEngine
-  LLVMInterpreter
-  LLVMJITLink
-  LLVMMCJIT
-  LLVMOrcShared
-  LLVMOrcTargetProcess
-  LLVMOrcJIT
-  LLVMRuntimeDyld
+FIND_LIBS(
+  # variable containing libs
+  LLVM_LIBS
+  # directory to look in
+  ${CMAKE_BINARY_DIR}/llvm/lib
+  # list of libs to look for
+  ${LLVM_MC_JIT_LINK_LIBS}
 )
 
+message(STATUS "LLVM_LIBS_FOUND: ${LLVM_LIBS_FOUND}")
+
+if(NOT LLVM_LIBS_FOUND)
+  set(LLVM_INCLUDE_TESTS OFF CACHE BOOL "" FORCE)
+  set(LLVM_INCLUDE_RUNTIMES OFF CACHE BOOL "" FORCE)
+  set(LLVM_INCLUDE_EXAMPLES OFF CACHE BOOL "" FORCE)
+  set(LLVM_BUILD_TOOLS OFF CACHE BOOL "" FORCE)
+  set(LLVM_BUILD_UTILS OFF CACHE BOOL "" FORCE)
+  set(LLVM_BUILD_RUNTIMES OFF CACHE BOOL "" FORCE)
+  set(LLVM_BUILD_RUNTIME OFF CACHE BOOL "" FORCE)
+  set(LLVM_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+  set(LLVM_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+  set(LLVM_BUILD_BENCHMARKS OFF CACHE BOOL "" FORCE)
+  set(LLVM_INCLUDE_BENCHMARKS OFF CACHE BOOL "" FORCE)
+  set(LLVM_BUILD_DOCS OFF CACHE BOOL "" FORCE)
+  set(LLVM_INCLUDE_DOCS OFF CACHE BOOL "" FORCE)
+  set(LLVM_ENABLE_DOXYGEN OFF CACHE BOOL "" FORCE)
+  set(LLVM_ENABLE_SPHINX OFF CACHE BOOL "" FORCE)
+  set(LLVM_ENABLE_OCAMLDOC OFF CACHE BOOL "" FORCE)
+  set(LLVM_ENABLE_BINDINGS OFF CACHE BOOL "" FORCE)
+  set(LLVM_BUILD_EXTERNAL_COMPILER_RT OFF CACHE BOOL "" FORCE)
+  set(LLVM_VERSION_PRINTER_SHOW_HOST_TARGET_INFO ON CACHE BOOL "" FORCE)
+  set(LLVM_BUILD_LLVM_C_DYLIB OFF CACHE BOOL "" FORCE)
+  set(LLVM_OPTIMIZED_TABLEGEN ON CACHE BOOL "" FORCE)
+  set(LLVM_USE_OPROFILE ON CACHE BOOL "" FORCE)
+
+  if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(LLVM_UNREACHABLE_OPTIMIZE OFF CACHE BOOL "" FORCE)
+  endif()
+
+  add_library(llvm_mcjit_core STATIC empty.c)
+  target_include_directories(llvm_mcjit_core PUBLIC llvm/include)
+  target_include_directories(llvm_mcjit_core PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/llvm/include)
+
+  add_subdirectory(llvm)
+
+  target_link_libraries(llvm_mcjit_core PRIVATE ${LLVM_MC_JIT_LINK_LIBS})
+
+  add_library(LLVM_BUILT_STATIC STATIC empty.c)
+  target_link_libraries(LLVM_BUILT_STATIC llvm_mcjit_core)
+  add_library(LLVM_BUILT_SHARED SHARED empty.c)
+  target_link_libraries(LLVM_BUILT_SHARED)
+else()
+
+  add_library(LLVM_BUILT_STATIC STATIC empty.c)
+
+  include(CheckCXXCompilerFlag)
+  check_cxx_compiler_flag(-Wl,--start-group CXX_HAS_START_GROUP)
+  check_cxx_compiler_flag(-Wl,--end-group CXX_HAS_END_GROUP)
+  if (CXX_HAS_START_GROUP AND CXX_HAS_END_GROUP)
+    target_link_libraries(LLVM_BUILT_STATIC "-Wl,--start-group" ${LLVM_LIBS} "-Wl,--end-group")
+  else()
+    check_cxx_compiler_flag(-Wl,-z,--rescan-start CXX_HAS_START_RESCAN)
+    check_cxx_compiler_flag(-Wl,-z,--rescan-end CXX_HAS_END_RESCAN)
+    if (CXX_HAS_START_RESCAN AND CXX_HAS_END_RESCAN)
+      target_link_libraries(LLVM_BUILT_STATIC "-wl,-z,--rescan-start" ${LLVM_LIBS} "-wl,-z,--rescan-end")
+    else()
+      target_link_libraries(LLVM_BUILT_STATIC ${LLVM_LIBS})
+    endif()
+  endif()
+
+  add_library(LLVM_BUILT_SHARED SHARED empty.c)
+
+  # Add path for custom modules
+  list(INSERT CMAKE_MODULE_PATH 0
+    "${CMAKE_CURRENT_SOURCE_DIR}/llvm/cmake"
+    "${CMAKE_CURRENT_SOURCE_DIR}/llvm/cmake/modules"
+  )
+
+  if( WIN32 AND NOT CYGWIN )
+    # We consider Cygwin as another Unix
+    set(PURE_WINDOWS 1)
+  endif()
+
+  include(CheckIncludeFile)
+  include(CheckLibraryExists)
+  include(CheckSymbolExists)
+  include(CheckCXXSymbolExists)
+  include(CheckFunctionExists)
+  include(CheckStructHasMember)
+  include(CheckCCompilerFlag)
+  include(CMakePushCheckState)
+
+  if( UNIX AND NOT (APPLE OR BEOS OR HAIKU) )
+    # Used by check_symbol_exists:
+    list(APPEND CMAKE_REQUIRED_LIBRARIES "m")
+  endif()
+
+  # x86_64 FreeBSD 9.2 requires libcxxrt to be specified explicitly.
+  if( CMAKE_SYSTEM MATCHES "FreeBSD-9.2-RELEASE" AND
+      CMAKE_SIZEOF_VOID_P EQUAL 8 )
+    list(APPEND CMAKE_REQUIRED_LIBRARIES "cxxrt")
+  endif()
+
+  if( NOT PURE_WINDOWS )
+    check_include_file(pthread.h HAVE_PTHREAD_H)
+  endif()
+
+  # library checks
+  if( NOT PURE_WINDOWS )
+    check_library_exists(pthread pthread_create "" HAVE_LIBPTHREAD)
+    if (HAVE_LIBPTHREAD)
+      check_library_exists(pthread pthread_rwlock_init "" HAVE_PTHREAD_RWLOCK_INIT)
+      check_library_exists(pthread pthread_mutex_lock "" HAVE_PTHREAD_MUTEX_LOCK)
+    else()
+      # this could be Android
+      check_library_exists(c pthread_create "" PTHREAD_IN_LIBC)
+      if (PTHREAD_IN_LIBC)
+        check_library_exists(c pthread_rwlock_init "" HAVE_PTHREAD_RWLOCK_INIT)
+        check_library_exists(c pthread_mutex_lock "" HAVE_PTHREAD_MUTEX_LOCK)
+      endif()
+    endif()
+    check_library_exists(dl dlopen "" HAVE_LIBDL)
+    check_library_exists(rt clock_gettime "" HAVE_LIBRT)
+  endif()
+
+  if(HAVE_LIBPTHREAD)
+    # We want to find pthreads library and at the moment we do want to
+    # have it reported as '-l<lib>' instead of '-pthread'.
+    # TODO: switch to -pthread once the rest of the build system can deal with it.
+    set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
+    set(THREADS_HAVE_PTHREAD_ARG Off)
+    find_package(Threads REQUIRED)
+    set(LLVM_PTHREAD_LIB ${CMAKE_THREAD_LIBS_INIT})
+  endif()
+
+  if(LLVM_ENABLE_ZLIB STREQUAL FORCE_ON)
+    find_package(ZLIB REQUIRED)
+  else()
+    find_package(ZLIB QUIET)
+  endif()
+  if(ZLIB_FOUND)
+    # Check if zlib we found is usable; for example, we may have found a 32-bit
+    # library on a 64-bit system which would result in a link-time failure.
+    cmake_push_check_state()
+    list(APPEND CMAKE_REQUIRED_INCLUDES ${ZLIB_INCLUDE_DIRS})
+    list(APPEND CMAKE_REQUIRED_LIBRARIES ${ZLIB_LIBRARY})
+    check_symbol_exists(compress2 zlib.h HAVE_ZLIB)
+    cmake_pop_check_state()
+    if(LLVM_ENABLE_ZLIB STREQUAL FORCE_ON AND NOT HAVE_ZLIB)
+      message(FATAL_ERROR "Failed to configure zlib")
+    endif()
+  endif()
+  set(LLVM_ENABLE_ZLIB "${HAVE_ZLIB}")
+  if(LLVM_ENABLE_ZLIB)
+    message(STATUS "found zlib : ${ZLIB_LIBRARY}")
+    target_link_libraries(LLVM_BUILT_SHARED ${ZLIB_LIBRARY})
+  endif()
+
+  set(zstd_FOUND 0)
+  if(LLVM_ENABLE_ZSTD STREQUAL FORCE_ON)
+    find_package(zstd REQUIRED)
+    if(NOT zstd_FOUND)
+      message(FATAL_ERROR "Failed to configure zstd, but LLVM_ENABLE_ZSTD is FORCE_ON")
+    endif()
+  else()
+    find_package(zstd QUIET)
+  endif()
+  set(LLVM_ENABLE_ZSTD ${zstd_FOUND})
+  if(LLVM_ENABLE_ZSTD)
+    message(STATUS "found zstd : ${ZSTD_LIBRARY}")
+    target_link_libraries(LLVM_BUILT_SHARED ${ZSTD_LIBRARY})
+  endif()
+
+  if(LLVM_ENABLE_LIBXML2 STREQUAL FORCE_ON)
+    find_package(LibXml2 REQUIRED)
+  else()
+    find_package(LibXml2 QUIET)
+  endif()
+  if(LibXml2_FOUND)
+    # Check if libxml2 we found is usable; for example, we may have found a 32-bit
+    # library on a 64-bit system which would result in a link-time failure.
+    cmake_push_check_state()
+    list(APPEND CMAKE_REQUIRED_INCLUDES ${LIBXML2_INCLUDE_DIRS})
+    list(APPEND CMAKE_REQUIRED_LIBRARIES ${LIBXML2_LIBRARIES})
+    list(APPEND CMAKE_REQUIRED_DEFINITIONS ${LIBXML2_DEFINITIONS})
+    check_symbol_exists(xmlReadMemory libxml/xmlreader.h HAVE_LIBXML2)
+    cmake_pop_check_state()
+    if(LLVM_ENABLE_LIBXML2 STREQUAL FORCE_ON AND NOT HAVE_LIBXML2)
+      message(FATAL_ERROR "Failed to configure libxml2")
+    endif()
+  endif()
+  set(LLVM_ENABLE_LIBXML2 "${HAVE_LIBXML2}")
+  if(LLVM_ENABLE_LIBXML2)
+    message(STATUS "found libxml2 : ${LIBXML2_LIBRARY}")
+    target_link_libraries(LLVM_BUILT_SHARED ${LIBXML2_LIBRARY})
+  endif()
+
+  check_symbol_exists(__GLIBC__ stdio.h LLVM_USING_GLIBC)
+  if( LLVM_USING_GLIBC )
+    add_compile_definitions(_GNU_SOURCE)
+    list(APPEND CMAKE_REQUIRED_DEFINITIONS "-D_GNU_SOURCE")
+  # enable 64bit off_t on 32bit systems using glibc
+    if (CMAKE_SIZEOF_VOID_P EQUAL 4)
+      add_compile_definitions(_FILE_OFFSET_BITS=64)
+      list(APPEND CMAKE_REQUIRED_DEFINITIONS "-D_FILE_OFFSET_BITS=64")
+    endif()
+  endif()
+
+  # This check requires _GNU_SOURCE.
+  if (NOT PURE_WINDOWS)
+    if (LLVM_PTHREAD_LIB)
+      list(APPEND CMAKE_REQUIRED_LIBRARIES ${LLVM_PTHREAD_LIB})
+    endif()
+    check_symbol_exists(pthread_getname_np pthread.h HAVE_PTHREAD_GETNAME_NP)
+    check_symbol_exists(pthread_setname_np pthread.h HAVE_PTHREAD_SETNAME_NP)
+    if (LLVM_PTHREAD_LIB)
+      list(REMOVE_ITEM CMAKE_REQUIRED_LIBRARIES ${LLVM_PTHREAD_LIB})
+    endif()
+  endif()
+  if(LLVM_PTHREAD_LIB)
+    message(STATUS "found pthread : ${LLVM_PTHREAD_LIB}")
+    target_link_libraries(LLVM_BUILT_SHARED ${LLVM_PTHREAD_LIB})
+  endif()
+
+  if( LLVM_ENABLE_LIBXML2 )
+  endif()
+
+  check_include_file(dlfcn.h HAVE_DLFCN_H)
+
+  # This check requires _GNU_SOURCE.
+  if( HAVE_DLFCN_H )
+    if( HAVE_LIBDL )
+      list(APPEND CMAKE_REQUIRED_LIBRARIES dl)
+    endif()
+    check_symbol_exists(dlopen dlfcn.h HAVE_DLOPEN)
+    check_symbol_exists(dladdr dlfcn.h HAVE_DLADDR)
+    if( HAVE_LIBDL )
+      list(REMOVE_ITEM CMAKE_REQUIRED_LIBRARIES dl)
+    endif()
+  endif()
+  if(HAVE_LIBDL)
+    message(STATUS "found libdl : dl")
+    target_link_libraries(LLVM_BUILT_SHARED dl)
+  endif()
+
+  # Don't look for these libraries if we're using MSan, since uninstrumented third
+  # party code may call MSan interceptors like strlen, leading to false positives.
+  # Don't look for these libraries on Windows.
+  if (NOT PURE_WINDOWS)
+    # Skip libedit if using ASan as it contains memory leaks.
+    if (LLVM_ENABLE_LIBEDIT)
+      find_package(LibEdit QUIET)
+      set(HAVE_LIBEDIT ${LibEdit_FOUND})
+    else()
+      set(HAVE_LIBEDIT 0)
+    endif()
+    if(HAVE_LIBEDIT)
+      message(STATUS "found libedit : ${LIBEDIT_LIBRARY}")
+      target_link_libraries(LLVM_BUILT_SHARED ${LIBEDIT_LIBRARY})
+    endif()
+    if(LLVM_ENABLE_TERMINFO STREQUAL FORCE_ON)
+      find_package(Terminfo REQUIRED)
+    else()
+      find_package(Terminfo QUIET)
+    endif()
+    set(LLVM_ENABLE_TERMINFO "${Terminfo_FOUND}")
+    if(LLVM_ENABLE_TERMINFO)
+      message(STATUS "found terminfo : ${Terminfo_LIBRARIES}")
+      target_link_libraries(LLVM_BUILT_SHARED ${Terminfo_LIBRARIES})
+    endif()
+  endif()
+
+endif()
+
 add_executable(llvm_mcjit_example example.cpp)
-target_link_libraries(llvm_mcjit_example llvm_mcjit_core)
+target_link_libraries(llvm_mcjit_example LLVM_BUILT_STATIC LLVM_BUILT_SHARED)
+target_compile_options(llvm_mcjit_example PRIVATE "SHELL:-O0 -g3")
+target_include_directories(llvm_mcjit_example PRIVATE ${CMAKE_BINARY_DIR}/llvm/include)
+target_include_directories(llvm_mcjit_example PRIVATE llvm/include)

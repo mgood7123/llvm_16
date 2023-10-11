@@ -24,15 +24,15 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "llvm/ExecutionEngine/Orc/LLJIT.h"
-#include "llvm/IR/Function.h"
-#include "llvm/IR/IRBuilder.h"
-#include "llvm/IR/Module.h"
+#include <llvm/ExecutionEngine/Orc/LLJIT.h>
+#include <llvm/IR/Function.h>
+#include <llvm/IR/IRBuilder.h>
+#include <llvm/IR/Module.h>
 #include <llvm/MC/TargetRegistry.h>
-#include "llvm/Support/CommandLine.h"
-#include "llvm/Support/InitLLVM.h"
-#include "llvm/Support/TargetSelect.h"
-#include "llvm/Support/raw_ostream.h"
+#include <llvm/Support/CommandLine.h>
+#include <llvm/Support/InitLLVM.h>
+#include <llvm/Support/TargetSelect.h>
+#include <llvm/Support/raw_ostream.h>
 #include <llvm/TargetParser/Host.h>
 
 using namespace llvm;
@@ -80,8 +80,18 @@ int main(int argc, char *argv[]) {
   // Initialize LLVM.
   InitLLVM X(argc, argv);
 
+  InitializeAllTargetInfos();
+  InitializeAllTargets();
+  InitializeAllTargetMCs();
+  InitializeAllAsmPrinters();
+  InitializeAllAsmParsers();
+  InitializeAllDisassemblers();
+
   InitializeNativeTarget();
   InitializeNativeTargetAsmPrinter();
+  InitializeNativeTargetAsmParser();
+  InitializeNativeTargetDisassembler();
+  InitializeAllTargetMCAs();
 
   // Register the Target and CPU printer for --version.
   cl::AddExtraVersionPrinter(llvm::sys::printDefaultTargetAndDetectedCPU);
