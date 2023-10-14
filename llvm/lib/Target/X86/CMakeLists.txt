@@ -90,6 +90,9 @@ set(sources
   X86InsertWait.cpp
   )
 
+set_source_files_properties(X86TargetMachine.cpp PROPERTIES COMPILE_OPTIONS "-O0")
+set_source_files_properties(X86TargetMachine.cpp PROPERTIES COMPILE_OPTIONS "-g3")
+
 add_llvm_target(X86CodeGen ${sources}
   LINK_COMPONENTS
   Analysis

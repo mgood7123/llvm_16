@@ -44,7 +44,7 @@ add_llvm_target(BPFCodeGen
   BPFDesc
   BPFInfo
   IPO
-  Scalar
+  ScalarOpts
   SelectionDAG
   Support
   Target

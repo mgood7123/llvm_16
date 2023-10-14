@@ -1,3 +1,6 @@
+add_compile_options(-O3)
+add_compile_options(-g0)
+
 add_llvm_component_library(LLVMIPO
   AlwaysInliner.cpp
   Annotation2Metadata.cpp
@@ -63,7 +66,7 @@ add_llvm_component_library(LLVMIPO
   Linker
   Object
   ProfileData
-  Scalar
+  ScalarOpts
   Support
   TargetParser
   TransformUtils

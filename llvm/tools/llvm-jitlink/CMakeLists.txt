@@ -1,6 +1,6 @@
-if ( LLVM_INCLUDE_UTILS )
+#if ( LLVM_INCLUDE_UTILS )
   add_subdirectory(llvm-jitlink-executor)
-endif()
+#endif()
 
 set(LLVM_LINK_COMPONENTS
   AllTargetsDescs

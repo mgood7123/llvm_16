@@ -1,3 +1,6 @@
+add_compile_options(-O3)
+add_compile_options(-g0)
+
 if (DEFINED LLVM_HAVE_TF_AOT OR LLVM_HAVE_TFLITE)
   include(TensorFlowCompile)
   set(LLVM_RAEVICT_MODEL_PATH_DEFAULT "models/regalloc-eviction")
@@ -264,12 +267,15 @@ add_llvm_component_library(LLVMCodeGen
   MC
   ObjCARC
   ProfileData
-  Scalar
+  ScalarOpts
   Support
   Target
   TargetParser
   TransformUtils
   )
+
+set_source_files_properties(TargetFrameLoweringImpl.cpp PROPERTIES COMPILE_OPTIONS "-O0")
+set_source_files_properties(TargetFrameLoweringImpl.cpp PROPERTIES COMPILE_OPTIONS "-g3")
 
 add_subdirectory(SelectionDAG)
 add_subdirectory(AsmPrinter)

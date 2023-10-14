@@ -28,32 +28,35 @@ endif()
 # Add LTO, llvm-ar, llvm-config, and llvm-profdata before clang, ExternalProject
 # requires targets specified in DEPENDS to exist before the call to
 # ExternalProject_Add.
-add_llvm_tool_subdirectory(lto)
-add_llvm_tool_subdirectory(gold)
-add_llvm_tool_subdirectory(llvm-ar)
+#add_llvm_tool_subdirectory(lto)
+#add_llvm_tool_subdirectory(gold)
+#add_llvm_tool_subdirectory(llvm-ar)
 add_llvm_tool_subdirectory(llvm-config)
-add_llvm_tool_subdirectory(llvm-lto)
-add_llvm_tool_subdirectory(llvm-profdata)
+add_llvm_tool_subdirectory(llvm-jitlink)
+add_llvm_tool_subdirectory(llvm-dwarfdump)
+#add_subdirectory(llvm-config)
+#add_llvm_tool_subdirectory(llvm-lto)
+#add_llvm_tool_subdirectory(llvm-profdata)
 
 # Projects supported via LLVM_EXTERNAL_*_SOURCE_DIR need to be explicitly
 # specified.
-add_llvm_external_project(clang)
-add_llvm_external_project(lld)
-add_llvm_external_project(lldb)
-add_llvm_external_project(mlir)
+#add_llvm_external_project(clang)
+#add_llvm_external_project(lld)
+#add_llvm_external_project(lldb)
+#add_llvm_external_project(mlir)
 # Flang depends on mlir, so place it afterward
-add_llvm_external_project(flang)
-add_llvm_external_project(bolt)
+#add_llvm_external_project(flang)
+#add_llvm_external_project(bolt)
 
 # Automatically add remaining sub-directories containing a 'CMakeLists.txt'
 # file as external projects.
-add_llvm_implicit_projects()
+#add_llvm_implicit_projects()
 
-add_llvm_external_project(polly)
+#add_llvm_external_project(polly)
 
 # Add subprojects specified using LLVM_EXTERNAL_PROJECTS
 foreach(p ${LLVM_EXTERNAL_PROJECTS})
-  add_llvm_external_project(${p})
+  #add_llvm_external_project(${p})
 endforeach(p)
 
 set(LLVM_COMMON_DEPENDS ${LLVM_COMMON_DEPENDS} PARENT_SCOPE)
@@ -61,9 +64,9 @@ set(LLVM_COMMON_DEPENDS ${LLVM_COMMON_DEPENDS} PARENT_SCOPE)
 if (LLVM_TOOL_LLVM_DRIVER_BUILD)
   # This is explicitly added at the end _after_ all tool projects so that it can
   # scrape up tools from other projects into itself.
-  add_subdirectory(llvm-driver)
+  #add_subdirectory(llvm-driver)
   # This must be here otherwise CMake complains in add_llvm_tool_symlink that
   # it can't add_custom_command that happens after llvm-driver is built because
   # llvm-driver was not created in that directory.
-  generate_driver_tool_targets()
+  #generate_driver_tool_targets()
 endif()

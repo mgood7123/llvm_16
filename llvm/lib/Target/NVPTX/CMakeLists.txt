@@ -50,7 +50,7 @@ add_llvm_target(NVPTXCodeGen
   MC
   NVPTXDesc
   NVPTXInfo
-  Scalar
+  ScalarOpts
   SelectionDAG
   Support
   Target

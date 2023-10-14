@@ -191,7 +191,13 @@ static unsigned CombineSymbolTypes(unsigned T1, unsigned T2) {
 }
 
 bool MCELFStreamer::emitSymbolAttribute(MCSymbol *S, MCSymbolAttr Attribute) {
+  if (S == nullptr) {
+    llvm_unreachable("the given symbol S is nullptr");
+  }
   auto *Symbol = cast<MCSymbolELF>(S);
+  if (Symbol == nullptr) {
+    llvm_unreachable("the given symbol S could not be cast to type 'MCSymbolELF'");
+  }
 
   // Adding a symbol attribute always introduces the symbol, note that an
   // important side effect of calling registerSymbol here is to register

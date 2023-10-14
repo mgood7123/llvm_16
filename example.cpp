@@ -1,4 +1,4 @@
-//===------- HowToUseLLJIT.cpp - An example use of ORC-based LLJIT --------===//
+//===----- ExampleModules.h - IR modules for LLJIT examples -----*- C++ -*-===//
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
@@ -6,75 +6,107 @@
 //
 //===----------------------------------------------------------------------===//
 //
-//  This small program provides an example of how to quickly build a small
-//  module with a 'add1' function and use of IRBuilder to create add & return
-//  instructions.
-//
-// Goal:
-//  The goal of this snippet is to create in the memory
-//  the LLVM module consisting of a function as follow:
-//
-// int add1(int x) {
-//   return x+1;
-// }
-//  add1(42);
-//
-// then compile the module via LLJIT, then execute the 'add1'
-// function and return result to a driver, i.e. to a "host program".
+// Example modules for LLJIT examples
 //
 //===----------------------------------------------------------------------===//
 
-#include <llvm/ExecutionEngine/Orc/LLJIT.h>
-#include <llvm/IR/Function.h>
-#include <llvm/IR/IRBuilder.h>
-#include <llvm/IR/Module.h>
-#include <llvm/MC/TargetRegistry.h>
-#include <llvm/Support/CommandLine.h>
-#include <llvm/Support/InitLLVM.h>
-#include <llvm/Support/TargetSelect.h>
-#include <llvm/Support/raw_ostream.h>
-#include <llvm/TargetParser/Host.h>
+#ifndef LLVM_EXAMPLES_ORCV2EXAMPLES_EXAMPLEMODULES_H
+#define LLVM_EXAMPLES_ORCV2EXAMPLES_EXAMPLEMODULES_H
+
+#include "llvm/ADT/StringRef.h"
+#include "llvm/ExecutionEngine/Orc/ThreadSafeModule.h"
+#include "llvm/IR/LLVMContext.h"
+#include "llvm/IR/Module.h"
+#include "llvm/IRReader/IRReader.h"
+#include "llvm/Support/CommandLine.h"
+#include "llvm/Support/Error.h"
+#include "llvm/Support/SourceMgr.h"
+
+const llvm::StringRef Add1Example =
+    R"(
+  define i32 @add1(i32 %x) {
+  entry:
+    %r = add nsw i32 %x, 1
+    ret i32 %r
+  }
+)";
+
+inline llvm::Error createSMDiagnosticError(llvm::SMDiagnostic &Diag) {
+  using namespace llvm;
+  std::string Msg;
+  {
+    raw_string_ostream OS(Msg);
+    Diag.print("", OS);
+  }
+  return make_error<StringError>(std::move(Msg), inconvertibleErrorCode());
+}
+
+inline llvm::Expected<llvm::orc::ThreadSafeModule>
+parseExampleModule(llvm::StringRef Source, llvm::StringRef Name) {
+  using namespace llvm;
+  auto Ctx = std::make_unique<LLVMContext>();
+  SMDiagnostic Err;
+  if (auto M = parseIR(MemoryBufferRef(Source, Name), Err, *Ctx))
+    return orc::ThreadSafeModule(std::move(M), std::move(Ctx));
+
+  return createSMDiagnosticError(Err);
+}
+
+inline llvm::Expected<llvm::orc::ThreadSafeModule>
+parseExampleModuleFromFile(llvm::StringRef FileName) {
+  using namespace llvm;
+  auto Ctx = std::make_unique<LLVMContext>();
+  SMDiagnostic Err;
+
+  if (auto M = parseIRFile(FileName, Err, *Ctx))
+    return orc::ThreadSafeModule(std::move(M), std::move(Ctx));
+
+  return createSMDiagnosticError(Err);
+}
+
+#endif // LLVM_EXAMPLES_ORCV2EXAMPLES_EXAMPLEMODULES_H
+
+//===--------------- LLJITWithGDBRegistrationListener.cpp -----------------===//
+//
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+//
+//===----------------------------------------------------------------------===//
+//
+// This file shows how to switch LLJIT to use a custom object linking layer (we
+// use ObjectLinkingLayer, which is backed by JITLink, as an example).
+//
+//===----------------------------------------------------------------------===//
+
+#include "llvm/ADT/StringMap.h"
+#include "llvm/ExecutionEngine/JITEventListener.h"
+#include "llvm/ExecutionEngine/JITLink/JITLinkMemoryManager.h"
+#include "llvm/ExecutionEngine/Orc/ExecutionUtils.h"
+#include "llvm/ExecutionEngine/Orc/LLJIT.h"
+#include "llvm/ExecutionEngine/Orc/RTDyldObjectLinkingLayer.h"
+#include "llvm/ExecutionEngine/Orc/TargetProcess/TargetExecutionUtils.h"
+#include "llvm/ExecutionEngine/SectionMemoryManager.h"
+#include "llvm/Support/CommandLine.h"
+#include "llvm/Support/InitLLVM.h"
+#include "llvm/Support/TargetSelect.h"
+#include "llvm/Support/raw_ostream.h"
 
 using namespace llvm;
 using namespace llvm::orc;
 
 ExitOnError ExitOnErr;
 
-ThreadSafeModule createDemoModule() {
-  auto Context = std::make_unique<LLVMContext>();
-  auto M = std::make_unique<Module>("test", *Context);
+static cl::opt<std::string>
+    EntryPointName("entry", cl::desc("Symbol to call as main entry point"),
+                   cl::init("main"));
 
-  // Create the add1 function entry and insert this entry into module M.  The
-  // function will have a return type of "int" and take an argument of "int".
-  Function *Add1F =
-      Function::Create(FunctionType::get(Type::getInt32Ty(*Context),
-                                         {Type::getInt32Ty(*Context)}, false),
-                       Function::ExternalLinkage, "add1", M.get());
+static cl::list<std::string> InputFiles(cl::Positional, cl::OneOrMore,
+                                        cl::desc("input files"));
 
-  // Add a basic block to the function. As before, it automatically inserts
-  // because of the last argument.
-  BasicBlock *BB = BasicBlock::Create(*Context, "EntryBlock", Add1F);
-
-  // Create a basic block builder with default parameters.  The builder will
-  // automatically append instructions to the basic block `BB'.
-  IRBuilder<> builder(BB);
-
-  // Get pointers to the constant `1'.
-  Value *One = builder.getInt32(1);
-
-  // Get pointers to the integer argument of the add1 function...
-  assert(Add1F->arg_begin() != Add1F->arg_end()); // Make sure there's an arg
-  Argument *ArgX = &*Add1F->arg_begin();          // Get the arg
-  ArgX->setName("AnArg"); // Give it a nice symbolic name for fun.
-
-  // Create the add instruction, inserting it into the end of BB.
-  Value *Add = builder.CreateAdd(One, ArgX);
-
-  // Create the return instruction and add it to the basic block
-  builder.CreateRet(Add);
-
-  return ThreadSafeModule(std::move(M), std::move(Context));
-}
+static cl::list<std::string> InputArgv("args", cl::Positional,
+                                       cl::desc("<program arguments>..."),
+                                       cl::PositionalEatsArgs);
 
 int main(int argc, char *argv[]) {
   // Initialize LLVM.
@@ -93,26 +125,69 @@ int main(int argc, char *argv[]) {
   InitializeNativeTargetDisassembler();
   InitializeAllTargetMCAs();
 
-  // Register the Target and CPU printer for --version.
-  cl::AddExtraVersionPrinter(llvm::sys::printDefaultTargetAndDetectedCPU);
-  // Register the target printer for --version.
-  cl::AddExtraVersionPrinter(llvm::TargetRegistry::printRegisteredTargetsForVersion);
-  
-  cl::ParseCommandLineOptions(argc, argv, "HowToUseLLJIT");
+  cl::ParseCommandLineOptions(argc, argv, "LLJITWithGDBRegistrationListener");
   ExitOnErr.setBanner(std::string(argv[0]) + ": ");
 
-  // Create an LLJIT instance.
-  auto J = ExitOnErr(LLJITBuilder().create());
-  auto M = createDemoModule();
+  // Detect the host and set code model to small.
+  auto JTMB = ExitOnErr(JITTargetMachineBuilder::detectHost());
+  if (!JTMB.getTargetTriple().isOSLinux())
+    errs()
+        << "Warning: This demo may not work for platforms other than Linux.\n";
 
-  ExitOnErr(J->addIRModule(std::move(M)));
+  // Create an LLJIT instance and use a custom object linking layer creator to
+  // register the GDBRegistrationListener with our RTDyldObjectLinkingLayer.
+  auto J =
+      ExitOnErr(LLJITBuilder()
+                    .setJITTargetMachineBuilder(std::move(JTMB))
+                    .setObjectLinkingLayerCreator([&](ExecutionSession &ES,
+                                                      const Triple &TT) {
+                      auto GetMemMgr = []() {
+                        return std::make_unique<SectionMemoryManager>();
+                      };
+                      auto ObjLinkingLayer =
+                          std::make_unique<RTDyldObjectLinkingLayer>(
+                              ES, std::move(GetMemMgr));
 
-  // Look up the JIT'd function, cast it to a function pointer, then call it.
-  auto Add1Addr = ExitOnErr(J->lookup("add1"));
-  int (*Add1)(int) = Add1Addr.toPtr<int(int)>();
+                      // Register the event listener.
+                      ObjLinkingLayer->registerJITEventListener(
+                          *JITEventListener::createGDBRegistrationListener());
 
-  int Result = Add1(42);
-  outs() << "add1(42) = " << Result << "\n";
+                      // Make sure the debug info sections aren't stripped.
+                      ObjLinkingLayer->setProcessAllSections(true);
 
-  return 0;
+                      return ObjLinkingLayer;
+                    })
+                    .create());
+
+  // Make sure that our process symbols are visible to JIT'd code.
+  {
+    MangleAndInterner Mangle(J->getExecutionSession(), J->getDataLayout());
+    J->getMainJITDylib().addGenerator(
+        ExitOnErr(orc::DynamicLibrarySearchGenerator::GetForCurrentProcess(
+            J->getDataLayout().getGlobalPrefix(),
+            [MainName = Mangle("main")](const orc::SymbolStringPtr &Name) {
+              return Name != MainName;
+            })));
+  }
+
+  // Load the input modules.
+  for (auto &InputFile : InputFiles) {
+    auto Ctx = std::make_unique<LLVMContext>();
+    SMDiagnostic Err;
+    std::unique_ptr<Module> M = parseIRFile(InputFile, Err, *Ctx);
+    if (!M) {
+      Err.print(argv[0], errs());
+      return 1;
+    }
+
+    ExitOnErr(J->addIRModule(ThreadSafeModule(std::move(M), std::move(Ctx))));
+  }
+
+  // Look up the entry point, cast it to a C main function pointer, then use
+  // runAsMain to call it.
+  auto EntryAddr = ExitOnErr(J->lookup(EntryPointName));
+  auto EntryFn = EntryAddr.toPtr<int(int, char *[])>();
+
+  return runAsMain(EntryFn, InputArgv, StringRef(InputFiles.front()));
 }
+

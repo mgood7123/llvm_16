@@ -1,3 +1,6 @@
+add_compile_options(-O3)
+add_compile_options(-g0)
+
 add_llvm_component_library(LLVMVectorize
   LoadStoreVectorizer.cpp
   LoopVectorizationLegality.cpp

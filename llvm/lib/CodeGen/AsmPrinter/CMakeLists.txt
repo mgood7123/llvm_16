@@ -1,3 +1,6 @@
+add_compile_options(-O0)
+add_compile_options(-g3)
+
 add_llvm_component_library(LLVMAsmPrinter
   AccelTable.cpp
   AddressPool.cpp

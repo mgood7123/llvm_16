@@ -70,7 +70,7 @@ add_llvm_target(PowerPCCodeGen
   MC
   PowerPCDesc
   PowerPCInfo
-  Scalar
+  ScalarOpts
   SelectionDAG
   Support
   Target

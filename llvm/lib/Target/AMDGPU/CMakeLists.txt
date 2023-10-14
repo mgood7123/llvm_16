@@ -173,7 +173,7 @@ add_llvm_target(AMDGPUCodeGen
   AMDGPUDesc
   AMDGPUInfo
   AMDGPUUtils
-  Scalar
+  ScalarOpts
   SelectionDAG
   Support
   Target

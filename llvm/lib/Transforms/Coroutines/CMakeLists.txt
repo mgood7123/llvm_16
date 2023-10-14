@@ -18,7 +18,7 @@ add_llvm_component_library(LLVMCoroutines
   Analysis
   Core
   IPO
-  Scalar
+  ScalarOpts
   Support
   TransformUtils
   )

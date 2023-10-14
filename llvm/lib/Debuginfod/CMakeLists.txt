@@ -1,3 +1,6 @@
+add_compile_options(-O3)
+add_compile_options(-g0)
+
 # Link LibCURL if the user wants it
 if (LLVM_ENABLE_CURL)
   set(imported_libs CURL::libcurl)

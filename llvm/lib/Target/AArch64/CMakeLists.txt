@@ -99,7 +99,7 @@ add_llvm_target(AArch64CodeGen
   CodeGen
   Core
   MC
-  Scalar
+  ScalarOpts
   SelectionDAG
   Support
   Target

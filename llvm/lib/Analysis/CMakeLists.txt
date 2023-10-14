@@ -1,3 +1,6 @@
+add_compile_options(-O3)
+add_compile_options(-g0)
+
 if (DEFINED LLVM_HAVE_TF_AOT OR LLVM_HAVE_TFLITE)
   include(TensorFlowCompile)
   set(LLVM_INLINER_MODEL_PATH_DEFAULT "models/inliner-Oz")

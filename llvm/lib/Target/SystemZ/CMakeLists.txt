@@ -45,7 +45,7 @@ add_llvm_target(SystemZCodeGen
   CodeGen
   Core
   MC
-  Scalar
+  ScalarOpts
   SelectionDAG
   Support
   SystemZDesc

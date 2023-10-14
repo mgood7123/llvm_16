@@ -78,7 +78,7 @@ add_llvm_target(HexagonCodeGen
   HexagonInfo
   IPO
   MC
-  Scalar
+  ScalarOpts
   SelectionDAG
   Support
   Target

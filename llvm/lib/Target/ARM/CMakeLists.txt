@@ -78,7 +78,7 @@ add_llvm_target(ARMCodeGen
   Core
   IPO
   MC
-  Scalar
+  ScalarOpts
   SelectionDAG
   Support
   Target

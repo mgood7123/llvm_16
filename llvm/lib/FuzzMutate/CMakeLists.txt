@@ -31,7 +31,7 @@ add_llvm_component_library(LLVMFuzzMutate
   BitReader
   BitWriter
   Core
-  Scalar
+  ScalarOpts
   Support
   Target
   TargetParser

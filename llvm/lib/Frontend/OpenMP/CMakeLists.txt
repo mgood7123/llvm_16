@@ -18,5 +18,5 @@ add_llvm_component_library(LLVMFrontendOpenMP
   TransformUtils
   Analysis
   MC
-  Scalar
+  ScalarOpts
   )

@@ -31,7 +31,7 @@ add_llvm_component_library(LLVMLTO
   Object
   Passes
   Remarks
-  Scalar
+  ScalarOpts
   Support
   Target
   TargetParser

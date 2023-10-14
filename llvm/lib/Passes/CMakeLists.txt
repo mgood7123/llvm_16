@@ -23,7 +23,7 @@ add_llvm_component_library(LLVMPasses
   InstCombine
   IRPrinter
   ObjCARC
-  Scalar
+  ScalarOpts
   Support
   Target
   TransformUtils

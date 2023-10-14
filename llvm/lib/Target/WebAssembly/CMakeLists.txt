@@ -68,7 +68,7 @@ add_llvm_target(WebAssemblyCodeGen
   CodeGen
   Core
   MC
-  Scalar
+  ScalarOpts
   SelectionDAG
   Support
   Target
