@@ -92,6 +92,10 @@ parseExampleModuleFromFile(llvm::StringRef FileName) {
 #include "llvm/Support/TargetSelect.h"
 #include "llvm/Support/raw_ostream.h"
 
+// additional --version info
+#include <llvm/MC/TargetRegistry.h>
+#include <llvm/TargetParser/Host.h>
+
 using namespace llvm;
 using namespace llvm::orc;
 
@@ -124,6 +128,11 @@ int main(int argc, char *argv[]) {
   InitializeNativeTargetAsmParser();
   InitializeNativeTargetDisassembler();
   InitializeAllTargetMCAs();
+
+  // Register the Target and CPU printer for --version.
+  cl::AddExtraVersionPrinter(llvm::sys::printDefaultTargetAndDetectedCPU);
+  // Register the target printer for --version.
+  cl::AddExtraVersionPrinter(llvm::TargetRegistry::printRegisteredTargetsForVersion);
 
   cl::ParseCommandLineOptions(argc, argv, "LLJITWithGDBRegistrationListener");
   ExitOnErr.setBanner(std::string(argv[0]) + ": ");

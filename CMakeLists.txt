@@ -184,6 +184,8 @@ if(CMAKE_SYSTEM_NAME MATCHES "Windows" OR CMAKE_SYSTEM_NAME MATCHES "Linux" )
   list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMIntelJITEvents)
 endif()
 
+# warning, this appears to erase previous configuration in ninja, causing entire llvm to rebuild
+#   makefile retains previous config
 FIND_LIBS( LLVM_LIBS ${CMAKE_BINARY_DIR}/llvm/lib ${LLVM_MC_JIT_LINK_LIBS})
 
 message(STATUS "LLVM_LIBS_FOUND: ${LLVM_LIBS_FOUND}")
