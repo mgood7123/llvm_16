@@ -58,6 +58,7 @@
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/TableGen/Error.h"
+#include "llvm/TableGen/Record.h"
 
 using namespace llvm;
 
@@ -113,7 +114,7 @@ static std::pair<StringRef, StringRef> getCustomCoders(ArrayRef<Init *> Args) {
 }
 
 VarLenInst::VarLenInst(const DagInit *DI, const RecordVal *TheDef)
-    : TheDef(TheDef), NumBits(0U) {
+    : TheDef(TheDef), NumBits(0U), HasDynamicSegment(false) {
   buildRec(DI);
   for (const auto &S : Segments)
     NumBits += S.BitWidth;

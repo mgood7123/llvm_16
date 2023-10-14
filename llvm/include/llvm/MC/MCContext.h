@@ -16,7 +16,7 @@
 #include "llvm/ADT/StringRef.h"
 #include "llvm/ADT/Twine.h"
 #include "llvm/BinaryFormat/Dwarf.h"
-// #include "llvm/BinaryFormat/XCOFF.h"
+#include "llvm/BinaryFormat/XCOFF.h"
 #include "llvm/MC/MCAsmMacro.h"
 #include "llvm/MC/MCDwarf.h"
 #include "llvm/MC/MCPseudoProbe.h"
@@ -49,19 +49,19 @@ class MCObjectFileInfo;
 class MCRegisterInfo;
 class MCSection;
 class MCSectionCOFF;
-// class MCSectionDXContainer;
+class MCSectionDXContainer;
 class MCSectionELF;
-// class MCSectionGOFF;
+class MCSectionGOFF;
 class MCSectionMachO;
-// class MCSectionSPIRV;
-// class MCSectionWasm;
-// class MCSectionXCOFF;
+class MCSectionSPIRV;
+class MCSectionWasm;
+class MCSectionXCOFF;
 class MCStreamer;
 class MCSubtargetInfo;
 class MCSymbol;
 class MCSymbolELF;
-// class MCSymbolWasm;
-// class MCSymbolXCOFF;
+class MCSymbolWasm;
+class MCSymbolXCOFF;
 class MCTargetOptions;
 class MDNode;
 template <typename T> class SmallVectorImpl;
@@ -101,7 +101,7 @@ private:
   Triple TT;
 
   /// The SourceMgr for this object, if any.
-  const SourceMgr *SrcMgr;
+  const SourceMgr *SrcMgr = nullptr;
 
   /// The SourceMgr for inline assembly, if any.
   std::unique_ptr<SourceMgr> InlineSrcMgr;
@@ -110,16 +110,16 @@ private:
   DiagHandlerTy DiagHandler;
 
   /// The MCAsmInfo for this target.
-  const MCAsmInfo *MAI;
+  const MCAsmInfo *MAI = nullptr;
 
   /// The MCRegisterInfo for this target.
-  const MCRegisterInfo *MRI;
+  const MCRegisterInfo *MRI = nullptr;
 
   /// The MCObjectFileInfo for this target.
-  const MCObjectFileInfo *MOFI;
+  const MCObjectFileInfo *MOFI = nullptr;
 
   /// The MCSubtargetInfo for this target.
-  const MCSubtargetInfo *MSTI;
+  const MCSubtargetInfo *MSTI = nullptr;
 
   std::unique_ptr<CodeViewContext> CVContext;
 
@@ -130,13 +130,13 @@ private:
   BumpPtrAllocator Allocator;
 
   SpecificBumpPtrAllocator<MCSectionCOFF> COFFAllocator;
-  // SpecificBumpPtrAllocator<MCSectionDXContainer> DXCAllocator;
+  SpecificBumpPtrAllocator<MCSectionDXContainer> DXCAllocator;
   SpecificBumpPtrAllocator<MCSectionELF> ELFAllocator;
   SpecificBumpPtrAllocator<MCSectionMachO> MachOAllocator;
-  // SpecificBumpPtrAllocator<MCSectionGOFF> GOFFAllocator;
-  // SpecificBumpPtrAllocator<MCSectionSPIRV> SPIRVAllocator;
-  // SpecificBumpPtrAllocator<MCSectionWasm> WasmAllocator;
-  // SpecificBumpPtrAllocator<MCSectionXCOFF> XCOFFAllocator;
+  SpecificBumpPtrAllocator<MCSectionGOFF> GOFFAllocator;
+  SpecificBumpPtrAllocator<MCSectionSPIRV> SPIRVAllocator;
+  SpecificBumpPtrAllocator<MCSectionWasm> WasmAllocator;
+  SpecificBumpPtrAllocator<MCSectionXCOFF> XCOFFAllocator;
   SpecificBumpPtrAllocator<MCInst> MCInstAllocator;
 
   /// Bindings of names to symbols.
@@ -173,7 +173,7 @@ private:
   unsigned GetInstance(unsigned LocalLabelVal);
 
   /// LLVM_BB_ADDR_MAP version to emit.
-  uint8_t BBAddrMapVersion = 1;
+  uint8_t BBAddrMapVersion = 2;
 
   /// The file name of the log file from the environment variable
   /// AS_SECURE_LOG_FILE.  Which must be set before the .secure_log_unique
@@ -190,7 +190,7 @@ private:
   SmallString<128> CompilationDir;
 
   /// Prefix replacement map for source file information.
-  std::map<std::string, const std::string, std::greater<>> DebugPrefixMap;
+  SmallVector<std::pair<std::string, std::string>, 0> DebugPrefixMap;
 
   /// The main file name if passed in explicitly.
   std::string MainFileName;
@@ -292,63 +292,63 @@ private:
     }
   };
 
-  // struct WasmSectionKey {
-  //   std::string SectionName;
-  //   StringRef GroupName;
-  //   unsigned UniqueID;
+  struct WasmSectionKey {
+    std::string SectionName;
+    StringRef GroupName;
+    unsigned UniqueID;
 
-  //   WasmSectionKey(StringRef SectionName, StringRef GroupName,
-  //                  unsigned UniqueID)
-  //       : SectionName(SectionName), GroupName(GroupName), UniqueID(UniqueID) {}
+    WasmSectionKey(StringRef SectionName, StringRef GroupName,
+                   unsigned UniqueID)
+        : SectionName(SectionName), GroupName(GroupName), UniqueID(UniqueID) {}
 
-  //   bool operator<(const WasmSectionKey &Other) const {
-  //     if (SectionName != Other.SectionName)
-  //       return SectionName < Other.SectionName;
-  //     if (GroupName != Other.GroupName)
-  //       return GroupName < Other.GroupName;
-  //     return UniqueID < Other.UniqueID;
-  //   }
-  // };
+    bool operator<(const WasmSectionKey &Other) const {
+      if (SectionName != Other.SectionName)
+        return SectionName < Other.SectionName;
+      if (GroupName != Other.GroupName)
+        return GroupName < Other.GroupName;
+      return UniqueID < Other.UniqueID;
+    }
+  };
 
-  // struct XCOFFSectionKey {
-  //   // Section name.
-  //   std::string SectionName;
-  //   // Section property.
-  //   // For csect section, it is storage mapping class.
-  //   // For debug section, it is section type flags.
-  //   union {
-  //     XCOFF::StorageMappingClass MappingClass;
-  //     XCOFF::DwarfSectionSubtypeFlags DwarfSubtypeFlags;
-  //   };
-  //   bool IsCsect;
+  struct XCOFFSectionKey {
+    // Section name.
+    std::string SectionName;
+    // Section property.
+    // For csect section, it is storage mapping class.
+    // For debug section, it is section type flags.
+    union {
+      XCOFF::StorageMappingClass MappingClass;
+      XCOFF::DwarfSectionSubtypeFlags DwarfSubtypeFlags;
+    };
+    bool IsCsect;
 
-  //   XCOFFSectionKey(StringRef SectionName,
-  //                   XCOFF::StorageMappingClass MappingClass)
-  //       : SectionName(SectionName), MappingClass(MappingClass), IsCsect(true) {}
+    XCOFFSectionKey(StringRef SectionName,
+                    XCOFF::StorageMappingClass MappingClass)
+        : SectionName(SectionName), MappingClass(MappingClass), IsCsect(true) {}
 
-  //   XCOFFSectionKey(StringRef SectionName,
-  //                   XCOFF::DwarfSectionSubtypeFlags DwarfSubtypeFlags)
-  //       : SectionName(SectionName), DwarfSubtypeFlags(DwarfSubtypeFlags),
-  //         IsCsect(false) {}
+    XCOFFSectionKey(StringRef SectionName,
+                    XCOFF::DwarfSectionSubtypeFlags DwarfSubtypeFlags)
+        : SectionName(SectionName), DwarfSubtypeFlags(DwarfSubtypeFlags),
+          IsCsect(false) {}
 
-  //   bool operator<(const XCOFFSectionKey &Other) const {
-  //     if (IsCsect && Other.IsCsect)
-  //       return std::tie(SectionName, MappingClass) <
-  //              std::tie(Other.SectionName, Other.MappingClass);
-  //     if (IsCsect != Other.IsCsect)
-  //       return IsCsect;
-  //     return std::tie(SectionName, DwarfSubtypeFlags) <
-  //            std::tie(Other.SectionName, Other.DwarfSubtypeFlags);
-  //   }
-  // };
+    bool operator<(const XCOFFSectionKey &Other) const {
+      if (IsCsect && Other.IsCsect)
+        return std::tie(SectionName, MappingClass) <
+               std::tie(Other.SectionName, Other.MappingClass);
+      if (IsCsect != Other.IsCsect)
+        return IsCsect;
+      return std::tie(SectionName, DwarfSubtypeFlags) <
+             std::tie(Other.SectionName, Other.DwarfSubtypeFlags);
+    }
+  };
 
   StringMap<MCSectionMachO *> MachOUniquingMap;
   std::map<ELFSectionKey, MCSectionELF *> ELFUniquingMap;
   std::map<COFFSectionKey, MCSectionCOFF *> COFFUniquingMap;
-  // std::map<std::string, MCSectionGOFF *> GOFFUniquingMap;
-  // std::map<WasmSectionKey, MCSectionWasm *> WasmUniquingMap;
-  // std::map<XCOFFSectionKey, MCSectionXCOFF *> XCOFFUniquingMap;
-  // StringMap<MCSectionDXContainer *> DXCUniquingMap;
+  std::map<std::string, MCSectionGOFF *> GOFFUniquingMap;
+  std::map<WasmSectionKey, MCSectionWasm *> WasmUniquingMap;
+  std::map<XCOFFSectionKey, MCSectionXCOFF *> XCOFFUniquingMap;
+  StringMap<MCSectionDXContainer *> DXCUniquingMap;
   StringMap<bool> RelSecNames;
 
   SpecificBumpPtrAllocator<MCSubtargetInfo> MCSubtargetAllocator;
@@ -378,8 +378,8 @@ private:
                                      unsigned UniqueID,
                                      const MCSymbolELF *LinkedToSym);
 
-  // MCSymbolXCOFF *createXCOFFSymbolImpl(const StringMapEntry<bool> *Name,
-  //                                      bool IsTemporary);
+  MCSymbolXCOFF *createXCOFFSymbolImpl(const StringMapEntry<bool> *Name,
+                                       bool IsTemporary);
 
   /// Map of currently defined macros.
   StringMap<MCAsmMacro> MacroMap;
@@ -473,9 +473,11 @@ public:
   /// \name Symbol Management
   /// @{
 
-  /// Create and return a new linker temporary symbol with a unique but
-  /// unspecified name.
+  /// Create a new linker temporary symbol with the specified prefix (Name) or
+  /// "tmp". This creates a "l"-prefixed symbol for Mach-O and is identical to
+  /// createNamedTempSymbol for other object file formats.
   MCSymbol *createLinkerPrivateTempSymbol();
+  MCSymbol *createLinkerPrivateSymbol(const Twine &Name);
 
   /// Create a temporary symbol with a unique name. The name will be omitted
   /// in the symbol table if UseNamesOnTempLabels is false (default except
@@ -506,17 +508,17 @@ public:
   /// variable after codegen.
   ///
   /// \param Idx - The index of a local variable passed to \@llvm.localescape.
-  MCSymbol *getOrCreateFrameAllocSymbol(StringRef FuncName, unsigned Idx);
+  MCSymbol *getOrCreateFrameAllocSymbol(const Twine &FuncName, unsigned Idx);
 
-  MCSymbol *getOrCreateParentFrameOffsetSymbol(StringRef FuncName);
+  MCSymbol *getOrCreateParentFrameOffsetSymbol(const Twine &FuncName);
 
-  MCSymbol *getOrCreateLSDASymbol(StringRef FuncName);
+  MCSymbol *getOrCreateLSDASymbol(const Twine &FuncName);
 
   /// Get the symbol for \p Name, or null.
   MCSymbol *lookupSymbol(const Twine &Name) const;
 
   /// Set value for a symbol.
-  void setSymbolValue(MCStreamer &Streamer, StringRef Sym, uint64_t Val);
+  void setSymbolValue(MCStreamer &Streamer, const Twine &Sym, uint64_t Val);
 
   /// getSymbols - Get a reference for the symbol table for clients that
   /// want to, for example, iterate over all symbols. 'const' because we
@@ -618,8 +620,8 @@ public:
                                                    unsigned Flags,
                                                    unsigned EntrySize);
 
-  // MCSectionGOFF *getGOFFSection(StringRef Section, SectionKind Kind,
-  //                               MCSection *Parent, const MCExpr *SubsectionId);
+  MCSectionGOFF *getGOFFSection(StringRef Section, SectionKind Kind,
+                                MCSection *Parent, const MCExpr *SubsectionId);
 
   MCSectionCOFF *getCOFFSection(StringRef Section, unsigned Characteristics,
                                 SectionKind Kind, StringRef COMDATSymName,
@@ -639,44 +641,44 @@ public:
   getAssociativeCOFFSection(MCSectionCOFF *Sec, const MCSymbol *KeySym,
                             unsigned UniqueID = GenericSectionID);
 
-  // MCSectionSPIRV *getSPIRVSection();
+  MCSectionSPIRV *getSPIRVSection();
 
-  // MCSectionWasm *getWasmSection(const Twine &Section, SectionKind K,
-  //                               unsigned Flags = 0) {
-  //   return getWasmSection(Section, K, Flags, nullptr);
-  // }
+  MCSectionWasm *getWasmSection(const Twine &Section, SectionKind K,
+                                unsigned Flags = 0) {
+    return getWasmSection(Section, K, Flags, nullptr);
+  }
 
-  // MCSectionWasm *getWasmSection(const Twine &Section, SectionKind K,
-  //                               unsigned Flags, const char *BeginSymName) {
-  //   return getWasmSection(Section, K, Flags, "", ~0, BeginSymName);
-  // }
+  MCSectionWasm *getWasmSection(const Twine &Section, SectionKind K,
+                                unsigned Flags, const char *BeginSymName) {
+    return getWasmSection(Section, K, Flags, "", ~0, BeginSymName);
+  }
 
-  // MCSectionWasm *getWasmSection(const Twine &Section, SectionKind K,
-  //                               unsigned Flags, const Twine &Group,
-  //                               unsigned UniqueID) {
-  //   return getWasmSection(Section, K, Flags, Group, UniqueID, nullptr);
-  // }
+  MCSectionWasm *getWasmSection(const Twine &Section, SectionKind K,
+                                unsigned Flags, const Twine &Group,
+                                unsigned UniqueID) {
+    return getWasmSection(Section, K, Flags, Group, UniqueID, nullptr);
+  }
 
-  // MCSectionWasm *getWasmSection(const Twine &Section, SectionKind K,
-  //                               unsigned Flags, const Twine &Group,
-  //                               unsigned UniqueID, const char *BeginSymName);
+  MCSectionWasm *getWasmSection(const Twine &Section, SectionKind K,
+                                unsigned Flags, const Twine &Group,
+                                unsigned UniqueID, const char *BeginSymName);
 
-  // MCSectionWasm *getWasmSection(const Twine &Section, SectionKind K,
-  //                               unsigned Flags, const MCSymbolWasm *Group,
-  //                               unsigned UniqueID, const char *BeginSymName);
-  
-  // /// Get the section for the provided Section name
-  // MCSectionDXContainer *getDXContainerSection(StringRef Section, SectionKind K);
+  MCSectionWasm *getWasmSection(const Twine &Section, SectionKind K,
+                                unsigned Flags, const MCSymbolWasm *Group,
+                                unsigned UniqueID, const char *BeginSymName);
 
-  // bool hasXCOFFSection(StringRef Section,
-  //                      XCOFF::CsectProperties CsectProp) const;
+  /// Get the section for the provided Section name
+  MCSectionDXContainer *getDXContainerSection(StringRef Section, SectionKind K);
 
-  // MCSectionXCOFF *getXCOFFSection(
-  //     StringRef Section, SectionKind K,
-  //     std::optional<XCOFF::CsectProperties> CsectProp = std::nullopt,
-  //     bool MultiSymbolsAllowed = false, const char *BeginSymName = nullptr,
-  //     std::optional<XCOFF::DwarfSectionSubtypeFlags> DwarfSubtypeFlags =
-  //         std::nullopt);
+  bool hasXCOFFSection(StringRef Section,
+                       XCOFF::CsectProperties CsectProp) const;
+
+  MCSectionXCOFF *getXCOFFSection(
+      StringRef Section, SectionKind K,
+      std::optional<XCOFF::CsectProperties> CsectProp = std::nullopt,
+      bool MultiSymbolsAllowed = false, const char *BeginSymName = nullptr,
+      std::optional<XCOFF::DwarfSectionSubtypeFlags> DwarfSubtypeFlags =
+          std::nullopt);
 
   // Create and save a copy of STI and return a reference to the copy.
   MCSubtargetInfo &getSubtargetCopy(const MCSubtargetInfo &STI);
@@ -788,6 +790,7 @@ public:
   void setGenDwarfForAssembly(bool Value) { GenDwarfForAssembly = Value; }
   unsigned getGenDwarfFileNumber() { return GenDwarfFileNumber; }
   EmitDwarfUnwindType emitDwarfUnwindInfo() const;
+  bool emitCompactUnwindNonCanonical() const;
 
   void setGenDwarfFileNumber(unsigned FileNumber) {
     GenDwarfFileNumber = FileNumber;

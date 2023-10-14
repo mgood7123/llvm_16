@@ -19,11 +19,12 @@ add_llvm_component_library(LLVMPasses
   CodeGen
   Core
   Coroutines
+  HipStdPar
   IPO
   InstCombine
   IRPrinter
   ObjCARC
-  ScalarOpts
+  Scalar
   Support
   Target
   TransformUtils

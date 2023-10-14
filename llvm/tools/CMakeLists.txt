@@ -34,7 +34,6 @@ endif()
 add_llvm_tool_subdirectory(llvm-config)
 add_llvm_tool_subdirectory(llvm-jitlink)
 add_llvm_tool_subdirectory(llvm-dwarfdump)
-#add_subdirectory(llvm-config)
 #add_llvm_tool_subdirectory(llvm-lto)
 #add_llvm_tool_subdirectory(llvm-profdata)
 

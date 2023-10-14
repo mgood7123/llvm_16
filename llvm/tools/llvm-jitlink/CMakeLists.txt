@@ -1,6 +1,6 @@
-#if ( LLVM_INCLUDE_UTILS )
+if ( LLVM_INCLUDE_UTILS )
   add_subdirectory(llvm-jitlink-executor)
-#endif()
+endif()
 
 set(LLVM_LINK_COMPONENTS
   AllTargetsDescs
@@ -11,6 +11,7 @@ set(LLVM_LINK_COMPONENTS
   JITLink
   MC
   Object
+  OrcDebugging
   OrcJIT
   OrcShared
   OrcTargetProcess
@@ -24,6 +25,7 @@ add_llvm_tool(llvm-jitlink
   llvm-jitlink-coff.cpp
   llvm-jitlink-elf.cpp
   llvm-jitlink-macho.cpp
+  llvm-jitlink-statistics.cpp
   )
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Haiku")

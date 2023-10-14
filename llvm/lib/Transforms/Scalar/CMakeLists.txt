@@ -1,6 +1,3 @@
-add_compile_options(-O3)
-add_compile_options(-g0)
-
 add_llvm_component_library(LLVMScalarOpts
   ADCE.cpp
   AlignmentFromAssumptions.cpp
@@ -25,6 +22,7 @@ add_llvm_component_library(LLVMScalarOpts
   InductiveRangeCheckElimination.cpp
   IndVarSimplify.cpp
   InferAddressSpaces.cpp
+  InferAlignment.cpp
   InstSimplifyPass.cpp
   JumpThreading.cpp
   LICM.cpp
@@ -88,6 +86,9 @@ add_llvm_component_library(LLVMScalarOpts
 
   DEPENDS
   intrinsics_gen
+
+  COMPONENT_NAME
+  Scalar
 
   LINK_COMPONENTS
   AggressiveInstCombine

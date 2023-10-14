@@ -18,7 +18,6 @@ add_llvm_component_library(LLVMFuzzMutate
   OpDescriptor.cpp
   Operations.cpp
   RandomIRBuilder.cpp
-  PARTIAL_SOURCES_INTENDED
 
   ADDITIONAL_HEADER_DIRS
   ${LLVM_MAIN_INCLUDE_DIR}/llvm/FuzzMutate
@@ -31,9 +30,8 @@ add_llvm_component_library(LLVMFuzzMutate
   BitReader
   BitWriter
   Core
-  ScalarOpts
+  Scalar
   Support
-  Target
   TargetParser
   TransformUtils
   )

@@ -41,6 +41,7 @@ void StringTableBuilder::initSize() {
   case MachO:
   case MachO64:
   case ELF:
+  case DXContainer:
     // Start the table with a NUL byte.
     Size = 1;
     break;
@@ -78,8 +79,8 @@ void StringTableBuilder::write(uint8_t *Buf) const {
   // For Windows, the format is little-endian; for AIX, it is big-endian.
   if (K == WinCOFF)
     support::endian::write32le(Buf, Size);
-  // else if (K == XCOFF)
-  //   support::endian::write32be(Buf, Size);
+  else if (K == XCOFF)
+    support::endian::write32be(Buf, Size);
 }
 
 // Returns the character at Pos from end of a string.
@@ -167,7 +168,7 @@ void StringTableBuilder::finalizeStringTable(bool Optimize) {
     }
   }
 
-  if (K == MachO || K == MachOLinked)
+  if (K == MachO || K == MachOLinked || K == DXContainer)
     Size = alignTo(Size, 4); // Pad to multiple of 4.
   if (K == MachO64 || K == MachO64Linked)
     Size = alignTo(Size, 8); // Pad to multiple of 8.

@@ -122,7 +122,7 @@ RetainedKnowledge llvm::getKnowledgeFromOperandInAssume(AssumeInst &Assume,
   return getKnowledgeFromBundle(Assume, BOI);
 }
 
-bool llvm::isAssumeWithEmptyBundle(AssumeInst &Assume) {
+bool llvm::isAssumeWithEmptyBundle(const AssumeInst &Assume) {
   return none_of(Assume.bundle_op_infos(),
                  [](const CallBase::BundleOpInfo &BOI) {
                    return BOI.Tag->getKey() != IgnoreBundleTag;
@@ -162,7 +162,7 @@ llvm::getKnowledgeForValue(const Value *V,
     return RetainedKnowledge::none();
   if (AC) {
     for (AssumptionCache::ResultElem &Elem : AC->assumptionsFor(V)) {
-      auto *II = dyn_cast_or_null<AssumeInst>(Elem.Assume);
+      auto *II = cast_or_null<AssumeInst>(Elem.Assume);
       if (!II || Elem.Index == AssumptionCache::ExprResultIdx)
         continue;
       if (RetainedKnowledge RK = getKnowledgeFromBundle(

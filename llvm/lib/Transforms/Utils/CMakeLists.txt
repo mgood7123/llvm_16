@@ -1,9 +1,6 @@
-add_compile_options(-O3)
-add_compile_options(-g0)
-
 add_llvm_component_library(LLVMTransformUtils
   AddDiscriminators.cpp
-  #AMDGPUEmitPrintf.cpp
+  AMDGPUEmitPrintf.cpp
   ASanStackFrameLayout.cpp
   AssumeBundleBuilder.cpp
   BasicBlockUtils.cpp
@@ -20,8 +17,10 @@ add_llvm_component_library(LLVMTransformUtils
   CodeLayout.cpp
   CodeMoverUtils.cpp
   CtorUtils.cpp
+  CountVisits.cpp
   Debugify.cpp
   DemoteRegToStack.cpp
+  DXILUpgrade.cpp
   EntryExitInstrumenter.cpp
   EscapeEnumerator.cpp
   Evaluator.cpp
@@ -31,7 +30,7 @@ add_llvm_component_library(LLVMTransformUtils
   FunctionImportUtils.cpp
   GlobalStatus.cpp
   GuardUtils.cpp
-  #HelloWorld.cpp
+  HelloWorld.cpp
   InlineFunction.cpp
   InjectTLIMappings.cpp
   InstructionNamer.cpp
@@ -60,6 +59,7 @@ add_llvm_component_library(LLVMTransformUtils
   MetaRenamer.cpp
   MisExpect.cpp
   ModuleUtils.cpp
+  MoveAutoInit.cpp
   NameAnonGlobals.cpp
   PredicateInfo.cpp
   PromoteMemoryToRegister.cpp

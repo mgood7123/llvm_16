@@ -22,11 +22,11 @@
 #include "llvm/MC/MCLinkerOptimizationHint.h"
 #include "llvm/MC/MCPseudoProbe.h"
 #include "llvm/MC/MCWinEH.h"
-#include "llvm/Support/ARMTargetParser.h"
 #include "llvm/Support/Error.h"
 #include "llvm/Support/MD5.h"
 #include "llvm/Support/SMLoc.h"
 #include "llvm/Support/VersionTuple.h"
+#include "llvm/TargetParser/ARMTargetParser.h"
 #include <cassert>
 #include <cstdint>
 #include <memory>
@@ -157,7 +157,7 @@ public:
   virtual void emitTextAttribute(unsigned Attribute, StringRef String);
   virtual void emitIntTextAttribute(unsigned Attribute, unsigned IntValue,
                                     StringRef StringValue = "");
-  virtual void emitFPU(unsigned FPU);
+  virtual void emitFPU(ARM::FPUKind FPU);
   virtual void emitArch(ARM::ArchKind Arch);
   virtual void emitArchExtension(uint64_t ArchExt);
   virtual void emitObjectArch(ARM::ArchKind Arch);
@@ -214,6 +214,10 @@ class MCStreamer {
   std::unique_ptr<MCTargetStreamer> TargetStreamer;
 
   std::vector<MCDwarfFrameInfo> DwarfFrameInfos;
+  // This is a pair of index into DwarfFrameInfos and the MCSection associated
+  // with the frame. Note, we use an index instead of an iterator because they
+  // can be invalidated in std::vector.
+  SmallVector<std::pair<size_t, MCSection *>, 1> FrameInfoStack;
   MCDwarfFrameInfo *getCurrentDwarfFrameInfo();
 
   /// Similar to DwarfFrameInfos, but for SEH unwind info. Chained frames may
@@ -266,7 +270,7 @@ protected:
 
   virtual void emitRawTextImpl(StringRef String);
 
-  /// Returns true if the the .cv_loc directive is in the right section.
+  /// Returns true if the .cv_loc directive is in the right section.
   bool checkCVLocSection(unsigned FuncId, unsigned FileNo, SMLoc Loc);
 
 public:
@@ -598,50 +602,56 @@ public:
   /// \param Symbol - Symbol the image relative relocation should point to.
   virtual void emitCOFFImgRel32(MCSymbol const *Symbol, int64_t Offset);
 
-  // /// Emits an lcomm directive with XCOFF csect information.
-  // ///
-  // /// \param LabelSym - Label on the block of storage.
-  // /// \param Size - The size of the block of storage.
-  // /// \param CsectSym - Csect name for the block of storage.
-  // /// \param Alignment - The alignment of the symbol in bytes.
-  // virtual void emitXCOFFLocalCommonSymbol(MCSymbol *LabelSym, uint64_t Size,
-  //                                         MCSymbol *CsectSym, Align Alignment);
+  /// Emits an lcomm directive with XCOFF csect information.
+  ///
+  /// \param LabelSym - Label on the block of storage.
+  /// \param Size - The size of the block of storage.
+  /// \param CsectSym - Csect name for the block of storage.
+  /// \param Alignment - The alignment of the symbol in bytes.
+  virtual void emitXCOFFLocalCommonSymbol(MCSymbol *LabelSym, uint64_t Size,
+                                          MCSymbol *CsectSym, Align Alignment);
 
-  // /// Emit a symbol's linkage and visibility with a linkage directive for XCOFF.
-  // ///
-  // /// \param Symbol - The symbol to emit.
-  // /// \param Linkage - The linkage of the symbol to emit.
-  // /// \param Visibility - The visibility of the symbol to emit or MCSA_Invalid
-  // /// if the symbol does not have an explicit visibility.
-  // virtual void emitXCOFFSymbolLinkageWithVisibility(MCSymbol *Symbol,
-  //                                                   MCSymbolAttr Linkage,
-  //                                                   MCSymbolAttr Visibility);
+  /// Emit a symbol's linkage and visibility with a linkage directive for XCOFF.
+  ///
+  /// \param Symbol - The symbol to emit.
+  /// \param Linkage - The linkage of the symbol to emit.
+  /// \param Visibility - The visibility of the symbol to emit or MCSA_Invalid
+  /// if the symbol does not have an explicit visibility.
+  virtual void emitXCOFFSymbolLinkageWithVisibility(MCSymbol *Symbol,
+                                                    MCSymbolAttr Linkage,
+                                                    MCSymbolAttr Visibility);
 
-  // /// Emit a XCOFF .rename directive which creates a synonym for an illegal or
-  // /// undesirable name.
-  // ///
-  // /// \param Name - The name used internally in the assembly for references to
-  // /// the symbol.
-  // /// \param Rename - The value to which the Name parameter is
-  // /// changed at the end of assembly.
-  // virtual void emitXCOFFRenameDirective(const MCSymbol *Name, StringRef Rename);
+  /// Emit a XCOFF .rename directive which creates a synonym for an illegal or
+  /// undesirable name.
+  ///
+  /// \param Name - The name used internally in the assembly for references to
+  /// the symbol.
+  /// \param Rename - The value to which the Name parameter is
+  /// changed at the end of assembly.
+  virtual void emitXCOFFRenameDirective(const MCSymbol *Name, StringRef Rename);
 
-  // /// Emit an XCOFF .except directive which adds information about
-  // /// a trap instruction to the object file exception section
-  // ///
-  // /// \param Symbol - The function containing the trap.
-  // /// \param Lang - The language code for the exception entry.
-  // /// \param Reason - The reason code for the exception entry.
-  // virtual void emitXCOFFExceptDirective(const MCSymbol *Symbol, 
-  //                                       const MCSymbol *Trap,
-  //                                       unsigned Lang, unsigned Reason,
-  //                                       unsigned FunctionSize, bool hasDebug);
+  /// Emit an XCOFF .except directive which adds information about
+  /// a trap instruction to the object file exception section
+  ///
+  /// \param Symbol - The function containing the trap.
+  /// \param Lang - The language code for the exception entry.
+  /// \param Reason - The reason code for the exception entry.
+  virtual void emitXCOFFExceptDirective(const MCSymbol *Symbol,
+                                        const MCSymbol *Trap,
+                                        unsigned Lang, unsigned Reason,
+                                        unsigned FunctionSize, bool hasDebug);
 
-  // /// Emit a XCOFF .ref directive which creates R_REF type entry in the
-  // /// relocation table for one or more symbols.
-  // ///
-  // /// \param Sym - The symbol on the .ref directive.
-  // virtual void emitXCOFFRefDirective(StringRef Sym);
+  /// Emit a XCOFF .ref directive which creates R_REF type entry in the
+  /// relocation table for one or more symbols.
+  ///
+  /// \param Sym - The symbol on the .ref directive.
+  virtual void emitXCOFFRefDirective(const MCSymbol *Symbol);
+
+  /// Emit a C_INFO symbol with XCOFF embedded metadata to the .info section.
+  ///
+  /// \param Name - The embedded metadata name
+  /// \param Metadata - The embedded metadata
+  virtual void emitXCOFFCInfoSym(StringRef Name, StringRef Metadata);
 
   /// Emit an ELF .size directive.
   ///
@@ -1021,28 +1031,29 @@ public:
   virtual void emitCFISections(bool EH, bool Debug);
   void emitCFIStartProc(bool IsSimple, SMLoc Loc = SMLoc());
   void emitCFIEndProc();
-  virtual void emitCFIDefCfa(int64_t Register, int64_t Offset);
-  virtual void emitCFIDefCfaOffset(int64_t Offset);
-  virtual void emitCFIDefCfaRegister(int64_t Register);
+  virtual void emitCFIDefCfa(int64_t Register, int64_t Offset, SMLoc Loc = {});
+  virtual void emitCFIDefCfaOffset(int64_t Offset, SMLoc Loc = {});
+  virtual void emitCFIDefCfaRegister(int64_t Register, SMLoc Loc = {});
   virtual void emitCFILLVMDefAspaceCfa(int64_t Register, int64_t Offset,
-                                       int64_t AddressSpace);
-  virtual void emitCFIOffset(int64_t Register, int64_t Offset);
+                                       int64_t AddressSpace, SMLoc Loc = {});
+  virtual void emitCFIOffset(int64_t Register, int64_t Offset, SMLoc Loc = {});
   virtual void emitCFIPersonality(const MCSymbol *Sym, unsigned Encoding);
   virtual void emitCFILsda(const MCSymbol *Sym, unsigned Encoding);
-  virtual void emitCFIRememberState();
-  virtual void emitCFIRestoreState();
-  virtual void emitCFISameValue(int64_t Register);
-  virtual void emitCFIRestore(int64_t Register);
-  virtual void emitCFIRelOffset(int64_t Register, int64_t Offset);
-  virtual void emitCFIAdjustCfaOffset(int64_t Adjustment);
-  virtual void emitCFIEscape(StringRef Values);
+  virtual void emitCFIRememberState(SMLoc Loc);
+  virtual void emitCFIRestoreState(SMLoc Loc);
+  virtual void emitCFISameValue(int64_t Register, SMLoc Loc = {});
+  virtual void emitCFIRestore(int64_t Register, SMLoc Loc = {});
+  virtual void emitCFIRelOffset(int64_t Register, int64_t Offset, SMLoc Loc);
+  virtual void emitCFIAdjustCfaOffset(int64_t Adjustment, SMLoc Loc = {});
+  virtual void emitCFIEscape(StringRef Values, SMLoc Loc = {});
   virtual void emitCFIReturnColumn(int64_t Register);
-  virtual void emitCFIGnuArgsSize(int64_t Size);
+  virtual void emitCFIGnuArgsSize(int64_t Size, SMLoc Loc = {});
   virtual void emitCFISignalFrame();
-  virtual void emitCFIUndefined(int64_t Register);
-  virtual void emitCFIRegister(int64_t Register1, int64_t Register2);
-  virtual void emitCFIWindowSave();
-  virtual void emitCFINegateRAState();
+  virtual void emitCFIUndefined(int64_t Register, SMLoc Loc = {});
+  virtual void emitCFIRegister(int64_t Register1, int64_t Register2,
+                               SMLoc Loc = {});
+  virtual void emitCFIWindowSave(SMLoc Loc = {});
+  virtual void emitCFINegateRAState(SMLoc Loc = {});
 
   virtual void emitWinCFIStartProc(const MCSymbol *Symbol, SMLoc Loc = SMLoc());
   virtual void emitWinCFIEndProc(SMLoc Loc = SMLoc());
@@ -1096,7 +1107,7 @@ public:
 
   /// Emit the a pseudo probe into the current section.
   virtual void emitPseudoProbe(uint64_t Guid, uint64_t Index, uint64_t Type,
-                               uint64_t Attr,
+                               uint64_t Attr, uint64_t Discriminator,
                                const MCPseudoProbeInlineStack &InlineStack,
                                MCSymbol *FnSym);
 

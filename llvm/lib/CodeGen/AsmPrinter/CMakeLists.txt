@@ -1,10 +1,7 @@
-add_compile_options(-O0)
-add_compile_options(-g3)
-
 add_llvm_component_library(LLVMAsmPrinter
   AccelTable.cpp
   AddressPool.cpp
-  #AIXException.cpp
+  AIXException.cpp
   ARMException.cpp
   AsmPrinter.cpp
   AsmPrinterDwarf.cpp
@@ -22,13 +19,13 @@ add_llvm_component_library(LLVMAsmPrinter
   DwarfStringPool.cpp
   DwarfUnit.cpp
   EHStreamer.cpp
-  #ErlangGCPrinter.cpp
-  #OcamlGCPrinter.cpp
+  ErlangGCPrinter.cpp
+  OcamlGCPrinter.cpp
   PseudoProbePrinter.cpp
   WinCFGuard.cpp
   WinException.cpp
   CodeViewDebug.cpp
-  #WasmException.cpp
+  WasmException.cpp
 
   DEPENDS
   intrinsics_gen
@@ -37,10 +34,10 @@ add_llvm_component_library(LLVMAsmPrinter
   Analysis
   BinaryFormat
   CodeGen
+  CodeGenTypes
   Core
   DebugInfoCodeView
   DebugInfoDWARF
-  DebugInfoMSF
   MC
   MCParser
   Remarks

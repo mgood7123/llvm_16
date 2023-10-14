@@ -1,6 +1,3 @@
-add_compile_options(-O3)
-add_compile_options(-g0)
-
 list(APPEND LLVM_COMMON_DEPENDS intrinsics_gen)
 
 list(APPEND LLVM_TABLEGEN_FLAGS -I ${LLVM_MAIN_SRC_DIR}/lib/Target)
@@ -22,17 +19,6 @@ add_llvm_component_library(LLVMTarget
   Support
   TargetParser
   )
-
-set_source_files_properties(Target.cpp PROPERTIES COMPILE_OPTIONS "-O0")
-set_source_files_properties(Target.cpp PROPERTIES COMPILE_OPTIONS "-g3")
-set_source_files_properties(TargetIntrinsicInfo.cpp PROPERTIES COMPILE_OPTIONS "-O0")
-set_source_files_properties(TargetIntrinsicInfo.cpp PROPERTIES COMPILE_OPTIONS "-g3")
-set_source_files_properties(TargetLoweringObjectFile.cpp PROPERTIES COMPILE_OPTIONS "-O0")
-set_source_files_properties(TargetLoweringObjectFile.cpp PROPERTIES COMPILE_OPTIONS "-g3")
-set_source_files_properties(TargetMachine.cpp PROPERTIES COMPILE_OPTIONS "-O0")
-set_source_files_properties(TargetMachine.cpp PROPERTIES COMPILE_OPTIONS "-g3")
-set_source_files_properties(TargetMachineC.cpp PROPERTIES COMPILE_OPTIONS "-O0")
-set_source_files_properties(TargetMachineC.cpp PROPERTIES COMPILE_OPTIONS "-g3")
 
 # When building shared objects for each target there are some internal APIs
 # that are used across shared objects which we can't hide.

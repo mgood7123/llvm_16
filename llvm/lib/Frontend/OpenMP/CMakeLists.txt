@@ -18,5 +18,6 @@ add_llvm_component_library(LLVMFrontendOpenMP
   TransformUtils
   Analysis
   MC
-  ScalarOpts
+  Scalar
+  BitReader
   )

@@ -8,22 +8,22 @@
 
 #include "llvm/MC/MCObjectFileInfo.h"
 #include "llvm/ADT/StringExtras.h"
-#include "llvm/ADT/Triple.h"
 #include "llvm/BinaryFormat/COFF.h"
 #include "llvm/BinaryFormat/ELF.h"
-// #include "llvm/BinaryFormat/Wasm.h"
+#include "llvm/BinaryFormat/Wasm.h"
 #include "llvm/MC/MCAsmInfo.h"
 #include "llvm/MC/MCContext.h"
 #include "llvm/MC/MCSection.h"
 #include "llvm/MC/MCSectionCOFF.h"
-// #include "llvm/MC/MCSectionDXContainer.h"
+#include "llvm/MC/MCSectionDXContainer.h"
 #include "llvm/MC/MCSectionELF.h"
-// #include "llvm/MC/MCSectionGOFF.h"
+#include "llvm/MC/MCSectionGOFF.h"
 #include "llvm/MC/MCSectionMachO.h"
-// #include "llvm/MC/MCSectionSPIRV.h"
-// #include "llvm/MC/MCSectionWasm.h"
-// #include "llvm/MC/MCSectionXCOFF.h"
+#include "llvm/MC/MCSectionSPIRV.h"
+#include "llvm/MC/MCSectionWasm.h"
+#include "llvm/MC/MCSectionXCOFF.h"
 #include "llvm/Support/Casting.h"
+#include "llvm/TargetParser/Triple.h"
 
 using namespace llvm;
 
@@ -48,6 +48,10 @@ static bool useCompactUnwind(const Triple &T) {
   if (T.isiOS() && T.isX86())
     return true;
 
+  // The rest of the simulators always have it.
+  if (T.isSimulatorEnvironment())
+    return true;
+
   return false;
 }
 
@@ -62,7 +66,8 @@ void MCObjectFileInfo::initMachOMCObjectFileInfo(const Triple &T) {
       SectionKind::getReadOnly());
 
   if (T.isOSDarwin() &&
-      (T.getArch() == Triple::aarch64 || T.getArch() == Triple::aarch64_32))
+      (T.getArch() == Triple::aarch64 || T.getArch() == Triple::aarch64_32 ||
+      T.isSimulatorEnvironment()))
     SupportsCompactUnwindWithoutEHFrame = true;
 
   switch (Ctx->emitDwarfUnwindInfo()) {
@@ -249,7 +254,7 @@ void MCObjectFileInfo::initMachOMCObjectFileInfo(const Triple &T) {
                            SectionKind::getMetadata(), "section_line_str");
   DwarfFrameSection =
       Ctx->getMachOSection("__DWARF", "__debug_frame", MachO::S_ATTR_DEBUG,
-                           SectionKind::getMetadata());
+                           SectionKind::getMetadata(), "section_frame");
   DwarfPubNamesSection =
       Ctx->getMachOSection("__DWARF", "__debug_pubnames", MachO::S_ATTR_DEBUG,
                            SectionKind::getMetadata());
@@ -534,15 +539,17 @@ void MCObjectFileInfo::initELFMCObjectFileInfo(const Triple &T, bool Large) {
   LLVMStatsSection = Ctx->getELFSection(".llvm_stats", ELF::SHT_PROGBITS, 0);
 }
 
-// void MCObjectFileInfo::initGOFFMCObjectFileInfo(const Triple &T) {
-//   TextSection =
-//       Ctx->getGOFFSection(".text", SectionKind::getText(), nullptr, nullptr);
-//   BSSSection =
-//       Ctx->getGOFFSection(".bss", SectionKind::getBSS(), nullptr, nullptr);
-//   PPA1Section =
-//       Ctx->getGOFFSection(".ppa1", SectionKind::getMetadata(), TextSection,
-//                           MCConstantExpr::create(GOFF::SK_PPA1, *Ctx));
-// }
+void MCObjectFileInfo::initGOFFMCObjectFileInfo(const Triple &T) {
+  TextSection =
+      Ctx->getGOFFSection(".text", SectionKind::getText(), nullptr, nullptr);
+  BSSSection =
+      Ctx->getGOFFSection(".bss", SectionKind::getBSS(), nullptr, nullptr);
+  PPA1Section =
+      Ctx->getGOFFSection(".ppa1", SectionKind::getMetadata(), TextSection,
+                          MCConstantExpr::create(GOFF::SK_PPA1, *Ctx));
+  ADASection =
+      Ctx->getGOFFSection(".ada", SectionKind::getData(), nullptr, nullptr);
+}
 
 void MCObjectFileInfo::initCOFFMCObjectFileInfo(const Triple &T) {
   EHFrameSection =
@@ -824,211 +831,211 @@ void MCObjectFileInfo::initCOFFMCObjectFileInfo(const Triple &T) {
                                         SectionKind::getReadOnly());
 }
 
-// void MCObjectFileInfo::initSPIRVMCObjectFileInfo(const Triple &T) {
-//   // Put everything in a single binary section.
-//   TextSection = Ctx->getSPIRVSection();
-// }
+void MCObjectFileInfo::initSPIRVMCObjectFileInfo(const Triple &T) {
+  // Put everything in a single binary section.
+  TextSection = Ctx->getSPIRVSection();
+}
 
-// void MCObjectFileInfo::initWasmMCObjectFileInfo(const Triple &T) {
-//   TextSection = Ctx->getWasmSection(".text", SectionKind::getText());
-//   DataSection = Ctx->getWasmSection(".data", SectionKind::getData());
+void MCObjectFileInfo::initWasmMCObjectFileInfo(const Triple &T) {
+  TextSection = Ctx->getWasmSection(".text", SectionKind::getText());
+  DataSection = Ctx->getWasmSection(".data", SectionKind::getData());
 
-//   DwarfLineSection =
-//       Ctx->getWasmSection(".debug_line", SectionKind::getMetadata());
-//   DwarfLineStrSection =
-//       Ctx->getWasmSection(".debug_line_str", SectionKind::getMetadata(),
-//                           wasm::WASM_SEG_FLAG_STRINGS);
-//   DwarfStrSection = Ctx->getWasmSection(
-//       ".debug_str", SectionKind::getMetadata(), wasm::WASM_SEG_FLAG_STRINGS);
-//   DwarfLocSection =
-//       Ctx->getWasmSection(".debug_loc", SectionKind::getMetadata());
-//   DwarfAbbrevSection =
-//       Ctx->getWasmSection(".debug_abbrev", SectionKind::getMetadata());
-//   DwarfARangesSection = Ctx->getWasmSection(".debug_aranges", SectionKind::getMetadata());
-//   DwarfRangesSection =
-//       Ctx->getWasmSection(".debug_ranges", SectionKind::getMetadata());
-//   DwarfMacinfoSection =
-//       Ctx->getWasmSection(".debug_macinfo", SectionKind::getMetadata());
-//   DwarfMacroSection =
-//       Ctx->getWasmSection(".debug_macro", SectionKind::getMetadata());
-//   DwarfCUIndexSection = Ctx->getWasmSection(".debug_cu_index", SectionKind::getMetadata());
-//   DwarfTUIndexSection = Ctx->getWasmSection(".debug_tu_index", SectionKind::getMetadata());
-//   DwarfInfoSection =
-//       Ctx->getWasmSection(".debug_info", SectionKind::getMetadata());
-//   DwarfFrameSection = Ctx->getWasmSection(".debug_frame", SectionKind::getMetadata());
-//   DwarfPubNamesSection = Ctx->getWasmSection(".debug_pubnames", SectionKind::getMetadata());
-//   DwarfPubTypesSection = Ctx->getWasmSection(".debug_pubtypes", SectionKind::getMetadata());
-//   DwarfGnuPubNamesSection =
-//       Ctx->getWasmSection(".debug_gnu_pubnames", SectionKind::getMetadata());
-//   DwarfGnuPubTypesSection =
-//       Ctx->getWasmSection(".debug_gnu_pubtypes", SectionKind::getMetadata());
+  DwarfLineSection =
+      Ctx->getWasmSection(".debug_line", SectionKind::getMetadata());
+  DwarfLineStrSection =
+      Ctx->getWasmSection(".debug_line_str", SectionKind::getMetadata(),
+                          wasm::WASM_SEG_FLAG_STRINGS);
+  DwarfStrSection = Ctx->getWasmSection(
+      ".debug_str", SectionKind::getMetadata(), wasm::WASM_SEG_FLAG_STRINGS);
+  DwarfLocSection =
+      Ctx->getWasmSection(".debug_loc", SectionKind::getMetadata());
+  DwarfAbbrevSection =
+      Ctx->getWasmSection(".debug_abbrev", SectionKind::getMetadata());
+  DwarfARangesSection = Ctx->getWasmSection(".debug_aranges", SectionKind::getMetadata());
+  DwarfRangesSection =
+      Ctx->getWasmSection(".debug_ranges", SectionKind::getMetadata());
+  DwarfMacinfoSection =
+      Ctx->getWasmSection(".debug_macinfo", SectionKind::getMetadata());
+  DwarfMacroSection =
+      Ctx->getWasmSection(".debug_macro", SectionKind::getMetadata());
+  DwarfCUIndexSection = Ctx->getWasmSection(".debug_cu_index", SectionKind::getMetadata());
+  DwarfTUIndexSection = Ctx->getWasmSection(".debug_tu_index", SectionKind::getMetadata());
+  DwarfInfoSection =
+      Ctx->getWasmSection(".debug_info", SectionKind::getMetadata());
+  DwarfFrameSection = Ctx->getWasmSection(".debug_frame", SectionKind::getMetadata());
+  DwarfPubNamesSection = Ctx->getWasmSection(".debug_pubnames", SectionKind::getMetadata());
+  DwarfPubTypesSection = Ctx->getWasmSection(".debug_pubtypes", SectionKind::getMetadata());
+  DwarfGnuPubNamesSection =
+      Ctx->getWasmSection(".debug_gnu_pubnames", SectionKind::getMetadata());
+  DwarfGnuPubTypesSection =
+      Ctx->getWasmSection(".debug_gnu_pubtypes", SectionKind::getMetadata());
 
-//   DwarfDebugNamesSection =
-//       Ctx->getWasmSection(".debug_names", SectionKind::getMetadata());
-//   DwarfStrOffSection =
-//       Ctx->getWasmSection(".debug_str_offsets", SectionKind::getMetadata());
-//   DwarfAddrSection =
-//       Ctx->getWasmSection(".debug_addr", SectionKind::getMetadata());
-//   DwarfRnglistsSection =
-//       Ctx->getWasmSection(".debug_rnglists", SectionKind::getMetadata());
-//   DwarfLoclistsSection =
-//       Ctx->getWasmSection(".debug_loclists", SectionKind::getMetadata());
+  DwarfDebugNamesSection =
+      Ctx->getWasmSection(".debug_names", SectionKind::getMetadata());
+  DwarfStrOffSection =
+      Ctx->getWasmSection(".debug_str_offsets", SectionKind::getMetadata());
+  DwarfAddrSection =
+      Ctx->getWasmSection(".debug_addr", SectionKind::getMetadata());
+  DwarfRnglistsSection =
+      Ctx->getWasmSection(".debug_rnglists", SectionKind::getMetadata());
+  DwarfLoclistsSection =
+      Ctx->getWasmSection(".debug_loclists", SectionKind::getMetadata());
 
-//   // Fission Sections
-//   DwarfInfoDWOSection =
-//       Ctx->getWasmSection(".debug_info.dwo", SectionKind::getMetadata());
-//   DwarfTypesDWOSection =
-//       Ctx->getWasmSection(".debug_types.dwo", SectionKind::getMetadata());
-//   DwarfAbbrevDWOSection =
-//       Ctx->getWasmSection(".debug_abbrev.dwo", SectionKind::getMetadata());
-//   DwarfStrDWOSection =
-//       Ctx->getWasmSection(".debug_str.dwo", SectionKind::getMetadata(),
-//                           wasm::WASM_SEG_FLAG_STRINGS);
-//   DwarfLineDWOSection =
-//       Ctx->getWasmSection(".debug_line.dwo", SectionKind::getMetadata());
-//   DwarfLocDWOSection =
-//       Ctx->getWasmSection(".debug_loc.dwo", SectionKind::getMetadata());
-//   DwarfStrOffDWOSection =
-//       Ctx->getWasmSection(".debug_str_offsets.dwo", SectionKind::getMetadata());
-//   DwarfRnglistsDWOSection =
-//       Ctx->getWasmSection(".debug_rnglists.dwo", SectionKind::getMetadata());
-//   DwarfMacinfoDWOSection =
-//       Ctx->getWasmSection(".debug_macinfo.dwo", SectionKind::getMetadata());
-//   DwarfMacroDWOSection =
-//       Ctx->getWasmSection(".debug_macro.dwo", SectionKind::getMetadata());
+  // Fission Sections
+  DwarfInfoDWOSection =
+      Ctx->getWasmSection(".debug_info.dwo", SectionKind::getMetadata());
+  DwarfTypesDWOSection =
+      Ctx->getWasmSection(".debug_types.dwo", SectionKind::getMetadata());
+  DwarfAbbrevDWOSection =
+      Ctx->getWasmSection(".debug_abbrev.dwo", SectionKind::getMetadata());
+  DwarfStrDWOSection =
+      Ctx->getWasmSection(".debug_str.dwo", SectionKind::getMetadata(),
+                          wasm::WASM_SEG_FLAG_STRINGS);
+  DwarfLineDWOSection =
+      Ctx->getWasmSection(".debug_line.dwo", SectionKind::getMetadata());
+  DwarfLocDWOSection =
+      Ctx->getWasmSection(".debug_loc.dwo", SectionKind::getMetadata());
+  DwarfStrOffDWOSection =
+      Ctx->getWasmSection(".debug_str_offsets.dwo", SectionKind::getMetadata());
+  DwarfRnglistsDWOSection =
+      Ctx->getWasmSection(".debug_rnglists.dwo", SectionKind::getMetadata());
+  DwarfMacinfoDWOSection =
+      Ctx->getWasmSection(".debug_macinfo.dwo", SectionKind::getMetadata());
+  DwarfMacroDWOSection =
+      Ctx->getWasmSection(".debug_macro.dwo", SectionKind::getMetadata());
 
-//   DwarfLoclistsDWOSection =
-//       Ctx->getWasmSection(".debug_loclists.dwo", SectionKind::getMetadata());
+  DwarfLoclistsDWOSection =
+      Ctx->getWasmSection(".debug_loclists.dwo", SectionKind::getMetadata());
 
-//   // DWP Sections
-//   DwarfCUIndexSection =
-//       Ctx->getWasmSection(".debug_cu_index", SectionKind::getMetadata());
-//   DwarfTUIndexSection =
-//       Ctx->getWasmSection(".debug_tu_index", SectionKind::getMetadata());
+  // DWP Sections
+  DwarfCUIndexSection =
+      Ctx->getWasmSection(".debug_cu_index", SectionKind::getMetadata());
+  DwarfTUIndexSection =
+      Ctx->getWasmSection(".debug_tu_index", SectionKind::getMetadata());
 
-//   // Wasm use data section for LSDA.
-//   // TODO Consider putting each function's exception table in a separate
-//   // section, as in -function-sections, to facilitate lld's --gc-section.
-//   LSDASection = Ctx->getWasmSection(".rodata.gcc_except_table",
-//                                     SectionKind::getReadOnlyWithRel());
+  // Wasm use data section for LSDA.
+  // TODO Consider putting each function's exception table in a separate
+  // section, as in -function-sections, to facilitate lld's --gc-section.
+  LSDASection = Ctx->getWasmSection(".rodata.gcc_except_table",
+                                    SectionKind::getReadOnlyWithRel());
 
-//   // TODO: Define more sections.
-// }
+  // TODO: Define more sections.
+}
 
-// void MCObjectFileInfo::initXCOFFMCObjectFileInfo(const Triple &T) {
-//   // The default csect for program code. Functions without a specified section
-//   // get placed into this csect. The choice of csect name is not a property of
-//   // the ABI or object file format. For example, the XL compiler uses an unnamed
-//   // csect for program code.
-//   TextSection = Ctx->getXCOFFSection(
-//       ".text", SectionKind::getText(),
-//       XCOFF::CsectProperties(XCOFF::StorageMappingClass::XMC_PR, XCOFF::XTY_SD),
-//       /* MultiSymbolsAllowed*/ true);
+void MCObjectFileInfo::initXCOFFMCObjectFileInfo(const Triple &T) {
+  // The default csect for program code. Functions without a specified section
+  // get placed into this csect. The choice of csect name is not a property of
+  // the ABI or object file format, but various tools rely on the section
+  // name being empty (considering named symbols to be "user symbol names").
+  TextSection = Ctx->getXCOFFSection(
+      "", SectionKind::getText(),
+      XCOFF::CsectProperties(XCOFF::StorageMappingClass::XMC_PR, XCOFF::XTY_SD),
+      /* MultiSymbolsAllowed*/ true);
 
-//   DataSection = Ctx->getXCOFFSection(
-//       ".data", SectionKind::getData(),
-//       XCOFF::CsectProperties(XCOFF::StorageMappingClass::XMC_RW, XCOFF::XTY_SD),
-//       /* MultiSymbolsAllowed*/ true);
+  DataSection = Ctx->getXCOFFSection(
+      ".data", SectionKind::getData(),
+      XCOFF::CsectProperties(XCOFF::StorageMappingClass::XMC_RW, XCOFF::XTY_SD),
+      /* MultiSymbolsAllowed*/ true);
 
-//   ReadOnlySection = Ctx->getXCOFFSection(
-//       ".rodata", SectionKind::getReadOnly(),
-//       XCOFF::CsectProperties(XCOFF::StorageMappingClass::XMC_RO, XCOFF::XTY_SD),
-//       /* MultiSymbolsAllowed*/ true);
-//   ReadOnlySection->setAlignment(Align(4));
+  ReadOnlySection = Ctx->getXCOFFSection(
+      ".rodata", SectionKind::getReadOnly(),
+      XCOFF::CsectProperties(XCOFF::StorageMappingClass::XMC_RO, XCOFF::XTY_SD),
+      /* MultiSymbolsAllowed*/ true);
+  ReadOnlySection->setAlignment(Align(4));
 
-//   ReadOnly8Section = Ctx->getXCOFFSection(
-//       ".rodata.8", SectionKind::getReadOnly(),
-//       XCOFF::CsectProperties(XCOFF::StorageMappingClass::XMC_RO, XCOFF::XTY_SD),
-//       /* MultiSymbolsAllowed*/ true);
-//   ReadOnly8Section->setAlignment(Align(8));
+  ReadOnly8Section = Ctx->getXCOFFSection(
+      ".rodata.8", SectionKind::getReadOnly(),
+      XCOFF::CsectProperties(XCOFF::StorageMappingClass::XMC_RO, XCOFF::XTY_SD),
+      /* MultiSymbolsAllowed*/ true);
+  ReadOnly8Section->setAlignment(Align(8));
 
-//   ReadOnly16Section = Ctx->getXCOFFSection(
-//       ".rodata.16", SectionKind::getReadOnly(),
-//       XCOFF::CsectProperties(XCOFF::StorageMappingClass::XMC_RO, XCOFF::XTY_SD),
-//       /* MultiSymbolsAllowed*/ true);
-//   ReadOnly16Section->setAlignment(Align(16));
+  ReadOnly16Section = Ctx->getXCOFFSection(
+      ".rodata.16", SectionKind::getReadOnly(),
+      XCOFF::CsectProperties(XCOFF::StorageMappingClass::XMC_RO, XCOFF::XTY_SD),
+      /* MultiSymbolsAllowed*/ true);
+  ReadOnly16Section->setAlignment(Align(16));
 
-//   TLSDataSection = Ctx->getXCOFFSection(
-//       ".tdata", SectionKind::getThreadData(),
-//       XCOFF::CsectProperties(XCOFF::StorageMappingClass::XMC_TL, XCOFF::XTY_SD),
-//       /* MultiSymbolsAllowed*/ true);
+  TLSDataSection = Ctx->getXCOFFSection(
+      ".tdata", SectionKind::getThreadData(),
+      XCOFF::CsectProperties(XCOFF::StorageMappingClass::XMC_TL, XCOFF::XTY_SD),
+      /* MultiSymbolsAllowed*/ true);
 
-//   TOCBaseSection = Ctx->getXCOFFSection(
-//       "TOC", SectionKind::getData(),
-//       XCOFF::CsectProperties(XCOFF::StorageMappingClass::XMC_TC0,
-//                              XCOFF::XTY_SD));
+  TOCBaseSection = Ctx->getXCOFFSection(
+      "TOC", SectionKind::getData(),
+      XCOFF::CsectProperties(XCOFF::StorageMappingClass::XMC_TC0,
+                             XCOFF::XTY_SD));
 
-//   // The TOC-base always has 0 size, but 4 byte alignment.
-//   TOCBaseSection->setAlignment(Align(4));
+  // The TOC-base always has 0 size, but 4 byte alignment.
+  TOCBaseSection->setAlignment(Align(4));
 
-//   LSDASection = Ctx->getXCOFFSection(
-//       ".gcc_except_table", SectionKind::getReadOnly(),
-//       XCOFF::CsectProperties(XCOFF::StorageMappingClass::XMC_RO,
-//                              XCOFF::XTY_SD));
+  LSDASection = Ctx->getXCOFFSection(
+      ".gcc_except_table", SectionKind::getReadOnly(),
+      XCOFF::CsectProperties(XCOFF::StorageMappingClass::XMC_RO,
+                             XCOFF::XTY_SD));
 
-//   CompactUnwindSection = Ctx->getXCOFFSection(
-//       ".eh_info_table", SectionKind::getData(),
-//       XCOFF::CsectProperties(XCOFF::StorageMappingClass::XMC_RW,
-//                              XCOFF::XTY_SD));
+  CompactUnwindSection = Ctx->getXCOFFSection(
+      ".eh_info_table", SectionKind::getData(),
+      XCOFF::CsectProperties(XCOFF::StorageMappingClass::XMC_RW,
+                             XCOFF::XTY_SD));
 
-//   // DWARF sections for XCOFF are not csects. They are special STYP_DWARF
-//   // sections, and the individual DWARF sections are distinguished by their
-//   // section subtype.
-//   DwarfAbbrevSection = Ctx->getXCOFFSection(
-//       ".dwabrev", SectionKind::getMetadata(),
-//       /* CsectProperties */ std::nullopt,
-//       /* MultiSymbolsAllowed */ true, ".dwabrev", XCOFF::SSUBTYP_DWABREV);
+  // DWARF sections for XCOFF are not csects. They are special STYP_DWARF
+  // sections, and the individual DWARF sections are distinguished by their
+  // section subtype.
+  DwarfAbbrevSection = Ctx->getXCOFFSection(
+      ".dwabrev", SectionKind::getMetadata(),
+      /* CsectProperties */ std::nullopt,
+      /* MultiSymbolsAllowed */ true, ".dwabrev", XCOFF::SSUBTYP_DWABREV);
 
-//   DwarfInfoSection = Ctx->getXCOFFSection(
-//       ".dwinfo", SectionKind::getMetadata(), /* CsectProperties */ std::nullopt,
-//       /* MultiSymbolsAllowed */ true, ".dwinfo", XCOFF::SSUBTYP_DWINFO);
+  DwarfInfoSection = Ctx->getXCOFFSection(
+      ".dwinfo", SectionKind::getMetadata(), /* CsectProperties */ std::nullopt,
+      /* MultiSymbolsAllowed */ true, ".dwinfo", XCOFF::SSUBTYP_DWINFO);
 
-//   DwarfLineSection = Ctx->getXCOFFSection(
-//       ".dwline", SectionKind::getMetadata(), /* CsectProperties */ std::nullopt,
-//       /* MultiSymbolsAllowed */ true, ".dwline", XCOFF::SSUBTYP_DWLINE);
+  DwarfLineSection = Ctx->getXCOFFSection(
+      ".dwline", SectionKind::getMetadata(), /* CsectProperties */ std::nullopt,
+      /* MultiSymbolsAllowed */ true, ".dwline", XCOFF::SSUBTYP_DWLINE);
 
-//   DwarfFrameSection = Ctx->getXCOFFSection(
-//       ".dwframe", SectionKind::getMetadata(),
-//       /* CsectProperties */ std::nullopt,
-//       /* MultiSymbolsAllowed */ true, ".dwframe", XCOFF::SSUBTYP_DWFRAME);
+  DwarfFrameSection = Ctx->getXCOFFSection(
+      ".dwframe", SectionKind::getMetadata(),
+      /* CsectProperties */ std::nullopt,
+      /* MultiSymbolsAllowed */ true, ".dwframe", XCOFF::SSUBTYP_DWFRAME);
 
-//   DwarfPubNamesSection = Ctx->getXCOFFSection(
-//       ".dwpbnms", SectionKind::getMetadata(),
-//       /* CsectProperties */ std::nullopt,
-//       /* MultiSymbolsAllowed */ true, ".dwpbnms", XCOFF::SSUBTYP_DWPBNMS);
+  DwarfPubNamesSection = Ctx->getXCOFFSection(
+      ".dwpbnms", SectionKind::getMetadata(),
+      /* CsectProperties */ std::nullopt,
+      /* MultiSymbolsAllowed */ true, ".dwpbnms", XCOFF::SSUBTYP_DWPBNMS);
 
-//   DwarfPubTypesSection = Ctx->getXCOFFSection(
-//       ".dwpbtyp", SectionKind::getMetadata(),
-//       /* CsectProperties */ std::nullopt,
-//       /* MultiSymbolsAllowed */ true, ".dwpbtyp", XCOFF::SSUBTYP_DWPBTYP);
+  DwarfPubTypesSection = Ctx->getXCOFFSection(
+      ".dwpbtyp", SectionKind::getMetadata(),
+      /* CsectProperties */ std::nullopt,
+      /* MultiSymbolsAllowed */ true, ".dwpbtyp", XCOFF::SSUBTYP_DWPBTYP);
 
-//   DwarfStrSection = Ctx->getXCOFFSection(
-//       ".dwstr", SectionKind::getMetadata(), /* CsectProperties */ std::nullopt,
-//       /* MultiSymbolsAllowed */ true, ".dwstr", XCOFF::SSUBTYP_DWSTR);
+  DwarfStrSection = Ctx->getXCOFFSection(
+      ".dwstr", SectionKind::getMetadata(), /* CsectProperties */ std::nullopt,
+      /* MultiSymbolsAllowed */ true, ".dwstr", XCOFF::SSUBTYP_DWSTR);
 
-//   DwarfLocSection = Ctx->getXCOFFSection(
-//       ".dwloc", SectionKind::getMetadata(), /* CsectProperties */ std::nullopt,
-//       /* MultiSymbolsAllowed */ true, ".dwloc", XCOFF::SSUBTYP_DWLOC);
+  DwarfLocSection = Ctx->getXCOFFSection(
+      ".dwloc", SectionKind::getMetadata(), /* CsectProperties */ std::nullopt,
+      /* MultiSymbolsAllowed */ true, ".dwloc", XCOFF::SSUBTYP_DWLOC);
 
-//   DwarfARangesSection = Ctx->getXCOFFSection(
-//       ".dwarnge", SectionKind::getMetadata(),
-//       /* CsectProperties */ std::nullopt,
-//       /* MultiSymbolsAllowed */ true, ".dwarnge", XCOFF::SSUBTYP_DWARNGE);
+  DwarfARangesSection = Ctx->getXCOFFSection(
+      ".dwarnge", SectionKind::getMetadata(),
+      /* CsectProperties */ std::nullopt,
+      /* MultiSymbolsAllowed */ true, ".dwarnge", XCOFF::SSUBTYP_DWARNGE);
 
-//   DwarfRangesSection = Ctx->getXCOFFSection(
-//       ".dwrnges", SectionKind::getMetadata(),
-//       /* CsectProperties */ std::nullopt,
-//       /* MultiSymbolsAllowed */ true, ".dwrnges", XCOFF::SSUBTYP_DWRNGES);
+  DwarfRangesSection = Ctx->getXCOFFSection(
+      ".dwrnges", SectionKind::getMetadata(),
+      /* CsectProperties */ std::nullopt,
+      /* MultiSymbolsAllowed */ true, ".dwrnges", XCOFF::SSUBTYP_DWRNGES);
 
-//   DwarfMacinfoSection = Ctx->getXCOFFSection(
-//       ".dwmac", SectionKind::getMetadata(), /* CsectProperties */ std::nullopt,
-//       /* MultiSymbolsAllowed */ true, ".dwmac", XCOFF::SSUBTYP_DWMAC);
-// }
+  DwarfMacinfoSection = Ctx->getXCOFFSection(
+      ".dwmac", SectionKind::getMetadata(), /* CsectProperties */ std::nullopt,
+      /* MultiSymbolsAllowed */ true, ".dwmac", XCOFF::SSUBTYP_DWMAC);
+}
 
-// void MCObjectFileInfo::initDXContainerObjectFileInfo(const Triple &T) {
-//   // At the moment the DXBC section should end up empty.
-//   TextSection = Ctx->getDXContainerSection("DXBC", SectionKind::getText());
-// }
+void MCObjectFileInfo::initDXContainerObjectFileInfo(const Triple &T) {
+  // At the moment the DXBC section should end up empty.
+  TextSection = Ctx->getDXContainerSection("DXBC", SectionKind::getText());
+}
 
 MCObjectFileInfo::~MCObjectFileInfo() = default;
 
@@ -1065,21 +1072,19 @@ void MCObjectFileInfo::initMCObjectFileInfo(MCContext &MCCtx, bool PIC,
     initELFMCObjectFileInfo(TheTriple, LargeCodeModel);
     break;
   case MCContext::IsGOFF:
-//     initGOFFMCObjectFileInfo(TheTriple);
-//     break;
+    initGOFFMCObjectFileInfo(TheTriple);
+    break;
   case MCContext::IsSPIRV:
-//     initSPIRVMCObjectFileInfo(TheTriple);
-//     break;
+    initSPIRVMCObjectFileInfo(TheTriple);
+    break;
   case MCContext::IsWasm:
-//     initWasmMCObjectFileInfo(TheTriple);
-//     break;
+    initWasmMCObjectFileInfo(TheTriple);
+    break;
   case MCContext::IsXCOFF:
-//     initXCOFFMCObjectFileInfo(TheTriple);
-//     break;
+    initXCOFFMCObjectFileInfo(TheTriple);
+    break;
   case MCContext::IsDXContainer:
-//     initDXContainerObjectFileInfo(TheTriple);
-    report_fatal_error("Cannot get initialize file info for this object file "
-                       "format: not implemented.");
+    initDXContainerObjectFileInfo(TheTriple);
     break;
   }
 }
@@ -1091,8 +1096,8 @@ MCSection *MCObjectFileInfo::getDwarfComdatSection(const char *Name,
     return Ctx->getELFSection(Name, ELF::SHT_PROGBITS, ELF::SHF_GROUP, 0,
                               utostr(Hash), /*IsComdat=*/true);
   case Triple::Wasm:
-    // return Ctx->getWasmSection(Name, SectionKind::getMetadata(), 0,
-    //                            utostr(Hash), MCContext::GenericSectionID);
+    return Ctx->getWasmSection(Name, SectionKind::getMetadata(), 0,
+                               utostr(Hash), MCContext::GenericSectionID);
   case Triple::MachO:
   case Triple::COFF:
   case Triple::GOFF:
@@ -1167,18 +1172,20 @@ MCObjectFileInfo::getKCFITrapSection(const MCSection &TextSec) const {
 
 MCSection *
 MCObjectFileInfo::getPseudoProbeSection(const MCSection &TextSec) const {
-  if (Ctx->getObjectFileType() == MCContext::IsELF) {
-    const auto &ElfSec = static_cast<const MCSectionELF &>(TextSec);
-    // Create a separate section for probes that comes with a comdat function.
-    if (const MCSymbol *Group = ElfSec.getGroup()) {
-      auto *S = static_cast<MCSectionELF *>(PseudoProbeSection);
-      auto Flags = S->getFlags() | ELF::SHF_GROUP;
-      return Ctx->getELFSection(S->getName(), S->getType(), Flags,
-                                S->getEntrySize(), Group->getName(),
-                                /*IsComdat=*/true);
-    }
+  if (Ctx->getObjectFileType() != MCContext::IsELF)
+    return PseudoProbeSection;
+
+  const auto &ElfSec = static_cast<const MCSectionELF &>(TextSec);
+  unsigned Flags = ELF::SHF_LINK_ORDER;
+  StringRef GroupName;
+  if (const MCSymbol *Group = ElfSec.getGroup()) {
+    GroupName = Group->getName();
+    Flags |= ELF::SHF_GROUP;
   }
-  return PseudoProbeSection;
+
+  return Ctx->getELFSection(PseudoProbeSection->getName(), ELF::SHT_PROGBITS,
+                            Flags, 0, GroupName, true, ElfSec.getUniqueID(),
+                            cast<MCSymbolELF>(TextSec.getBeginSymbol()));
 }
 
 MCSection *

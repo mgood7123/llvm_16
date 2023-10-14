@@ -1,7 +1,4 @@
-add_compile_options(-O3)
-add_compile_options(-g0)
-
-add_llvm_component_library(LLVMIPO
+add_llvm_component_library(LLVMipo
   AlwaysInliner.cpp
   Annotation2Metadata.cpp
   ArgumentPromotion.cpp
@@ -14,6 +11,7 @@ add_llvm_component_library(LLVMIPO
   CrossDSOCFI.cpp
   DeadArgumentElimination.cpp
   ElimAvailExtern.cpp
+  EmbedBitcodePass.cpp
   ExtractGV.cpp
   ForceFunctionAttrs.cpp
   FunctionAttrs.cpp
@@ -26,16 +24,15 @@ add_llvm_component_library(LLVMIPO
   IPO.cpp
   IROutliner.cpp
   InferFunctionAttrs.cpp
-  InlineSimple.cpp
   Inliner.cpp
   Internalize.cpp
   LoopExtractor.cpp
   LowerTypeTests.cpp
+  MemProfContextDisambiguation.cpp
   MergeFunctions.cpp
   ModuleInliner.cpp
   OpenMPOpt.cpp
   PartialInlining.cpp
-  PassManagerBuilder.cpp
   SampleContextTracker.cpp
   SampleProfile.cpp
   SampleProfileProbe.cpp
@@ -54,6 +51,9 @@ add_llvm_component_library(LLVMIPO
   intrinsics_gen
   omp_gen
 
+  COMPONENT_NAME
+  IPO
+
   LINK_COMPONENTS
   AggressiveInstCombine
   Analysis
@@ -66,7 +66,7 @@ add_llvm_component_library(LLVMIPO
   Linker
   Object
   ProfileData
-  ScalarOpts
+  Scalar
   Support
   TargetParser
   TransformUtils

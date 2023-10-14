@@ -191,13 +191,7 @@ static unsigned CombineSymbolTypes(unsigned T1, unsigned T2) {
 }
 
 bool MCELFStreamer::emitSymbolAttribute(MCSymbol *S, MCSymbolAttr Attribute) {
-  if (S == nullptr) {
-    llvm_unreachable("the given symbol S is nullptr");
-  }
   auto *Symbol = cast<MCSymbolELF>(S);
-  if (Symbol == nullptr) {
-    llvm_unreachable("the given symbol S could not be cast to type 'MCSymbolELF'");
-  }
 
   // Adding a symbol attribute always introduces the symbol, note that an
   // important side effect of calling registerSymbol here is to register
@@ -222,6 +216,7 @@ bool MCELFStreamer::emitSymbolAttribute(MCSymbol *S, MCSymbolAttr Attribute) {
   case MCSA_Invalid:
   case MCSA_IndirectSymbol:
   case MCSA_Exported:
+  case MCSA_WeakAntiDep:
     return false;
 
   case MCSA_NoDeadStrip:
@@ -557,8 +552,7 @@ void MCELFStreamer::emitInstToData(const MCInst &Inst,
   MCAssembler &Assembler = getAssembler();
   SmallVector<MCFixup, 4> Fixups;
   SmallString<256> Code;
-  raw_svector_ostream VecOS(Code);
-  Assembler.getEmitter().encodeInstruction(Inst, VecOS, Fixups, STI);
+  Assembler.getEmitter().encodeInstruction(Inst, Code, Fixups, STI);
 
   for (auto &Fixup : Fixups)
     fixSymbolsInTLSFixups(Fixup.getValue());
@@ -634,6 +628,9 @@ void MCELFStreamer::emitInstToData(const MCInst &Inst,
   }
 
   DF->setHasInstructions(STI);
+  if (!Fixups.empty() && Fixups.back().getTargetKind() ==
+                             getAssembler().getBackend().RelaxFixupKind)
+    DF->setLinkerRelaxable();
   DF->getContents().append(Code.begin(), Code.end());
 
   if (Assembler.isBundlingEnabled() && Assembler.getRelaxAll()) {

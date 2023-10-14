@@ -34,9 +34,9 @@ add_subdirectory(MCJIT)
 add_subdirectory(Orc)
 add_subdirectory(RuntimeDyld)
 
-if( HAVE_OPAGENT_H )
+if( LLVM_USE_OPROFILE )
   add_subdirectory(OProfileJIT)
-endif( HAVE_OPAGENT_H )
+endif( LLVM_USE_OPROFILE )
 
 if( LLVM_USE_INTEL_JITEVENTS )
   add_subdirectory(IntelJITEvents)

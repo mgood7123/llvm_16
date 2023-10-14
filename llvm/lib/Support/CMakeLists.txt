@@ -79,7 +79,11 @@ endif( MSVC OR MINGW )
 # Delay load shell32.dll if possible to speed up process startup.
 set (delayload_flags)
 if (MSVC)
-  set (delayload_flags delayimp -delayload:shell32.dll -delayload:ole32.dll)
+  # When linking with Swift, `swiftc.exe` is used as the linker drive rather
+  # than invoking `link.exe` directly.  In such a case, the flags should be
+  # marked as `-Xlinker` to pass them directly to the linker.  As a temporary
+  # workaround simply elide the delay loading.
+  set (delayload_flags $<$<NOT:$<LINK_LANGUAGE:Swift>>:delayimp -delayload:shell32.dll -delayload:ole32.dll>)
 endif()
 
 # Link Z3 if the user wants to build it.
@@ -89,8 +93,8 @@ endif()
 
 # Override the C runtime allocator on Windows and embed it into LLVM tools & libraries
 if(LLVM_INTEGRATED_CRT_ALLOC)
-  if (CMAKE_BUILD_TYPE AND NOT ${LLVM_USE_CRT_${uppercase_CMAKE_BUILD_TYPE}} MATCHES "^(MT|MTd)$")
-    message(FATAL_ERROR "LLVM_INTEGRATED_CRT_ALLOC only works with /MT or /MTd. Use LLVM_USE_CRT_${uppercase_CMAKE_BUILD_TYPE} to set the appropriate option.")
+  if (NOT CMAKE_MSVC_RUNTIME_LIBRARY OR CMAKE_MSVC_RUNTIME_LIBRARY MATCHES "DLL$")
+    message(FATAL_ERROR "LLVM_INTEGRATED_CRT_ALLOC only works with CMAKE_MSVC_RUNTIME_LIBRARY set to MultiThreaded or MultiThreadedDebug.")
   endif()
 
   string(REGEX REPLACE "(/|\\\\)$" "" LLVM_INTEGRATED_CRT_ALLOC "${LLVM_INTEGRATED_CRT_ALLOC}")
@@ -114,169 +118,178 @@ if(LLVM_INTEGRATED_CRT_ALLOC)
   endif()
 endif()
 
+# FIXME: We are currently guarding AIX headers with _XOPEN_SOURCE=700.
+# See llvm/CMakeLists.txt. However, we need _SC_NPROCESSORS_ONLN in
+# unistd.h and it is guarded by _ALL_SOURCE, so we remove the _XOPEN_SOURCE
+# guard here. We should remove the guards all together once AIX cleans up
+# the system headers.
+if (UNIX AND ${CMAKE_SYSTEM_NAME} MATCHES "AIX")
+  remove_definitions("-D_XOPEN_SOURCE=700")
+endif()
+
 add_subdirectory(BLAKE3)
 
 add_llvm_component_library(LLVMSupport
- AddressRanges.cpp
- ABIBreak.cpp
- #AMDGPUMetadata.cpp
- APFixedPoint.cpp
- APFloat.cpp
- APInt.cpp
- APSInt.cpp
- ARMBuildAttrs.cpp
- ARMAttributeParser.cpp
- ARMWinEH.cpp
- Allocator.cpp
- AutoConvert.cpp
- Base64.cpp
- BinaryStreamError.cpp
- BinaryStreamReader.cpp
- BinaryStreamRef.cpp
- BinaryStreamWriter.cpp
- BlockFrequency.cpp
- BranchProbability.cpp
- BuryPointer.cpp
- CachePruning.cpp
- Caching.cpp
- circular_raw_ostream.cpp
- Chrono.cpp
- COM.cpp
- CodeGenCoverage.cpp
- CommandLine.cpp
- Compression.cpp
- CRC.cpp
- ConvertUTF.cpp
- ConvertUTFWrapper.cpp
- CrashRecoveryContext.cpp
- #CSKYAttributes.cpp
- #CSKYAttributeParser.cpp
- DataExtractor.cpp
- Debug.cpp
- DebugCounter.cpp
- DeltaAlgorithm.cpp
- DivisionByConstantInfo.cpp
- DAGDeltaAlgorithm.cpp
- DJB.cpp
- ELFAttributeParser.cpp
- ELFAttributes.cpp
- Error.cpp
- ErrorHandling.cpp
- ExtensibleRTTI.cpp
- FileCollector.cpp
- FileUtilities.cpp
- FileOutputBuffer.cpp
- FoldingSet.cpp
- FormattedStream.cpp
- FormatVariadic.cpp
- GlobPattern.cpp
- GraphWriter.cpp
- Hashing.cpp
- InitLLVM.cpp
- InstructionCost.cpp
- IntEqClasses.cpp
- IntervalMap.cpp
- ItaniumManglingCanonicalizer.cpp
- JSON.cpp
- KnownBits.cpp
- LEB128.cpp
- LineIterator.cpp
- Locale.cpp
- LockFileManager.cpp
- LowLevelType.cpp
- ManagedStatic.cpp
- MathExtras.cpp
- MemAlloc.cpp
- MemoryBuffer.cpp
- MemoryBufferRef.cpp
- MD5.cpp
- #MSP430Attributes.cpp
- #MSP430AttributeParser.cpp
- NativeFormatting.cpp
- OptimizedStructLayout.cpp
- Optional.cpp
- Parallel.cpp
- PluginLoader.cpp
- PrettyStackTrace.cpp
- RandomNumberGenerator.cpp
- Regex.cpp
- RISCVAttributes.cpp
- RISCVAttributeParser.cpp
- RISCVISAInfo.cpp
- ScaledNumber.cpp
- ScopedPrinter.cpp
- SHA1.cpp
- SHA256.cpp
- Signposts.cpp
- SmallPtrSet.cpp
- SmallVector.cpp
- SourceMgr.cpp
- SpecialCaseList.cpp
- Statistic.cpp
- StringExtras.cpp
- StringMap.cpp
- StringSaver.cpp
- StringRef.cpp
- SuffixTree.cpp
- SymbolRemappingReader.cpp
- SystemUtils.cpp
- TarWriter.cpp
- ThreadPool.cpp
- TimeProfiler.cpp
- Timer.cpp
- ToolOutputFile.cpp
- TrigramIndex.cpp
- Twine.cpp
- TypeSize.cpp
- Unicode.cpp
- UnicodeCaseFold.cpp
- UnicodeNameToCodepoint.cpp
- UnicodeNameToCodepointGenerated.cpp
- VersionTuple.cpp
- VirtualFileSystem.cpp
- WithColor.cpp
- YAMLParser.cpp
- YAMLTraits.cpp
- raw_os_ostream.cpp
- raw_ostream.cpp
- regcomp.c
- regerror.c
- regexec.c
- regfree.c
- regstrlcpy.c
- xxhash.cpp
- Z3Solver.cpp
+  ABIBreak.cpp
+  AMDGPUMetadata.cpp
+  APFixedPoint.cpp
+  APFloat.cpp
+  APInt.cpp
+  APSInt.cpp
+  ARMBuildAttrs.cpp
+  ARMAttributeParser.cpp
+  ARMWinEH.cpp
+  Allocator.cpp
+  AutoConvert.cpp
+  Base64.cpp
+  BalancedPartitioning.cpp
+  BinaryStreamError.cpp
+  BinaryStreamReader.cpp
+  BinaryStreamRef.cpp
+  BinaryStreamWriter.cpp
+  BlockFrequency.cpp
+  BranchProbability.cpp
+  BuryPointer.cpp
+  CachePruning.cpp
+  Caching.cpp
+  circular_raw_ostream.cpp
+  Chrono.cpp
+  COM.cpp
+  CodeGenCoverage.cpp
+  CommandLine.cpp
+  Compression.cpp
+  CRC.cpp
+  ConvertUTF.cpp
+  ConvertEBCDIC.cpp
+  ConvertUTFWrapper.cpp
+  CrashRecoveryContext.cpp
+  CSKYAttributes.cpp
+  CSKYAttributeParser.cpp
+  DataExtractor.cpp
+  Debug.cpp
+  DebugCounter.cpp
+  DeltaAlgorithm.cpp
+  DivisionByConstantInfo.cpp
+  DAGDeltaAlgorithm.cpp
+  DJB.cpp
+  ELFAttributeParser.cpp
+  ELFAttributes.cpp
+  Error.cpp
+  ErrorHandling.cpp
+  ExtensibleRTTI.cpp
+  FileCollector.cpp
+  FileUtilities.cpp
+  FileOutputBuffer.cpp
+  FloatingPointMode.cpp
+  FoldingSet.cpp
+  FormattedStream.cpp
+  FormatVariadic.cpp
+  GlobPattern.cpp
+  GraphWriter.cpp
+  Hashing.cpp
+  InitLLVM.cpp
+  InstructionCost.cpp
+  IntEqClasses.cpp
+  IntervalMap.cpp
+  JSON.cpp
+  KnownBits.cpp
+  LEB128.cpp
+  LineIterator.cpp
+  Locale.cpp
+  LockFileManager.cpp
+  ManagedStatic.cpp
+  MathExtras.cpp
+  MemAlloc.cpp
+  MemoryBuffer.cpp
+  MemoryBufferRef.cpp
+  MD5.cpp
+  MSP430Attributes.cpp
+  MSP430AttributeParser.cpp
+  NativeFormatting.cpp
+  OptimizedStructLayout.cpp
+  Optional.cpp
+  PGOOptions.cpp
+  Parallel.cpp
+  PluginLoader.cpp
+  PrettyStackTrace.cpp
+  RandomNumberGenerator.cpp
+  Regex.cpp
+  RISCVAttributes.cpp
+  RISCVAttributeParser.cpp
+  RISCVISAInfo.cpp
+  ScaledNumber.cpp
+  ScopedPrinter.cpp
+  SHA1.cpp
+  SHA256.cpp
+  Signposts.cpp
+  SmallPtrSet.cpp
+  SmallVector.cpp
+  SourceMgr.cpp
+  SpecialCaseList.cpp
+  Statistic.cpp
+  StringExtras.cpp
+  StringMap.cpp
+  StringSaver.cpp
+  StringRef.cpp
+  SuffixTreeNode.cpp
+  SuffixTree.cpp
+  SystemUtils.cpp
+  TarWriter.cpp
+  ThreadPool.cpp
+  TimeProfiler.cpp
+  Timer.cpp
+  ToolOutputFile.cpp
+  Twine.cpp
+  TypeSize.cpp
+  Unicode.cpp
+  UnicodeCaseFold.cpp
+  UnicodeNameToCodepoint.cpp
+  UnicodeNameToCodepointGenerated.cpp
+  VersionTuple.cpp
+  VirtualFileSystem.cpp
+  WithColor.cpp
+  YAMLParser.cpp
+  YAMLTraits.cpp
+  raw_os_ostream.cpp
+  raw_ostream.cpp
+  regcomp.c
+  regerror.c
+  regexec.c
+  regfree.c
+  regstrlcpy.c
+  xxhash.cpp
+  Z3Solver.cpp
 
- ${ALLOCATOR_FILES}
- $<TARGET_OBJECTS:LLVMSupportBlake3>
+  ${ALLOCATOR_FILES}
+  $<TARGET_OBJECTS:LLVMSupportBlake3>
 
 # System
- Atomic.cpp
- DynamicLibrary.cpp
- Errno.cpp
- Memory.cpp
- Path.cpp
- Process.cpp
- Program.cpp
- RWMutex.cpp
- Signals.cpp
- Threading.cpp
- Valgrind.cpp
- Watchdog.cpp
+  Atomic.cpp
+  DynamicLibrary.cpp
+  Errno.cpp
+  Memory.cpp
+  Path.cpp
+  Process.cpp
+  Program.cpp
+  RWMutex.cpp
+  Signals.cpp
+  Threading.cpp
+  Valgrind.cpp
+  Watchdog.cpp
 
- ADDITIONAL_HEADER_DIRS
- Unix
- Windows
- ${LLVM_MAIN_INCLUDE_DIR}/llvm/ADT
- ${LLVM_MAIN_INCLUDE_DIR}/llvm/Support
- ${Backtrace_INCLUDE_DIRS}
+  ADDITIONAL_HEADER_DIRS
+  Unix
+  Windows
+  ${LLVM_MAIN_INCLUDE_DIR}/llvm/ADT
+  ${LLVM_MAIN_INCLUDE_DIR}/llvm/Support
+  ${Backtrace_INCLUDE_DIRS}
 
- LINK_LIBS
- ${system_libs} ${imported_libs} ${delayload_flags}
+  LINK_LIBS
+  ${system_libs} ${imported_libs} ${delayload_flags}
 
- LINK_COMPONENTS
- Demangle
-)
+  LINK_COMPONENTS
+  Demangle
+  )
 
 set(llvm_system_libs ${system_libs})
 

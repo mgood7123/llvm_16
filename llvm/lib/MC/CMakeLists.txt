@@ -1,14 +1,16 @@
 add_llvm_component_library(LLVMMC
   ConstantPools.cpp
+  DXContainerPSVInfo.cpp
   ELFObjectWriter.cpp
+  GOFFObjectWriter.cpp
   MCAsmBackend.cpp
   MCAsmInfo.cpp
   MCAsmInfoCOFF.cpp
   MCAsmInfoDarwin.cpp
   MCAsmInfoELF.cpp
-  #MCAsmInfoGOFF.cpp
-  #MCAsmInfoWasm.cpp
-  #MCAsmInfoXCOFF.cpp
+  MCAsmInfoGOFF.cpp
+  MCAsmInfoWasm.cpp
+  MCAsmInfoXCOFF.cpp
   MCAsmMacro.cpp
   MCAsmStreamer.cpp
   MCAssembler.cpp
@@ -16,12 +18,13 @@ add_llvm_component_library(LLVMMC
   MCCodeView.cpp
   MCContext.cpp
   MCDwarf.cpp
-  #MCDXContainerStreamer.cpp
-  #MCDXContainerWriter.cpp
+  MCDXContainerStreamer.cpp
+  MCDXContainerWriter.cpp
   MCELFObjectTargetWriter.cpp
   MCELFStreamer.cpp
   MCExpr.cpp
   MCFragment.cpp
+  MCGOFFStreamer.cpp
   MCInst.cpp
   MCInstPrinter.cpp
   MCInstrAnalysis.cpp
@@ -40,35 +43,34 @@ add_llvm_component_library(LLVMMC
   MCSchedule.cpp
   MCSection.cpp
   MCSectionCOFF.cpp
-  #MCSectionDXContainer.cpp
+  MCSectionDXContainer.cpp
   MCSectionELF.cpp
   MCSectionMachO.cpp
-  #MCSectionWasm.cpp
-  #MCSectionXCOFF.cpp
+  MCSectionWasm.cpp
+  MCSectionXCOFF.cpp
   MCStreamer.cpp
-  #MCSPIRVStreamer.cpp
+  MCSPIRVStreamer.cpp
   MCSubtargetInfo.cpp
   MCSymbol.cpp
   MCSymbolELF.cpp
-  #MCSymbolXCOFF.cpp
+  MCSymbolXCOFF.cpp
   MCTargetOptions.cpp
   MCTargetOptionsCommandFlags.cpp
   MCValue.cpp
-  #MCWasmObjectTargetWriter.cpp
-  #MCWasmStreamer.cpp
+  MCWasmObjectTargetWriter.cpp
+  MCWasmStreamer.cpp
   MCWin64EH.cpp
   MCWinCOFFStreamer.cpp
   MCWinEH.cpp
-  #MCXCOFFObjectTargetWriter.cpp
-  #MCXCOFFStreamer.cpp
+  MCXCOFFObjectTargetWriter.cpp
+  MCXCOFFStreamer.cpp
   MachObjectWriter.cpp
-  #SPIRVObjectWriter.cpp
+  SPIRVObjectWriter.cpp
   StringTableBuilder.cpp
-  SubtargetFeature.cpp
   TargetRegistry.cpp
-  #WasmObjectWriter.cpp
+  WasmObjectWriter.cpp
   WinCOFFObjectWriter.cpp
-  #XCOFFObjectWriter.cpp
+  XCOFFObjectWriter.cpp
 
   ADDITIONAL_HEADER_DIRS
   ${LLVM_MAIN_INCLUDE_DIR}/llvm/MC
@@ -78,6 +80,9 @@ add_llvm_component_library(LLVMMC
   TargetParser
   BinaryFormat
   DebugInfoCodeView
+
+  DEPENDS
+  intrinsics_gen
   )
 
 add_subdirectory(MCParser)

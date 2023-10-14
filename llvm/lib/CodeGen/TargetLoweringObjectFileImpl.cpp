@@ -16,12 +16,11 @@
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringExtras.h"
 #include "llvm/ADT/StringRef.h"
-#include "llvm/ADT/Triple.h"
 #include "llvm/BinaryFormat/COFF.h"
 #include "llvm/BinaryFormat/Dwarf.h"
 #include "llvm/BinaryFormat/ELF.h"
 #include "llvm/BinaryFormat/MachO.h"
-// #include "llvm/BinaryFormat/Wasm.h"
+#include "llvm/BinaryFormat/Wasm.h"
 #include "llvm/CodeGen/BasicBlockSectionUtils.h"
 #include "llvm/CodeGen/MachineBasicBlock.h"
 #include "llvm/CodeGen/MachineFunction.h"
@@ -48,10 +47,10 @@
 #include "llvm/MC/MCExpr.h"
 #include "llvm/MC/MCSectionCOFF.h"
 #include "llvm/MC/MCSectionELF.h"
-// #include "llvm/MC/MCSectionGOFF.h"
+#include "llvm/MC/MCSectionGOFF.h"
 #include "llvm/MC/MCSectionMachO.h"
-// #include "llvm/MC/MCSectionWasm.h"
-// #include "llvm/MC/MCSectionXCOFF.h"
+#include "llvm/MC/MCSectionWasm.h"
+#include "llvm/MC/MCSectionXCOFF.h"
 #include "llvm/MC/MCStreamer.h"
 #include "llvm/MC/MCSymbol.h"
 #include "llvm/MC/MCSymbolELF.h"
@@ -65,11 +64,16 @@
 #include "llvm/Support/Format.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Target/TargetMachine.h"
+#include "llvm/TargetParser/Triple.h"
 #include <cassert>
 #include <string>
 
 using namespace llvm;
 using namespace dwarf;
+
+static cl::opt<bool> JumpTableInFunctionSection(
+    "jumptable-in-function-section", cl::Hidden, cl::init(false),
+    cl::desc("Putting Jump Table in function section"));
 
 static void GetObjCImageInfo(Module &M, unsigned &Version, unsigned &Flags,
                              StringRef &Section) {
@@ -182,26 +186,14 @@ void TargetLoweringObjectFileELF::Initialize(MCContext &Ctx,
     // The small model guarantees static code/data size < 4GB, but not where it
     // will be in memory. Most of these could end up >2GB away so even a signed
     // pc-relative 32-bit address is insufficient, theoretically.
-    if (isPositionIndependent()) {
-      // ILP32 uses sdata4 instead of sdata8
-      if (TgtM.getTargetTriple().getEnvironment() == Triple::GNUILP32) {
-        PersonalityEncoding = dwarf::DW_EH_PE_indirect | dwarf::DW_EH_PE_pcrel |
-                              dwarf::DW_EH_PE_sdata4;
-        LSDAEncoding = dwarf::DW_EH_PE_pcrel | dwarf::DW_EH_PE_sdata4;
-        TTypeEncoding = dwarf::DW_EH_PE_indirect | dwarf::DW_EH_PE_pcrel |
-                        dwarf::DW_EH_PE_sdata4;
-      } else {
-        PersonalityEncoding = dwarf::DW_EH_PE_indirect | dwarf::DW_EH_PE_pcrel |
-                              dwarf::DW_EH_PE_sdata8;
-        LSDAEncoding = dwarf::DW_EH_PE_pcrel | dwarf::DW_EH_PE_sdata8;
-        TTypeEncoding = dwarf::DW_EH_PE_indirect | dwarf::DW_EH_PE_pcrel |
-                        dwarf::DW_EH_PE_sdata8;
-      }
-    } else {
-      PersonalityEncoding = dwarf::DW_EH_PE_absptr;
-      LSDAEncoding = dwarf::DW_EH_PE_absptr;
-      TTypeEncoding = dwarf::DW_EH_PE_absptr;
-    }
+    //
+    // Use DW_EH_PE_indirect even for -fno-pic to avoid copy relocations.
+    LSDAEncoding = dwarf::DW_EH_PE_pcrel |
+                   (TgtM.getTargetTriple().getEnvironment() == Triple::GNUILP32
+                        ? dwarf::DW_EH_PE_sdata4
+                        : dwarf::DW_EH_PE_sdata8);
+    PersonalityEncoding = LSDAEncoding | dwarf::DW_EH_PE_indirect;
+    TTypeEncoding = LSDAEncoding | dwarf::DW_EH_PE_indirect;
     break;
   case Triple::lanai:
     LSDAEncoding = dwarf::DW_EH_PE_absptr;
@@ -591,14 +583,7 @@ static const MCSymbolELF *getLinkedToSymbol(const GlobalObject *GO,
   if (!MD)
     return nullptr;
 
-  const MDOperand &Op = MD->getOperand(0);
-  if (!Op.get())
-    return nullptr;
-
-  auto *VM = dyn_cast<ValueAsMetadata>(Op);
-  if (!VM)
-    report_fatal_error("MD_associated operand is not ValueAsMetadata");
-
+  auto *VM = cast<ValueAsMetadata>(MD->getOperand(0).get());
   auto *OtherGV = dyn_cast<GlobalValue>(VM->getValue());
   return OtherGV ? dyn_cast<MCSymbolELF>(TM.getSymbol(OtherGV)) : nullptr;
 }
@@ -629,21 +614,21 @@ static unsigned getEntrySizeForKind(SectionKind Kind) {
 
 /// Return the section prefix name used by options FunctionsSections and
 /// DataSections.
-static StringRef getSectionPrefixForGlobal(SectionKind Kind) {
+static StringRef getSectionPrefixForGlobal(SectionKind Kind, bool IsLarge) {
   if (Kind.isText())
     return ".text";
   if (Kind.isReadOnly())
-    return ".rodata";
+    return IsLarge ? ".lrodata" : ".rodata";
   if (Kind.isBSS())
-    return ".bss";
+    return IsLarge ? ".lbss" : ".bss";
   if (Kind.isThreadData())
     return ".tdata";
   if (Kind.isThreadBSS())
     return ".tbss";
   if (Kind.isData())
-    return ".data";
+    return IsLarge ? ".ldata" : ".data";
   if (Kind.isReadOnlyWithRel())
-    return ".data.rel.ro";
+    return IsLarge ? ".ldata.rel.ro" : ".data.rel.ro";
   llvm_unreachable("Unknown section kind");
 }
 
@@ -665,7 +650,10 @@ getELFSectionNameForGlobal(const GlobalObject *GO, SectionKind Kind,
     Name = ".rodata.cst";
     Name += utostr(EntrySize);
   } else {
-    Name = getSectionPrefixForGlobal(Kind);
+    bool IsLarge = false;
+    if (auto *GV = dyn_cast<GlobalVariable>(GO))
+      IsLarge = TM.isLargeData(GV);
+    Name = getSectionPrefixForGlobal(Kind, IsLarge);
   }
 
   bool HasPrefix = false;
@@ -867,6 +855,12 @@ static MCSectionELF *selectELFSectionForGlobal(
     Group = C->getName();
     IsComdat = C->getSelectionKind() == Comdat::Any;
   }
+  if (auto *GV = dyn_cast<GlobalVariable>(GO)) {
+    if (TM.isLargeData(GV)) {
+      assert(TM.getTargetTriple().getArch() == Triple::x86_64);
+      Flags |= ELF::SHF_X86_64_LARGE;
+    }
+  }
 
   // Get the section entry size based on the kind.
   unsigned EntrySize = getEntrySizeForKind(Kind);
@@ -1044,21 +1038,32 @@ MCSection *TargetLoweringObjectFileELF::getSectionForMachineBasicBlock(
   // under the .text.eh prefix. For regular sections, we either use a unique
   // name, or a unique ID for the section.
   SmallString<128> Name;
-  if (MBB.getSectionID() == MBBSectionID::ColdSectionID) {
-    Name += BBSectionsColdTextPrefix;
-    Name += MBB.getParent()->getName();
-  } else if (MBB.getSectionID() == MBBSectionID::ExceptionSectionID) {
-    Name += ".text.eh.";
-    Name += MBB.getParent()->getName();
-  } else {
-    Name += MBB.getParent()->getSection()->getName();
-    if (TM.getUniqueBasicBlockSectionNames()) {
-      if (!Name.endswith("."))
-        Name += ".";
-      Name += MBB.getSymbol()->getName();
+  StringRef FunctionSectionName = MBB.getParent()->getSection()->getName();
+  if (FunctionSectionName.equals(".text") ||
+      FunctionSectionName.startswith(".text.")) {
+    // Function is in a regular .text section.
+    StringRef FunctionName = MBB.getParent()->getName();
+    if (MBB.getSectionID() == MBBSectionID::ColdSectionID) {
+      Name += BBSectionsColdTextPrefix;
+      Name += FunctionName;
+    } else if (MBB.getSectionID() == MBBSectionID::ExceptionSectionID) {
+      Name += ".text.eh.";
+      Name += FunctionName;
     } else {
-      UniqueID = NextUniqueID++;
+      Name += FunctionSectionName;
+      if (TM.getUniqueBasicBlockSectionNames()) {
+        if (!Name.endswith("."))
+          Name += ".";
+        Name += MBB.getSymbol()->getName();
+      } else {
+        UniqueID = NextUniqueID++;
+      }
     }
+  } else {
+    // If the original function has a custom non-dot-text section, then emit
+    // all basic block sections into that section too, each with a unique id.
+    Name = FunctionSectionName;
+    UniqueID = NextUniqueID++;
   }
 
   unsigned Flags = ELF::SHF_ALLOC | ELF::SHF_EXECINSTR;
@@ -1217,11 +1222,12 @@ void TargetLoweringObjectFileMachO::Initialize(MCContext &Ctx,
 
 MCSection *TargetLoweringObjectFileMachO::getStaticDtorSection(
     unsigned Priority, const MCSymbol *KeySym) const {
-  // TODO(yln): Remove -lower-global-dtors-via-cxa-atexit fallback flag
-  // (LowerGlobalDtorsViaCxaAtExit) and always issue a fatal error here.
-  if (TM->Options.LowerGlobalDtorsViaCxaAtExit)
-    report_fatal_error("@llvm.global_dtors should have been lowered already");
   return StaticDtorSection;
+  // In userspace, we lower global destructors via atexit(), but kernel/kext
+  // environments do not provide this function so we still need to support the
+  // legacy way here.
+  // See the -disable-atexit-based-global-dtor-lowering CodeGen flag for more
+  // context.
 }
 
 void TargetLoweringObjectFileMachO::emitModuleMetadata(MCStreamer &Streamer,
@@ -1281,6 +1287,20 @@ MCSection *TargetLoweringObjectFileMachO::getExplicitSectionGlobal(
     const GlobalObject *GO, SectionKind Kind, const TargetMachine &TM) const {
 
   StringRef SectionName = GO->getSection();
+
+  const GlobalVariable *GV = dyn_cast<GlobalVariable>(GO);
+  if (GV && GV->hasImplicitSection()) {
+    auto Attrs = GV->getAttributes();
+    if (Attrs.hasAttribute("bss-section") && Kind.isBSS()) {
+      SectionName = Attrs.getAttribute("bss-section").getValueAsString();
+    } else if (Attrs.hasAttribute("rodata-section") && Kind.isReadOnly()) {
+      SectionName = Attrs.getAttribute("rodata-section").getValueAsString();
+    } else if (Attrs.hasAttribute("relro-section") && Kind.isReadOnlyWithRel()) {
+      SectionName = Attrs.getAttribute("relro-section").getValueAsString();
+    } else if (Attrs.hasAttribute("data-section") && Kind.isData()) {
+      SectionName = Attrs.getAttribute("data-section").getValueAsString();
+    }
+  }
 
   const Function *F = dyn_cast<Function>(GO);
   if (F && F->hasFnAttribute("implicit-section-name")) {
@@ -1409,6 +1429,11 @@ MCSection *TargetLoweringObjectFileMachO::getSectionForConstant(
   if (Kind.isMergeableConst16())
     return SixteenByteConstantSection;
   return ReadOnlySection;  // .const
+}
+
+MCSection *TargetLoweringObjectFileMachO::getSectionForCommandLines() const {
+  return getContext().getMachOSection("__TEXT", "__command_line", 0,
+                                      SectionKind::getReadOnly());
 }
 
 const MCExpr *TargetLoweringObjectFileMachO::getTTypeGlobalReference(
@@ -1796,6 +1821,19 @@ MCSection *TargetLoweringObjectFileCOFF::getSectionForJumpTable(
       COFF::IMAGE_COMDAT_SELECT_ASSOCIATIVE, UniqueID);
 }
 
+bool TargetLoweringObjectFileCOFF::shouldPutJumpTableInFunctionSection(
+    bool UsesLabelDifference, const Function &F) const {
+  if (TM->getTargetTriple().getArch() == Triple::x86_64) {
+    if (!JumpTableInFunctionSection) {
+      // We can always create relative relocations, so use another section
+      // that can be marked non-executable.
+      return false;
+    }
+  }
+  return TargetLoweringObjectFile::shouldPutJumpTableInFunctionSection(
+    UsesLabelDifference, F);
+}
+
 void TargetLoweringObjectFileCOFF::emitModuleMetadata(MCStreamer &Streamer,
                                                       Module &M) const {
   emitLinkerDirectives(Streamer, M);
@@ -2082,577 +2120,572 @@ MCSection *TargetLoweringObjectFileCOFF::getSectionForConstant(
                                                          Alignment);
 }
 
-// //===----------------------------------------------------------------------===//
-// //                                  Wasm
-// //===----------------------------------------------------------------------===//
-
-// static const Comdat *getWasmComdat(const GlobalValue *GV) {
-//   const Comdat *C = GV->getComdat();
-//   if (!C)
-//     return nullptr;
-
-//   if (C->getSelectionKind() != Comdat::Any)
-//     report_fatal_error("WebAssembly COMDATs only support "
-//                        "SelectionKind::Any, '" + C->getName() + "' cannot be "
-//                        "lowered.");
-
-//   return C;
-// }
-
-// static unsigned getWasmSectionFlags(SectionKind K) {
-//   unsigned Flags = 0;
-
-//   if (K.isThreadLocal())
-//     Flags |= wasm::WASM_SEG_FLAG_TLS;
-
-//   if (K.isMergeableCString())
-//     Flags |= wasm::WASM_SEG_FLAG_STRINGS;
-
-//   // TODO(sbc): Add suport for K.isMergeableConst()
-
-//   return Flags;
-// }
-
-// MCSection *TargetLoweringObjectFileWasm::getExplicitSectionGlobal(
-//     const GlobalObject *GO, SectionKind Kind, const TargetMachine &TM) const {
-//   // We don't support explict section names for functions in the wasm object
-//   // format.  Each function has to be in its own unique section.
-//   if (isa<Function>(GO)) {
-//     return SelectSectionForGlobal(GO, Kind, TM);
-//   }
-
-//   StringRef Name = GO->getSection();
-
-//   // Certain data sections we treat as named custom sections rather than
-//   // segments within the data section.
-//   // This could be avoided if all data segements (the wasm sense) were
-//   // represented as their own sections (in the llvm sense).
-//   // TODO(sbc): https://github.com/WebAssembly/tool-conventions/issues/138
-//   if (Name == ".llvmcmd" || Name == ".llvmbc")
-//     Kind = SectionKind::getMetadata();
-
-//   StringRef Group = "";
-//   if (const Comdat *C = getWasmComdat(GO)) {
-//     Group = C->getName();
-//   }
-
-//   unsigned Flags = getWasmSectionFlags(Kind);
-//   MCSectionWasm *Section = getContext().getWasmSection(
-//       Name, Kind, Flags, Group, MCContext::GenericSectionID);
-
-//   return Section;
-// }
-
-// static MCSectionWasm *selectWasmSectionForGlobal(
-//     MCContext &Ctx, const GlobalObject *GO, SectionKind Kind, Mangler &Mang,
-//     const TargetMachine &TM, bool EmitUniqueSection, unsigned *NextUniqueID) {
-//   StringRef Group = "";
-//   if (const Comdat *C = getWasmComdat(GO)) {
-//     Group = C->getName();
-//   }
-
-//   bool UniqueSectionNames = TM.getUniqueSectionNames();
-//   SmallString<128> Name = getSectionPrefixForGlobal(Kind);
-
-//   if (const auto *F = dyn_cast<Function>(GO)) {
-//     const auto &OptionalPrefix = F->getSectionPrefix();
-//     if (OptionalPrefix)
-//       raw_svector_ostream(Name) << '.' << *OptionalPrefix;
-//   }
-
-//   if (EmitUniqueSection && UniqueSectionNames) {
-//     Name.push_back('.');
-//     TM.getNameWithPrefix(Name, GO, Mang, true);
-//   }
-//   unsigned UniqueID = MCContext::GenericSectionID;
-//   if (EmitUniqueSection && !UniqueSectionNames) {
-//     UniqueID = *NextUniqueID;
-//     (*NextUniqueID)++;
-//   }
-
-//   unsigned Flags = getWasmSectionFlags(Kind);
-//   return Ctx.getWasmSection(Name, Kind, Flags, Group, UniqueID);
-// }
-
-// MCSection *TargetLoweringObjectFileWasm::SelectSectionForGlobal(
-//     const GlobalObject *GO, SectionKind Kind, const TargetMachine &TM) const {
-
-//   if (Kind.isCommon())
-//     report_fatal_error("mergable sections not supported yet on wasm");
-
-//   // If we have -ffunction-section or -fdata-section then we should emit the
-//   // global value to a uniqued section specifically for it.
-//   bool EmitUniqueSection = false;
-//   if (Kind.isText())
-//     EmitUniqueSection = TM.getFunctionSections();
-//   else
-//     EmitUniqueSection = TM.getDataSections();
-//   EmitUniqueSection |= GO->hasComdat();
-
-//   return selectWasmSectionForGlobal(getContext(), GO, Kind, getMangler(), TM,
-//                                     EmitUniqueSection, &NextUniqueID);
-// }
-
-// bool TargetLoweringObjectFileWasm::shouldPutJumpTableInFunctionSection(
-//     bool UsesLabelDifference, const Function &F) const {
-//   // We can always create relative relocations, so use another section
-//   // that can be marked non-executable.
-//   return false;
-// }
-
-// const MCExpr *TargetLoweringObjectFileWasm::lowerRelativeReference(
-//     const GlobalValue *LHS, const GlobalValue *RHS,
-//     const TargetMachine &TM) const {
-//   // We may only use a PLT-relative relocation to refer to unnamed_addr
-//   // functions.
-//   if (!LHS->hasGlobalUnnamedAddr() || !LHS->getValueType()->isFunctionTy())
-//     return nullptr;
-
-//   // Basic correctness checks.
-//   if (LHS->getType()->getPointerAddressSpace() != 0 ||
-//       RHS->getType()->getPointerAddressSpace() != 0 || LHS->isThreadLocal() ||
-//       RHS->isThreadLocal())
-//     return nullptr;
-
-//   return MCBinaryExpr::createSub(
-//       MCSymbolRefExpr::create(TM.getSymbol(LHS), MCSymbolRefExpr::VK_None,
-//                               getContext()),
-//       MCSymbolRefExpr::create(TM.getSymbol(RHS), getContext()), getContext());
-// }
-
-// void TargetLoweringObjectFileWasm::InitializeWasm() {
-//   StaticCtorSection =
-//       getContext().getWasmSection(".init_array", SectionKind::getData());
-
-//   // We don't use PersonalityEncoding and LSDAEncoding because we don't emit
-//   // .cfi directives. We use TTypeEncoding to encode typeinfo global variables.
-//   TTypeEncoding = dwarf::DW_EH_PE_absptr;
-// }
-
-// MCSection *TargetLoweringObjectFileWasm::getStaticCtorSection(
-//     unsigned Priority, const MCSymbol *KeySym) const {
-//   return Priority == UINT16_MAX ?
-//          StaticCtorSection :
-//          getContext().getWasmSection(".init_array." + utostr(Priority),
-//                                      SectionKind::getData());
-// }
-
-// MCSection *TargetLoweringObjectFileWasm::getStaticDtorSection(
-//     unsigned Priority, const MCSymbol *KeySym) const {
-//   report_fatal_error("@llvm.global_dtors should have been lowered already");
-// }
-
-// //===----------------------------------------------------------------------===//
-// //                                  XCOFF
-// //===----------------------------------------------------------------------===//
-// bool TargetLoweringObjectFileXCOFF::ShouldEmitEHBlock(
-//     const MachineFunction *MF) {
-//   if (!MF->getLandingPads().empty())
-//     return true;
-
-//   const Function &F = MF->getFunction();
-//   if (!F.hasPersonalityFn() || !F.needsUnwindTableEntry())
-//     return false;
-
-//   const GlobalValue *Per =
-//       dyn_cast<GlobalValue>(F.getPersonalityFn()->stripPointerCasts());
-//   assert(Per && "Personality routine is not a GlobalValue type.");
-//   if (isNoOpWithoutInvoke(classifyEHPersonality(Per)))
-//     return false;
-
-//   return true;
-// }
-
-// bool TargetLoweringObjectFileXCOFF::ShouldSetSSPCanaryBitInTB(
-//     const MachineFunction *MF) {
-//   const Function &F = MF->getFunction();
-//   if (!F.hasStackProtectorFnAttr())
-//     return false;
-//   // FIXME: check presence of canary word
-//   // There are cases that the stack protectors are not really inserted even if
-//   // the attributes are on.
-//   return true;
-// }
-
-// MCSymbol *
-// TargetLoweringObjectFileXCOFF::getEHInfoTableSymbol(const MachineFunction *MF) {
-//   return MF->getMMI().getContext().getOrCreateSymbol(
-//       "__ehinfo." + Twine(MF->getFunctionNumber()));
-// }
-
-// MCSymbol *
-// TargetLoweringObjectFileXCOFF::getTargetSymbol(const GlobalValue *GV,
-//                                                const TargetMachine &TM) const {
-//   // We always use a qualname symbol for a GV that represents
-//   // a declaration, a function descriptor, or a common symbol.
-//   // If a GV represents a GlobalVariable and -fdata-sections is enabled, we
-//   // also return a qualname so that a label symbol could be avoided.
-//   // It is inherently ambiguous when the GO represents the address of a
-//   // function, as the GO could either represent a function descriptor or a
-//   // function entry point. We choose to always return a function descriptor
-//   // here.
-//   if (const GlobalObject *GO = dyn_cast<GlobalObject>(GV)) {
-//     if (GO->isDeclarationForLinker())
-//       return cast<MCSectionXCOFF>(getSectionForExternalReference(GO, TM))
-//           ->getQualNameSymbol();
-
-//     if (const GlobalVariable *GVar = dyn_cast<GlobalVariable>(GV))
-//       if (GVar->hasAttribute("toc-data"))
-//         return cast<MCSectionXCOFF>(
-//                    SectionForGlobal(GVar, SectionKind::getData(), TM))
-//             ->getQualNameSymbol();
-
-//     SectionKind GOKind = getKindForGlobal(GO, TM);
-//     if (GOKind.isText())
-//       return cast<MCSectionXCOFF>(
-//                  getSectionForFunctionDescriptor(cast<Function>(GO), TM))
-//           ->getQualNameSymbol();
-//     if ((TM.getDataSections() && !GO->hasSection()) || GO->hasCommonLinkage() ||
-//         GOKind.isBSSLocal() || GOKind.isThreadBSSLocal())
-//       return cast<MCSectionXCOFF>(SectionForGlobal(GO, GOKind, TM))
-//           ->getQualNameSymbol();
-//   }
-
-//   // For all other cases, fall back to getSymbol to return the unqualified name.
-//   return nullptr;
-// }
-
-// MCSection *TargetLoweringObjectFileXCOFF::getExplicitSectionGlobal(
-//     const GlobalObject *GO, SectionKind Kind, const TargetMachine &TM) const {
-//   if (!GO->hasSection())
-//     report_fatal_error("#pragma clang section is not yet supported");
-
-//   StringRef SectionName = GO->getSection();
-
-//   // Handle the XCOFF::TD case first, then deal with the rest.
-//   if (const GlobalVariable *GVar = dyn_cast<GlobalVariable>(GO))
-//     if (GVar->hasAttribute("toc-data"))
-//       return getContext().getXCOFFSection(
-//           SectionName, Kind,
-//           XCOFF::CsectProperties(/*MappingClass*/ XCOFF::XMC_TD, XCOFF::XTY_SD),
-//           /* MultiSymbolsAllowed*/ true);
-
-//   XCOFF::StorageMappingClass MappingClass;
-//   if (Kind.isText())
-//     MappingClass = XCOFF::XMC_PR;
-//   else if (Kind.isData() || Kind.isReadOnlyWithRel() || Kind.isBSS())
-//     MappingClass = XCOFF::XMC_RW;
-//   else if (Kind.isReadOnly())
-//     MappingClass = XCOFF::XMC_RO;
-//   else
-//     report_fatal_error("XCOFF other section types not yet implemented.");
-
-//   return getContext().getXCOFFSection(
-//       SectionName, Kind, XCOFF::CsectProperties(MappingClass, XCOFF::XTY_SD),
-//       /* MultiSymbolsAllowed*/ true);
-// }
-
-// MCSection *TargetLoweringObjectFileXCOFF::getSectionForExternalReference(
-//     const GlobalObject *GO, const TargetMachine &TM) const {
-//   assert(GO->isDeclarationForLinker() &&
-//          "Tried to get ER section for a defined global.");
-
-//   SmallString<128> Name;
-//   getNameWithPrefix(Name, GO, TM);
-
-//   XCOFF::StorageMappingClass SMC =
-//       isa<Function>(GO) ? XCOFF::XMC_DS : XCOFF::XMC_UA;
-//   if (GO->isThreadLocal())
-//     SMC = XCOFF::XMC_UL;
-
-//   if (const GlobalVariable *GVar = dyn_cast<GlobalVariable>(GO))
-//     if (GVar->hasAttribute("toc-data"))
-//       SMC = XCOFF::XMC_TD;
-
-//   // Externals go into a csect of type ER.
-//   return getContext().getXCOFFSection(
-//       Name, SectionKind::getMetadata(),
-//       XCOFF::CsectProperties(SMC, XCOFF::XTY_ER));
-// }
-
-// MCSection *TargetLoweringObjectFileXCOFF::SelectSectionForGlobal(
-//     const GlobalObject *GO, SectionKind Kind, const TargetMachine &TM) const {
-//   // Handle the XCOFF::TD case first, then deal with the rest.
-//   if (const GlobalVariable *GVar = dyn_cast<GlobalVariable>(GO))
-//     if (GVar->hasAttribute("toc-data")) {
-//       SmallString<128> Name;
-//       getNameWithPrefix(Name, GO, TM);
-//       return getContext().getXCOFFSection(
-//           Name, Kind, XCOFF::CsectProperties(XCOFF::XMC_TD, XCOFF::XTY_SD),
-//           /* MultiSymbolsAllowed*/ true);
-//     }
-
-//   // Common symbols go into a csect with matching name which will get mapped
-//   // into the .bss section.
-//   // Zero-initialized local TLS symbols go into a csect with matching name which
-//   // will get mapped into the .tbss section.
-//   if (Kind.isBSSLocal() || GO->hasCommonLinkage() || Kind.isThreadBSSLocal()) {
-//     SmallString<128> Name;
-//     getNameWithPrefix(Name, GO, TM);
-//     XCOFF::StorageMappingClass SMC = Kind.isBSSLocal() ? XCOFF::XMC_BS
-//                                      : Kind.isCommon() ? XCOFF::XMC_RW
-//                                                        : XCOFF::XMC_UL;
-//     return getContext().getXCOFFSection(
-//         Name, Kind, XCOFF::CsectProperties(SMC, XCOFF::XTY_CM));
-//   }
-
-//   if (Kind.isMergeableCString()) {
-//     Align Alignment = GO->getParent()->getDataLayout().getPreferredAlign(
-//         cast<GlobalVariable>(GO));
-
-//     unsigned EntrySize = getEntrySizeForKind(Kind);
-//     std::string SizeSpec = ".rodata.str" + utostr(EntrySize) + ".";
-//     SmallString<128> Name;
-//     Name = SizeSpec + utostr(Alignment.value());
-
-//     if (TM.getDataSections())
-//       getNameWithPrefix(Name, GO, TM);
-
-//     return getContext().getXCOFFSection(
-//         Name, Kind, XCOFF::CsectProperties(XCOFF::XMC_RO, XCOFF::XTY_SD),
-//         /* MultiSymbolsAllowed*/ !TM.getDataSections());
-//   }
-
-//   if (Kind.isText()) {
-//     if (TM.getFunctionSections()) {
-//       return cast<MCSymbolXCOFF>(getFunctionEntryPointSymbol(GO, TM))
-//           ->getRepresentedCsect();
-//     }
-//     return TextSection;
-//   }
-
-//   // TODO: We may put Kind.isReadOnlyWithRel() under option control, because
-//   // user may want to have read-only data with relocations placed into a
-//   // read-only section by the compiler.
-//   // For BSS kind, zero initialized data must be emitted to the .data section
-//   // because external linkage control sections that get mapped to the .bss
-//   // section will be linked as tentative defintions, which is only appropriate
-//   // for SectionKind::Common.
-//   if (Kind.isData() || Kind.isReadOnlyWithRel() || Kind.isBSS()) {
-//     if (TM.getDataSections()) {
-//       SmallString<128> Name;
-//       getNameWithPrefix(Name, GO, TM);
-//       return getContext().getXCOFFSection(
-//           Name, SectionKind::getData(),
-//           XCOFF::CsectProperties(XCOFF::XMC_RW, XCOFF::XTY_SD));
-//     }
-//     return DataSection;
-//   }
-
-//   if (Kind.isReadOnly()) {
-//     if (TM.getDataSections()) {
-//       SmallString<128> Name;
-//       getNameWithPrefix(Name, GO, TM);
-//       return getContext().getXCOFFSection(
-//           Name, SectionKind::getReadOnly(),
-//           XCOFF::CsectProperties(XCOFF::XMC_RO, XCOFF::XTY_SD));
-//     }
-//     return ReadOnlySection;
-//   }
-
-//   // External/weak TLS data and initialized local TLS data are not eligible
-//   // to be put into common csect. If data sections are enabled, thread
-//   // data are emitted into separate sections. Otherwise, thread data
-//   // are emitted into the .tdata section.
-//   if (Kind.isThreadLocal()) {
-//     if (TM.getDataSections()) {
-//       SmallString<128> Name;
-//       getNameWithPrefix(Name, GO, TM);
-//       return getContext().getXCOFFSection(
-//           Name, Kind, XCOFF::CsectProperties(XCOFF::XMC_TL, XCOFF::XTY_SD));
-//     }
-//     return TLSDataSection;
-//   }
-
-//   report_fatal_error("XCOFF other section types not yet implemented.");
-// }
-
-// MCSection *TargetLoweringObjectFileXCOFF::getSectionForJumpTable(
-//     const Function &F, const TargetMachine &TM) const {
-//   assert (!F.getComdat() && "Comdat not supported on XCOFF.");
-
-//   if (!TM.getFunctionSections())
-//     return ReadOnlySection;
-
-//   // If the function can be removed, produce a unique section so that
-//   // the table doesn't prevent the removal.
-//   SmallString<128> NameStr(".rodata.jmp..");
-//   getNameWithPrefix(NameStr, &F, TM);
-//   return getContext().getXCOFFSection(
-//       NameStr, SectionKind::getReadOnly(),
-//       XCOFF::CsectProperties(XCOFF::XMC_RO, XCOFF::XTY_SD));
-// }
-
-// bool TargetLoweringObjectFileXCOFF::shouldPutJumpTableInFunctionSection(
-//     bool UsesLabelDifference, const Function &F) const {
-//   return false;
-// }
-
-// /// Given a mergeable constant with the specified size and relocation
-// /// information, return a section that it should be placed in.
-// MCSection *TargetLoweringObjectFileXCOFF::getSectionForConstant(
-//     const DataLayout &DL, SectionKind Kind, const Constant *C,
-//     Align &Alignment) const {
-//   // TODO: Enable emiting constant pool to unique sections when we support it.
-//   if (Alignment > Align(16))
-//     report_fatal_error("Alignments greater than 16 not yet supported.");
-
-//   if (Alignment == Align(8)) {
-//     assert(ReadOnly8Section && "Section should always be initialized.");
-//     return ReadOnly8Section;
-//   }
-
-//   if (Alignment == Align(16)) {
-//     assert(ReadOnly16Section && "Section should always be initialized.");
-//     return ReadOnly16Section;
-//   }
-
-//   return ReadOnlySection;
-// }
-
-// void TargetLoweringObjectFileXCOFF::Initialize(MCContext &Ctx,
-//                                                const TargetMachine &TgtM) {
-//   TargetLoweringObjectFile::Initialize(Ctx, TgtM);
-//   TTypeEncoding =
-//       dwarf::DW_EH_PE_indirect | dwarf::DW_EH_PE_datarel |
-//       (TgtM.getTargetTriple().isArch32Bit() ? dwarf::DW_EH_PE_sdata4
-//                                             : dwarf::DW_EH_PE_sdata8);
-//   PersonalityEncoding = 0;
-//   LSDAEncoding = 0;
-//   CallSiteEncoding = dwarf::DW_EH_PE_udata4;
-
-//   // AIX debug for thread local location is not ready. And for integrated as
-//   // mode, the relocatable address for the thread local variable will cause
-//   // linker error. So disable the location attribute generation for thread local
-//   // variables for now.
-//   // FIXME: when TLS debug on AIX is ready, remove this setting.
-//   SupportDebugThreadLocalLocation = false;
-// }
-
-// MCSection *TargetLoweringObjectFileXCOFF::getStaticCtorSection(
-// 	unsigned Priority, const MCSymbol *KeySym) const {
-//   report_fatal_error("no static constructor section on AIX");
-// }
-
-// MCSection *TargetLoweringObjectFileXCOFF::getStaticDtorSection(
-// 	unsigned Priority, const MCSymbol *KeySym) const {
-//   report_fatal_error("no static destructor section on AIX");
-// }
-
-// const MCExpr *TargetLoweringObjectFileXCOFF::lowerRelativeReference(
-//     const GlobalValue *LHS, const GlobalValue *RHS,
-//     const TargetMachine &TM) const {
-//   /* Not implemented yet, but don't crash, return nullptr. */
-//   return nullptr;
-// }
-
-// XCOFF::StorageClass
-// TargetLoweringObjectFileXCOFF::getStorageClassForGlobal(const GlobalValue *GV) {
-//   assert(!isa<GlobalIFunc>(GV) && "GlobalIFunc is not supported on AIX.");
-
-//   switch (GV->getLinkage()) {
-//   case GlobalValue::InternalLinkage:
-//   case GlobalValue::PrivateLinkage:
-//     return XCOFF::C_HIDEXT;
-//   case GlobalValue::ExternalLinkage:
-//   case GlobalValue::CommonLinkage:
-//   case GlobalValue::AvailableExternallyLinkage:
-//     return XCOFF::C_EXT;
-//   case GlobalValue::ExternalWeakLinkage:
-//   case GlobalValue::LinkOnceAnyLinkage:
-//   case GlobalValue::LinkOnceODRLinkage:
-//   case GlobalValue::WeakAnyLinkage:
-//   case GlobalValue::WeakODRLinkage:
-//     return XCOFF::C_WEAKEXT;
-//   case GlobalValue::AppendingLinkage:
-//     report_fatal_error(
-//         "There is no mapping that implements AppendingLinkage for XCOFF.");
-//   }
-//   llvm_unreachable("Unknown linkage type!");
-// }
-
-// MCSymbol *TargetLoweringObjectFileXCOFF::getFunctionEntryPointSymbol(
-//     const GlobalValue *Func, const TargetMachine &TM) const {
-//   assert((isa<Function>(Func) ||
-//           (isa<GlobalAlias>(Func) &&
-//            isa_and_nonnull<Function>(
-//                cast<GlobalAlias>(Func)->getAliaseeObject()))) &&
-//          "Func must be a function or an alias which has a function as base "
-//          "object.");
-
-//   SmallString<128> NameStr;
-//   NameStr.push_back('.');
-//   getNameWithPrefix(NameStr, Func, TM);
-
-//   // When -function-sections is enabled and explicit section is not specified,
-//   // it's not necessary to emit function entry point label any more. We will use
-//   // function entry point csect instead. And for function delcarations, the
-//   // undefined symbols gets treated as csect with XTY_ER property.
-//   if (((TM.getFunctionSections() && !Func->hasSection()) ||
-//        Func->isDeclaration()) &&
-//       isa<Function>(Func)) {
-//     return getContext()
-//         .getXCOFFSection(
-//             NameStr, SectionKind::getText(),
-//             XCOFF::CsectProperties(XCOFF::XMC_PR, Func->isDeclaration()
-//                                                       ? XCOFF::XTY_ER
-//                                                       : XCOFF::XTY_SD))
-//         ->getQualNameSymbol();
-//   }
-
-//   return getContext().getOrCreateSymbol(NameStr);
-// }
-
-// MCSection *TargetLoweringObjectFileXCOFF::getSectionForFunctionDescriptor(
-//     const Function *F, const TargetMachine &TM) const {
-//   SmallString<128> NameStr;
-//   getNameWithPrefix(NameStr, F, TM);
-//   return getContext().getXCOFFSection(
-//       NameStr, SectionKind::getData(),
-//       XCOFF::CsectProperties(XCOFF::XMC_DS, XCOFF::XTY_SD));
-// }
-
-// MCSection *TargetLoweringObjectFileXCOFF::getSectionForTOCEntry(
-//     const MCSymbol *Sym, const TargetMachine &TM) const {
-//   // Use TE storage-mapping class when large code model is enabled so that
-//   // the chance of needing -bbigtoc is decreased.
-//   return getContext().getXCOFFSection(
-//       cast<MCSymbolXCOFF>(Sym)->getSymbolTableName(), SectionKind::getData(),
-//       XCOFF::CsectProperties(
-//           TM.getCodeModel() == CodeModel::Large ? XCOFF::XMC_TE : XCOFF::XMC_TC,
-//           XCOFF::XTY_SD));
-// }
-
-// MCSection *TargetLoweringObjectFileXCOFF::getSectionForLSDA(
-//     const Function &F, const MCSymbol &FnSym, const TargetMachine &TM) const {
-//   auto *LSDA = cast<MCSectionXCOFF>(LSDASection);
-//   if (TM.getFunctionSections()) {
-//     // If option -ffunction-sections is on, append the function name to the
-//     // name of the LSDA csect so that each function has its own LSDA csect.
-//     // This helps the linker to garbage-collect EH info of unused functions.
-//     SmallString<128> NameStr = LSDA->getName();
-//     raw_svector_ostream(NameStr) << '.' << F.getName();
-//     LSDA = getContext().getXCOFFSection(NameStr, LSDA->getKind(),
-//                                         LSDA->getCsectProp());
-//   }
-//   return LSDA;
-// }
-// //===----------------------------------------------------------------------===//
-// //                                  GOFF
-// //===----------------------------------------------------------------------===//
-// TargetLoweringObjectFileGOFF::TargetLoweringObjectFileGOFF() = default;
-
-// MCSection *TargetLoweringObjectFileGOFF::getExplicitSectionGlobal(
-//     const GlobalObject *GO, SectionKind Kind, const TargetMachine &TM) const {
-//   return SelectSectionForGlobal(GO, Kind, TM);
-// }
-
-// MCSection *TargetLoweringObjectFileGOFF::SelectSectionForGlobal(
-//     const GlobalObject *GO, SectionKind Kind, const TargetMachine &TM) const {
-//   auto *Symbol = TM.getSymbol(GO);
-//   if (Kind.isBSS())
-//     return getContext().getGOFFSection(Symbol->getName(), SectionKind::getBSS(),
-//                                        nullptr, nullptr);
-
-//   return getContext().getObjectFileInfo()->getTextSection();
-// }
+//===----------------------------------------------------------------------===//
+//                                  Wasm
+//===----------------------------------------------------------------------===//
+
+static const Comdat *getWasmComdat(const GlobalValue *GV) {
+  const Comdat *C = GV->getComdat();
+  if (!C)
+    return nullptr;
+
+  if (C->getSelectionKind() != Comdat::Any)
+    report_fatal_error("WebAssembly COMDATs only support "
+                       "SelectionKind::Any, '" + C->getName() + "' cannot be "
+                       "lowered.");
+
+  return C;
+}
+
+static unsigned getWasmSectionFlags(SectionKind K) {
+  unsigned Flags = 0;
+
+  if (K.isThreadLocal())
+    Flags |= wasm::WASM_SEG_FLAG_TLS;
+
+  if (K.isMergeableCString())
+    Flags |= wasm::WASM_SEG_FLAG_STRINGS;
+
+  // TODO(sbc): Add suport for K.isMergeableConst()
+
+  return Flags;
+}
+
+MCSection *TargetLoweringObjectFileWasm::getExplicitSectionGlobal(
+    const GlobalObject *GO, SectionKind Kind, const TargetMachine &TM) const {
+  // We don't support explict section names for functions in the wasm object
+  // format.  Each function has to be in its own unique section.
+  if (isa<Function>(GO)) {
+    return SelectSectionForGlobal(GO, Kind, TM);
+  }
+
+  StringRef Name = GO->getSection();
+
+  // Certain data sections we treat as named custom sections rather than
+  // segments within the data section.
+  // This could be avoided if all data segements (the wasm sense) were
+  // represented as their own sections (in the llvm sense).
+  // TODO(sbc): https://github.com/WebAssembly/tool-conventions/issues/138
+  if (Name == ".llvmcmd" || Name == ".llvmbc")
+    Kind = SectionKind::getMetadata();
+
+  StringRef Group = "";
+  if (const Comdat *C = getWasmComdat(GO)) {
+    Group = C->getName();
+  }
+
+  unsigned Flags = getWasmSectionFlags(Kind);
+  MCSectionWasm *Section = getContext().getWasmSection(
+      Name, Kind, Flags, Group, MCContext::GenericSectionID);
+
+  return Section;
+}
+
+static MCSectionWasm *selectWasmSectionForGlobal(
+    MCContext &Ctx, const GlobalObject *GO, SectionKind Kind, Mangler &Mang,
+    const TargetMachine &TM, bool EmitUniqueSection, unsigned *NextUniqueID) {
+  StringRef Group = "";
+  if (const Comdat *C = getWasmComdat(GO)) {
+    Group = C->getName();
+  }
+
+  bool UniqueSectionNames = TM.getUniqueSectionNames();
+  SmallString<128> Name = getSectionPrefixForGlobal(Kind, /*IsLarge=*/false);
+
+  if (const auto *F = dyn_cast<Function>(GO)) {
+    const auto &OptionalPrefix = F->getSectionPrefix();
+    if (OptionalPrefix)
+      raw_svector_ostream(Name) << '.' << *OptionalPrefix;
+  }
+
+  if (EmitUniqueSection && UniqueSectionNames) {
+    Name.push_back('.');
+    TM.getNameWithPrefix(Name, GO, Mang, true);
+  }
+  unsigned UniqueID = MCContext::GenericSectionID;
+  if (EmitUniqueSection && !UniqueSectionNames) {
+    UniqueID = *NextUniqueID;
+    (*NextUniqueID)++;
+  }
+
+  unsigned Flags = getWasmSectionFlags(Kind);
+  return Ctx.getWasmSection(Name, Kind, Flags, Group, UniqueID);
+}
+
+MCSection *TargetLoweringObjectFileWasm::SelectSectionForGlobal(
+    const GlobalObject *GO, SectionKind Kind, const TargetMachine &TM) const {
+
+  if (Kind.isCommon())
+    report_fatal_error("mergable sections not supported yet on wasm");
+
+  // If we have -ffunction-section or -fdata-section then we should emit the
+  // global value to a uniqued section specifically for it.
+  bool EmitUniqueSection = false;
+  if (Kind.isText())
+    EmitUniqueSection = TM.getFunctionSections();
+  else
+    EmitUniqueSection = TM.getDataSections();
+  EmitUniqueSection |= GO->hasComdat();
+
+  return selectWasmSectionForGlobal(getContext(), GO, Kind, getMangler(), TM,
+                                    EmitUniqueSection, &NextUniqueID);
+}
+
+bool TargetLoweringObjectFileWasm::shouldPutJumpTableInFunctionSection(
+    bool UsesLabelDifference, const Function &F) const {
+  // We can always create relative relocations, so use another section
+  // that can be marked non-executable.
+  return false;
+}
+
+const MCExpr *TargetLoweringObjectFileWasm::lowerRelativeReference(
+    const GlobalValue *LHS, const GlobalValue *RHS,
+    const TargetMachine &TM) const {
+  // We may only use a PLT-relative relocation to refer to unnamed_addr
+  // functions.
+  if (!LHS->hasGlobalUnnamedAddr() || !LHS->getValueType()->isFunctionTy())
+    return nullptr;
+
+  // Basic correctness checks.
+  if (LHS->getType()->getPointerAddressSpace() != 0 ||
+      RHS->getType()->getPointerAddressSpace() != 0 || LHS->isThreadLocal() ||
+      RHS->isThreadLocal())
+    return nullptr;
+
+  return MCBinaryExpr::createSub(
+      MCSymbolRefExpr::create(TM.getSymbol(LHS), MCSymbolRefExpr::VK_None,
+                              getContext()),
+      MCSymbolRefExpr::create(TM.getSymbol(RHS), getContext()), getContext());
+}
+
+void TargetLoweringObjectFileWasm::InitializeWasm() {
+  StaticCtorSection =
+      getContext().getWasmSection(".init_array", SectionKind::getData());
+
+  // We don't use PersonalityEncoding and LSDAEncoding because we don't emit
+  // .cfi directives. We use TTypeEncoding to encode typeinfo global variables.
+  TTypeEncoding = dwarf::DW_EH_PE_absptr;
+}
+
+MCSection *TargetLoweringObjectFileWasm::getStaticCtorSection(
+    unsigned Priority, const MCSymbol *KeySym) const {
+  return Priority == UINT16_MAX ?
+         StaticCtorSection :
+         getContext().getWasmSection(".init_array." + utostr(Priority),
+                                     SectionKind::getData());
+}
+
+MCSection *TargetLoweringObjectFileWasm::getStaticDtorSection(
+    unsigned Priority, const MCSymbol *KeySym) const {
+  report_fatal_error("@llvm.global_dtors should have been lowered already");
+}
+
+//===----------------------------------------------------------------------===//
+//                                  XCOFF
+//===----------------------------------------------------------------------===//
+bool TargetLoweringObjectFileXCOFF::ShouldEmitEHBlock(
+    const MachineFunction *MF) {
+  if (!MF->getLandingPads().empty())
+    return true;
+
+  const Function &F = MF->getFunction();
+  if (!F.hasPersonalityFn() || !F.needsUnwindTableEntry())
+    return false;
+
+  const GlobalValue *Per =
+      dyn_cast<GlobalValue>(F.getPersonalityFn()->stripPointerCasts());
+  assert(Per && "Personality routine is not a GlobalValue type.");
+  if (isNoOpWithoutInvoke(classifyEHPersonality(Per)))
+    return false;
+
+  return true;
+}
+
+bool TargetLoweringObjectFileXCOFF::ShouldSetSSPCanaryBitInTB(
+    const MachineFunction *MF) {
+  const Function &F = MF->getFunction();
+  if (!F.hasStackProtectorFnAttr())
+    return false;
+  // FIXME: check presence of canary word
+  // There are cases that the stack protectors are not really inserted even if
+  // the attributes are on.
+  return true;
+}
+
+MCSymbol *
+TargetLoweringObjectFileXCOFF::getEHInfoTableSymbol(const MachineFunction *MF) {
+  return MF->getMMI().getContext().getOrCreateSymbol(
+      "__ehinfo." + Twine(MF->getFunctionNumber()));
+}
+
+MCSymbol *
+TargetLoweringObjectFileXCOFF::getTargetSymbol(const GlobalValue *GV,
+                                               const TargetMachine &TM) const {
+  // We always use a qualname symbol for a GV that represents
+  // a declaration, a function descriptor, or a common symbol.
+  // If a GV represents a GlobalVariable and -fdata-sections is enabled, we
+  // also return a qualname so that a label symbol could be avoided.
+  // It is inherently ambiguous when the GO represents the address of a
+  // function, as the GO could either represent a function descriptor or a
+  // function entry point. We choose to always return a function descriptor
+  // here.
+  if (const GlobalObject *GO = dyn_cast<GlobalObject>(GV)) {
+    if (GO->isDeclarationForLinker())
+      return cast<MCSectionXCOFF>(getSectionForExternalReference(GO, TM))
+          ->getQualNameSymbol();
+
+    if (const GlobalVariable *GVar = dyn_cast<GlobalVariable>(GV))
+      if (GVar->hasAttribute("toc-data"))
+        return cast<MCSectionXCOFF>(
+                   SectionForGlobal(GVar, SectionKind::getData(), TM))
+            ->getQualNameSymbol();
+
+    SectionKind GOKind = getKindForGlobal(GO, TM);
+    if (GOKind.isText())
+      return cast<MCSectionXCOFF>(
+                 getSectionForFunctionDescriptor(cast<Function>(GO), TM))
+          ->getQualNameSymbol();
+    if ((TM.getDataSections() && !GO->hasSection()) || GO->hasCommonLinkage() ||
+        GOKind.isBSSLocal() || GOKind.isThreadBSSLocal())
+      return cast<MCSectionXCOFF>(SectionForGlobal(GO, GOKind, TM))
+          ->getQualNameSymbol();
+  }
+
+  // For all other cases, fall back to getSymbol to return the unqualified name.
+  return nullptr;
+}
+
+MCSection *TargetLoweringObjectFileXCOFF::getExplicitSectionGlobal(
+    const GlobalObject *GO, SectionKind Kind, const TargetMachine &TM) const {
+  if (!GO->hasSection())
+    report_fatal_error("#pragma clang section is not yet supported");
+
+  StringRef SectionName = GO->getSection();
+
+  // Handle the XCOFF::TD case first, then deal with the rest.
+  if (const GlobalVariable *GVar = dyn_cast<GlobalVariable>(GO))
+    if (GVar->hasAttribute("toc-data"))
+      return getContext().getXCOFFSection(
+          SectionName, Kind,
+          XCOFF::CsectProperties(/*MappingClass*/ XCOFF::XMC_TD, XCOFF::XTY_SD),
+          /* MultiSymbolsAllowed*/ true);
+
+  XCOFF::StorageMappingClass MappingClass;
+  if (Kind.isText())
+    MappingClass = XCOFF::XMC_PR;
+  else if (Kind.isData() || Kind.isBSS())
+    MappingClass = XCOFF::XMC_RW;
+  else if (Kind.isReadOnlyWithRel())
+    MappingClass =
+        TM.Options.XCOFFReadOnlyPointers ? XCOFF::XMC_RO : XCOFF::XMC_RW;
+  else if (Kind.isReadOnly())
+    MappingClass = XCOFF::XMC_RO;
+  else
+    report_fatal_error("XCOFF other section types not yet implemented.");
+
+  return getContext().getXCOFFSection(
+      SectionName, Kind, XCOFF::CsectProperties(MappingClass, XCOFF::XTY_SD),
+      /* MultiSymbolsAllowed*/ true);
+}
+
+MCSection *TargetLoweringObjectFileXCOFF::getSectionForExternalReference(
+    const GlobalObject *GO, const TargetMachine &TM) const {
+  assert(GO->isDeclarationForLinker() &&
+         "Tried to get ER section for a defined global.");
+
+  SmallString<128> Name;
+  getNameWithPrefix(Name, GO, TM);
+
+  XCOFF::StorageMappingClass SMC =
+      isa<Function>(GO) ? XCOFF::XMC_DS : XCOFF::XMC_UA;
+  if (GO->isThreadLocal())
+    SMC = XCOFF::XMC_UL;
+
+  if (const GlobalVariable *GVar = dyn_cast<GlobalVariable>(GO))
+    if (GVar->hasAttribute("toc-data"))
+      SMC = XCOFF::XMC_TD;
+
+  // Externals go into a csect of type ER.
+  return getContext().getXCOFFSection(
+      Name, SectionKind::getMetadata(),
+      XCOFF::CsectProperties(SMC, XCOFF::XTY_ER));
+}
+
+MCSection *TargetLoweringObjectFileXCOFF::SelectSectionForGlobal(
+    const GlobalObject *GO, SectionKind Kind, const TargetMachine &TM) const {
+  // Handle the XCOFF::TD case first, then deal with the rest.
+  if (const GlobalVariable *GVar = dyn_cast<GlobalVariable>(GO))
+    if (GVar->hasAttribute("toc-data")) {
+      SmallString<128> Name;
+      getNameWithPrefix(Name, GO, TM);
+      return getContext().getXCOFFSection(
+          Name, Kind, XCOFF::CsectProperties(XCOFF::XMC_TD, XCOFF::XTY_SD),
+          /* MultiSymbolsAllowed*/ true);
+    }
+
+  // Common symbols go into a csect with matching name which will get mapped
+  // into the .bss section.
+  // Zero-initialized local TLS symbols go into a csect with matching name which
+  // will get mapped into the .tbss section.
+  if (Kind.isBSSLocal() || GO->hasCommonLinkage() || Kind.isThreadBSSLocal()) {
+    SmallString<128> Name;
+    getNameWithPrefix(Name, GO, TM);
+    XCOFF::StorageMappingClass SMC = Kind.isBSSLocal() ? XCOFF::XMC_BS
+                                     : Kind.isCommon() ? XCOFF::XMC_RW
+                                                       : XCOFF::XMC_UL;
+    return getContext().getXCOFFSection(
+        Name, Kind, XCOFF::CsectProperties(SMC, XCOFF::XTY_CM));
+  }
+
+  if (Kind.isText()) {
+    if (TM.getFunctionSections()) {
+      return cast<MCSymbolXCOFF>(getFunctionEntryPointSymbol(GO, TM))
+          ->getRepresentedCsect();
+    }
+    return TextSection;
+  }
+
+  if (TM.Options.XCOFFReadOnlyPointers && Kind.isReadOnlyWithRel()) {
+    if (!TM.getDataSections())
+      report_fatal_error(
+          "ReadOnlyPointers is supported only if data sections is turned on");
+
+    SmallString<128> Name;
+    getNameWithPrefix(Name, GO, TM);
+    return getContext().getXCOFFSection(
+        Name, SectionKind::getReadOnly(),
+        XCOFF::CsectProperties(XCOFF::XMC_RO, XCOFF::XTY_SD));
+  }
+
+  // For BSS kind, zero initialized data must be emitted to the .data section
+  // because external linkage control sections that get mapped to the .bss
+  // section will be linked as tentative defintions, which is only appropriate
+  // for SectionKind::Common.
+  if (Kind.isData() || Kind.isReadOnlyWithRel() || Kind.isBSS()) {
+    if (TM.getDataSections()) {
+      SmallString<128> Name;
+      getNameWithPrefix(Name, GO, TM);
+      return getContext().getXCOFFSection(
+          Name, SectionKind::getData(),
+          XCOFF::CsectProperties(XCOFF::XMC_RW, XCOFF::XTY_SD));
+    }
+    return DataSection;
+  }
+
+  if (Kind.isReadOnly()) {
+    if (TM.getDataSections()) {
+      SmallString<128> Name;
+      getNameWithPrefix(Name, GO, TM);
+      return getContext().getXCOFFSection(
+          Name, SectionKind::getReadOnly(),
+          XCOFF::CsectProperties(XCOFF::XMC_RO, XCOFF::XTY_SD));
+    }
+    return ReadOnlySection;
+  }
+
+  // External/weak TLS data and initialized local TLS data are not eligible
+  // to be put into common csect. If data sections are enabled, thread
+  // data are emitted into separate sections. Otherwise, thread data
+  // are emitted into the .tdata section.
+  if (Kind.isThreadLocal()) {
+    if (TM.getDataSections()) {
+      SmallString<128> Name;
+      getNameWithPrefix(Name, GO, TM);
+      return getContext().getXCOFFSection(
+          Name, Kind, XCOFF::CsectProperties(XCOFF::XMC_TL, XCOFF::XTY_SD));
+    }
+    return TLSDataSection;
+  }
+
+  report_fatal_error("XCOFF other section types not yet implemented.");
+}
+
+MCSection *TargetLoweringObjectFileXCOFF::getSectionForJumpTable(
+    const Function &F, const TargetMachine &TM) const {
+  assert (!F.getComdat() && "Comdat not supported on XCOFF.");
+
+  if (!TM.getFunctionSections())
+    return ReadOnlySection;
+
+  // If the function can be removed, produce a unique section so that
+  // the table doesn't prevent the removal.
+  SmallString<128> NameStr(".rodata.jmp..");
+  getNameWithPrefix(NameStr, &F, TM);
+  return getContext().getXCOFFSection(
+      NameStr, SectionKind::getReadOnly(),
+      XCOFF::CsectProperties(XCOFF::XMC_RO, XCOFF::XTY_SD));
+}
+
+bool TargetLoweringObjectFileXCOFF::shouldPutJumpTableInFunctionSection(
+    bool UsesLabelDifference, const Function &F) const {
+  return false;
+}
+
+/// Given a mergeable constant with the specified size and relocation
+/// information, return a section that it should be placed in.
+MCSection *TargetLoweringObjectFileXCOFF::getSectionForConstant(
+    const DataLayout &DL, SectionKind Kind, const Constant *C,
+    Align &Alignment) const {
+  // TODO: Enable emiting constant pool to unique sections when we support it.
+  if (Alignment > Align(16))
+    report_fatal_error("Alignments greater than 16 not yet supported.");
+
+  if (Alignment == Align(8)) {
+    assert(ReadOnly8Section && "Section should always be initialized.");
+    return ReadOnly8Section;
+  }
+
+  if (Alignment == Align(16)) {
+    assert(ReadOnly16Section && "Section should always be initialized.");
+    return ReadOnly16Section;
+  }
+
+  return ReadOnlySection;
+}
+
+void TargetLoweringObjectFileXCOFF::Initialize(MCContext &Ctx,
+                                               const TargetMachine &TgtM) {
+  TargetLoweringObjectFile::Initialize(Ctx, TgtM);
+  TTypeEncoding =
+      dwarf::DW_EH_PE_indirect | dwarf::DW_EH_PE_datarel |
+      (TgtM.getTargetTriple().isArch32Bit() ? dwarf::DW_EH_PE_sdata4
+                                            : dwarf::DW_EH_PE_sdata8);
+  PersonalityEncoding = 0;
+  LSDAEncoding = 0;
+  CallSiteEncoding = dwarf::DW_EH_PE_udata4;
+
+  // AIX debug for thread local location is not ready. And for integrated as
+  // mode, the relocatable address for the thread local variable will cause
+  // linker error. So disable the location attribute generation for thread local
+  // variables for now.
+  // FIXME: when TLS debug on AIX is ready, remove this setting.
+  SupportDebugThreadLocalLocation = false;
+}
+
+MCSection *TargetLoweringObjectFileXCOFF::getStaticCtorSection(
+	unsigned Priority, const MCSymbol *KeySym) const {
+  report_fatal_error("no static constructor section on AIX");
+}
+
+MCSection *TargetLoweringObjectFileXCOFF::getStaticDtorSection(
+	unsigned Priority, const MCSymbol *KeySym) const {
+  report_fatal_error("no static destructor section on AIX");
+}
+
+const MCExpr *TargetLoweringObjectFileXCOFF::lowerRelativeReference(
+    const GlobalValue *LHS, const GlobalValue *RHS,
+    const TargetMachine &TM) const {
+  /* Not implemented yet, but don't crash, return nullptr. */
+  return nullptr;
+}
+
+XCOFF::StorageClass
+TargetLoweringObjectFileXCOFF::getStorageClassForGlobal(const GlobalValue *GV) {
+  assert(!isa<GlobalIFunc>(GV) && "GlobalIFunc is not supported on AIX.");
+
+  switch (GV->getLinkage()) {
+  case GlobalValue::InternalLinkage:
+  case GlobalValue::PrivateLinkage:
+    return XCOFF::C_HIDEXT;
+  case GlobalValue::ExternalLinkage:
+  case GlobalValue::CommonLinkage:
+  case GlobalValue::AvailableExternallyLinkage:
+    return XCOFF::C_EXT;
+  case GlobalValue::ExternalWeakLinkage:
+  case GlobalValue::LinkOnceAnyLinkage:
+  case GlobalValue::LinkOnceODRLinkage:
+  case GlobalValue::WeakAnyLinkage:
+  case GlobalValue::WeakODRLinkage:
+    return XCOFF::C_WEAKEXT;
+  case GlobalValue::AppendingLinkage:
+    report_fatal_error(
+        "There is no mapping that implements AppendingLinkage for XCOFF.");
+  }
+  llvm_unreachable("Unknown linkage type!");
+}
+
+MCSymbol *TargetLoweringObjectFileXCOFF::getFunctionEntryPointSymbol(
+    const GlobalValue *Func, const TargetMachine &TM) const {
+  assert((isa<Function>(Func) ||
+          (isa<GlobalAlias>(Func) &&
+           isa_and_nonnull<Function>(
+               cast<GlobalAlias>(Func)->getAliaseeObject()))) &&
+         "Func must be a function or an alias which has a function as base "
+         "object.");
+
+  SmallString<128> NameStr;
+  NameStr.push_back('.');
+  getNameWithPrefix(NameStr, Func, TM);
+
+  // When -function-sections is enabled and explicit section is not specified,
+  // it's not necessary to emit function entry point label any more. We will use
+  // function entry point csect instead. And for function delcarations, the
+  // undefined symbols gets treated as csect with XTY_ER property.
+  if (((TM.getFunctionSections() && !Func->hasSection()) ||
+       Func->isDeclarationForLinker()) &&
+      isa<Function>(Func)) {
+    return getContext()
+        .getXCOFFSection(
+            NameStr, SectionKind::getText(),
+            XCOFF::CsectProperties(XCOFF::XMC_PR, Func->isDeclarationForLinker()
+                                                      ? XCOFF::XTY_ER
+                                                      : XCOFF::XTY_SD))
+        ->getQualNameSymbol();
+  }
+
+  return getContext().getOrCreateSymbol(NameStr);
+}
+
+MCSection *TargetLoweringObjectFileXCOFF::getSectionForFunctionDescriptor(
+    const Function *F, const TargetMachine &TM) const {
+  SmallString<128> NameStr;
+  getNameWithPrefix(NameStr, F, TM);
+  return getContext().getXCOFFSection(
+      NameStr, SectionKind::getData(),
+      XCOFF::CsectProperties(XCOFF::XMC_DS, XCOFF::XTY_SD));
+}
+
+MCSection *TargetLoweringObjectFileXCOFF::getSectionForTOCEntry(
+    const MCSymbol *Sym, const TargetMachine &TM) const {
+  // Use TE storage-mapping class when large code model is enabled so that
+  // the chance of needing -bbigtoc is decreased.
+  return getContext().getXCOFFSection(
+      cast<MCSymbolXCOFF>(Sym)->getSymbolTableName(), SectionKind::getData(),
+      XCOFF::CsectProperties(
+          TM.getCodeModel() == CodeModel::Large ? XCOFF::XMC_TE : XCOFF::XMC_TC,
+          XCOFF::XTY_SD));
+}
+
+MCSection *TargetLoweringObjectFileXCOFF::getSectionForLSDA(
+    const Function &F, const MCSymbol &FnSym, const TargetMachine &TM) const {
+  auto *LSDA = cast<MCSectionXCOFF>(LSDASection);
+  if (TM.getFunctionSections()) {
+    // If option -ffunction-sections is on, append the function name to the
+    // name of the LSDA csect so that each function has its own LSDA csect.
+    // This helps the linker to garbage-collect EH info of unused functions.
+    SmallString<128> NameStr = LSDA->getName();
+    raw_svector_ostream(NameStr) << '.' << F.getName();
+    LSDA = getContext().getXCOFFSection(NameStr, LSDA->getKind(),
+                                        LSDA->getCsectProp());
+  }
+  return LSDA;
+}
+//===----------------------------------------------------------------------===//
+//                                  GOFF
+//===----------------------------------------------------------------------===//
+TargetLoweringObjectFileGOFF::TargetLoweringObjectFileGOFF() = default;
+
+MCSection *TargetLoweringObjectFileGOFF::getExplicitSectionGlobal(
+    const GlobalObject *GO, SectionKind Kind, const TargetMachine &TM) const {
+  return SelectSectionForGlobal(GO, Kind, TM);
+}
+
+MCSection *TargetLoweringObjectFileGOFF::SelectSectionForGlobal(
+    const GlobalObject *GO, SectionKind Kind, const TargetMachine &TM) const {
+  auto *Symbol = TM.getSymbol(GO);
+  if (Kind.isBSS())
+    return getContext().getGOFFSection(Symbol->getName(), SectionKind::getBSS(),
+                                       nullptr, nullptr);
+
+  return getContext().getObjectFileInfo()->getTextSection();
+}

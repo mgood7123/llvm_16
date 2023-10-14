@@ -79,7 +79,7 @@ uint32_t ObjectFile::getSymbolAlignment(DataRefImpl DRI) const { return 0; }
 bool ObjectFile::isSectionBitcode(DataRefImpl Sec) const {
   Expected<StringRef> NameOrErr = getSectionName(Sec);
   if (NameOrErr)
-    return *NameOrErr == ".llvmbc";
+    return *NameOrErr == ".llvm.lto";
   consumeError(NameOrErr.takeError());
   return false;
 }
@@ -125,10 +125,14 @@ Triple ObjectFile::makeTriple() const {
     const auto COFFObj = cast<COFFObjectFile>(this);
     if (COFFObj->getArch() == Triple::thumb)
       TheTriple.setTriple("thumbv7-windows");
-  // } else if (isXCOFF()) {
-  //   // XCOFF implies AIX.
-  //   TheTriple.setOS(Triple::AIX);
-  //   TheTriple.setObjectFormat(Triple::XCOFF);
+  } else if (isXCOFF()) {
+    // XCOFF implies AIX.
+    TheTriple.setOS(Triple::AIX);
+    TheTriple.setObjectFormat(Triple::XCOFF);
+  }
+  else if (isGOFF()) {
+    TheTriple.setOS(Triple::ZOS);
+    TheTriple.setObjectFormat(Triple::GOFF);
   }
 
   return TheTriple;
@@ -154,9 +158,9 @@ ObjectFile::createObjectFile(MemoryBufferRef Object, file_magic Type,
   case file_magic::cuda_fatbinary:
   case file_magic::offload_binary:
   case file_magic::dxcontainer_object:
-  case file_magic::xcoff_object_32:
-  case file_magic::xcoff_object_64:
-  case file_magic::wasm_object:
+  case file_magic::offload_bundle:
+  case file_magic::offload_bundle_compressed:
+    return errorCodeToError(object_error::invalid_file_type);
   case file_magic::tapi_file:
     return errorCodeToError(object_error::invalid_file_type);
   case file_magic::elf:
@@ -182,9 +186,12 @@ ObjectFile::createObjectFile(MemoryBufferRef Object, file_magic Type,
   case file_magic::coff_import_library:
   case file_magic::pecoff_executable:
     return createCOFFObjectFile(Object);
-    // return createXCOFFObjectFile(Object, Binary::ID_XCOFF32);
-    // return createXCOFFObjectFile(Object, Binary::ID_XCOFF64);
-    // return createWasmObjectFile(Object);
+  case file_magic::xcoff_object_32:
+    return createXCOFFObjectFile(Object, Binary::ID_XCOFF32);
+  case file_magic::xcoff_object_64:
+    return createXCOFFObjectFile(Object, Binary::ID_XCOFF64);
+  case file_magic::wasm_object:
+    return createWasmObjectFile(Object);
   }
   llvm_unreachable("Unexpected Object File Type");
 }
