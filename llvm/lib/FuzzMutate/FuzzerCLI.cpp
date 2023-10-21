@@ -29,7 +29,7 @@ void llvm::parseFuzzerCLOpts(int ArgC, char *ArgV[]) {
   cl::ParseCommandLineOptions(CLArgs.size(), CLArgs.data());
 }
 
-void llvm::handleExecNameEncodedBEOpts(StringRef ExecName) {
+bool llvm::handleExecNameEncodedBEOpts(StringRef ExecName) {
   std::vector<std::string> Args{std::string(ExecName)};
 
   auto NameAndArgs = ExecName.split("--");
@@ -49,7 +49,7 @@ void llvm::handleExecNameEncodedBEOpts(StringRef ExecName) {
       Args.push_back("-mtriple=" + Opt.str());
     } else {
       errs() << ExecName << ": Unknown option: " << Opt << ".\n";
-      exit(1);
+      return false;
     }
   }
   errs() << NameAndArgs.first << ": Injected args:";
@@ -63,15 +63,16 @@ void llvm::handleExecNameEncodedBEOpts(StringRef ExecName) {
     CLArgs.push_back(S.c_str());
 
   cl::ParseCommandLineOptions(CLArgs.size(), CLArgs.data());
+  return true;
 }
 
-void llvm::handleExecNameEncodedOptimizerOpts(StringRef ExecName) {
+bool llvm::handleExecNameEncodedOptimizerOpts(StringRef ExecName) {
   // TODO: Refactor parts common with the 'handleExecNameEncodedBEOpts'
   std::vector<std::string> Args{std::string(ExecName)};
 
   auto NameAndArgs = ExecName.split("--");
   if (NameAndArgs.second.empty())
-    return;
+    return true;
 
   SmallVector<StringRef, 4> Opts;
   NameAndArgs.second.split(Opts, '-');
@@ -112,7 +113,7 @@ void llvm::handleExecNameEncodedOptimizerOpts(StringRef ExecName) {
       Args.push_back("-mtriple=" + Opt.str());
     } else {
       errs() << ExecName << ": Unknown option: " << Opt << ".\n";
-      exit(1);
+      return false;
     }
   }
 
@@ -127,6 +128,7 @@ void llvm::handleExecNameEncodedOptimizerOpts(StringRef ExecName) {
     CLArgs.push_back(S.c_str());
 
   cl::ParseCommandLineOptions(CLArgs.size(), CLArgs.data());
+  return true;
 }
 
 int llvm::runFuzzerOnInputs(int ArgC, char *ArgV[], FuzzerTestFun TestOne,

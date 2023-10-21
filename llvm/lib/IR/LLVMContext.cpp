@@ -211,13 +211,13 @@ void LLVMContext::yield() {
     pImpl->YieldCallback(this, pImpl->YieldOpaqueHandle);
 }
 
-void LLVMContext::emitError(const Twine &ErrorStr) {
-  diagnose(DiagnosticInfoInlineAsm(ErrorStr));
+bool LLVMContext::emitError(const Twine &ErrorStr) {
+  return diagnose(DiagnosticInfoInlineAsm(ErrorStr));
 }
 
-void LLVMContext::emitError(const Instruction *I, const Twine &ErrorStr) {
+bool LLVMContext::emitError(const Instruction *I, const Twine &ErrorStr) {
   assert (I && "Invalid instruction");
-  diagnose(DiagnosticInfoInlineAsm(*I, ErrorStr));
+  return diagnose(DiagnosticInfoInlineAsm(*I, ErrorStr));
 }
 
 static bool isDiagnosticEnabled(const DiagnosticInfo &DI) {
@@ -250,31 +250,33 @@ LLVMContext::getDiagnosticMessagePrefix(DiagnosticSeverity Severity) {
   llvm_unreachable("Unknown DiagnosticSeverity");
 }
 
-void LLVMContext::diagnose(const DiagnosticInfo &DI) {
+bool LLVMContext::diagnose(const DiagnosticInfo &DI) {
   if (auto *OptDiagBase = dyn_cast<DiagnosticInfoOptimizationBase>(&DI))
     if (LLVMRemarkStreamer *RS = getLLVMRemarkStreamer())
       RS->emit(*OptDiagBase);
 
   // If there is a report handler, use it.
   if (pImpl->DiagHandler &&
-      (!pImpl->RespectDiagnosticFilters || isDiagnosticEnabled(DI)) &&
-      pImpl->DiagHandler->handleDiagnostics(DI))
-    return;
+      (!pImpl->RespectDiagnosticFilters || isDiagnosticEnabled(DI)))
+    return pImpl->DiagHandler->handleDiagnostics(DI);
 
   if (!isDiagnosticEnabled(DI))
-    return;
+    return true;
 
   // Otherwise, print the message with a prefix based on the severity.
   DiagnosticPrinterRawOStream DP(errs());
   errs() << getDiagnosticMessagePrefix(DI.getSeverity()) << ": ";
   DI.print(DP);
   errs() << "\n";
-  if (DI.getSeverity() == DS_Error)
-    exit(1);
+  if (DI.getSeverity() == DS_Error) {
+    llvm_unreachable("fatal diagnose");
+    return false;
+  }
+  return true;
 }
 
-void LLVMContext::emitError(uint64_t LocCookie, const Twine &ErrorStr) {
-  diagnose(DiagnosticInfoInlineAsm(LocCookie, ErrorStr));
+bool LLVMContext::emitError(uint64_t LocCookie, const Twine &ErrorStr) {
+  return diagnose(DiagnosticInfoInlineAsm(LocCookie, ErrorStr));
 }
 
 //===----------------------------------------------------------------------===//

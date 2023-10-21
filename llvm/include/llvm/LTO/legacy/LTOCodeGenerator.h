@@ -138,7 +138,7 @@ struct LTOCodeGenerator {
   /// Like \a setCodeGenDebugOptions(), this must be called before
   /// LTOCodeGenerator::compilexxx() and
   /// LTOCodeGenerator::writeMergedModules().
-  void parseCodeGenDebugOptions();
+  bool parseCodeGenDebugOptions();
 
   /// Write the merged module to the file specified by the given path.  Return
   /// true on success.
@@ -251,6 +251,6 @@ private:
 
 /// A convenience function that calls cl::ParseCommandLineOptions on the given
 /// set of options.
-void parseCommandLineOptions(std::vector<std::string> &Options);
+bool parseCommandLineOptions(std::vector<std::string> &Options);
 }
 #endif

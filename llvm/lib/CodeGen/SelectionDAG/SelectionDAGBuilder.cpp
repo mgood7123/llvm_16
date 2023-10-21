@@ -305,14 +305,14 @@ static void diagnosePossiblyInvalidConstraint(LLVMContext &Ctx, const Value *V,
                                               const Twine &ErrMsg) {
   const Instruction *I = dyn_cast_or_null<Instruction>(V);
   if (!V)
-    return Ctx.emitError(ErrMsg);
+    Ctx.emitError(ErrMsg);
 
   const char *AsmError = ", possible invalid constraint for vector type";
   if (const CallInst *CI = dyn_cast<CallInst>(I))
     if (CI->isInlineAsm())
-      return Ctx.emitError(I, ErrMsg + AsmError);
+      Ctx.emitError(I, ErrMsg + AsmError);
 
-  return Ctx.emitError(I, ErrMsg);
+  Ctx.emitError(I, ErrMsg);
 }
 
 /// getCopyFromPartsVector - Create a value that contains the specified legal

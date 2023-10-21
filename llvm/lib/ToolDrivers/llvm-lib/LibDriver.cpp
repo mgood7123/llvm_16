@@ -120,7 +120,6 @@ static void fatalOpenError(llvm::Error E, Twine File) {
     return;
   handleAllErrors(std::move(E), [&](const llvm::ErrorInfoBase &EIB) {
     llvm::errs() << "error opening '" << File << "': " << EIB.message() << '\n';
-    exit(1);
   });
 }
 
@@ -215,7 +214,7 @@ static bool machineMatches(COFF::MachineTypes LibMachine,
   }
 }
 
-static void appendFile(std::vector<NewArchiveMember> &Members,
+static bool appendFile(std::vector<NewArchiveMember> &Members,
                        COFF::MachineTypes &LibMachine,
                        std::string &LibMachineSource, MemoryBufferRef MB) {
   file_magic Magic = identify_magic(MB.getBuffer());
@@ -226,7 +225,7 @@ static void appendFile(std::vector<NewArchiveMember> &Members,
     llvm::errs() << MB.getBufferIdentifier()
                  << ": not a COFF object, bitcode, archive, import library or "
                     "resource file\n";
-    exit(1);
+    return false;
   }
 
   // If a user attempts to add an archive to another archive, llvm-lib doesn't
@@ -245,14 +244,16 @@ static void appendFile(std::vector<NewArchiveMember> &Members,
           llvm::errs() << MB.getBufferIdentifier() << ": " << EIB.message()
                        << "\n";
         });
-        exit(1);
+        return false;
       }
 
-      appendFile(Members, LibMachine, LibMachineSource, *ChildMB);
+      if (!appendFile(Members, LibMachine, LibMachineSource, *ChildMB)) {
+        return false;
+      }
     }
 
     fatalOpenError(std::move(Err), MB.getBufferIdentifier());
-    return;
+    return false;
   }
 
   // Check that all input files have the same machine type.
@@ -272,7 +273,7 @@ static void appendFile(std::vector<NewArchiveMember> &Members,
                         llvm::errs() << MB.getBufferIdentifier() << ": "
                                      << EIB.message() << "\n";
                       });
-      exit(1);
+      return false;
     }
     COFF::MachineTypes FileMachine = *MaybeFileMachine;
 
@@ -287,7 +288,7 @@ static void appendFile(std::vector<NewArchiveMember> &Members,
                          << machineToStr(FileMachine)
                          << " conflicts with inferred library machine type,"
                          << " use /machine:arm64ec or /machine:arm64x\n";
-            exit(1);
+          return false;
         }
         LibMachine = FileMachine;
         LibMachineSource =
@@ -298,12 +299,13 @@ static void appendFile(std::vector<NewArchiveMember> &Members,
                      << machineToStr(FileMachine)
                      << " conflicts with library machine type "
                      << machineToStr(LibMachine) << LibMachineSource << '\n';
-        exit(1);
+        return false;
       }
     }
   }
 
   Members.emplace_back(MB);
+  return true;
 }
 
 int llvm::libDriverMain(ArrayRef<const char *> ArgsArr) {
@@ -451,7 +453,9 @@ int llvm::libDriverMain(ArrayRef<const char *> ArgsArr) {
     MemoryBufferRef MBRef = (*MOrErr)->getMemBufferRef();
 
     // Append a file.
-    appendFile(Members, LibMachine, LibMachineSource, MBRef);
+    if (!appendFile(Members, LibMachine, LibMachineSource, MBRef)) {
+      return 1;
+    }
 
     // Take the ownership of the file buffer to keep the file open.
     MBs.push_back(std::move(*MOrErr));

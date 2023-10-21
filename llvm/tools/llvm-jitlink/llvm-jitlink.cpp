@@ -2007,7 +2007,8 @@ int main(int argc, char *argv[]) {
   InitializeAllDisassemblers();
 
   cl::HideUnrelatedOptions({&JITLinkCategory, &getColorCategory()});
-  cl::ParseCommandLineOptions(argc, argv, "llvm jitlink tool");
+  if (!cl::ParseCommandLineOptions(argc, argv, "llvm jitlink tool"))
+    return 1;
   ExitOnErr.setBanner(std::string(argv[0]) + ": ");
 
   /// If timers are enabled, create a JITLinkTimers instance.

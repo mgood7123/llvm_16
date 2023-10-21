@@ -1470,365 +1470,6 @@ bool cl::ParseCommandLineOptions(int argc, const char *const *argv,
                                                Errs, LongOptionsUseDoubleDash);
 }
 
-/// Reset all options at least once, so that we can parse different options.
-void CommandLineParser::ResetAllOptionOccurrences() {
-  // Reset all option values to look like they have never been seen before.
-  // Options might be reset twice (they can be reference in both OptionsMap
-  // and one of the other members), but that does not harm.
-  for (auto *SC : RegisteredSubCommands) {
-    for (auto &O : SC->OptionsMap)
-      O.second->reset();
-    for (Option *O : SC->PositionalOpts)
-      O->reset();
-    for (Option *O : SC->SinkOpts)
-      O->reset();
-    if (SC->ConsumeAfterOpt)
-      SC->ConsumeAfterOpt->reset();
-  }
-}
-
-bool CommandLineParser::ParseCommandLineOptions(int argc,
-                                                const char *const *argv,
-                                                StringRef Overview,
-                                                raw_ostream *Errs,
-                                                bool LongOptionsUseDoubleDash) {
-  assert(hasOptions() && "No options specified!");
-
-  ProgramOverview = Overview;
-  bool IgnoreErrors = Errs;
-  if (!Errs)
-    Errs = &errs();
-  bool ErrorParsing = false;
-
-  // Expand response files.
-  SmallVector<const char *, 20> newArgv(argv, argv + argc);
-  BumpPtrAllocator A;
-#ifdef _WIN32
-  auto Tokenize = cl::TokenizeWindowsCommandLine;
-#else
-  auto Tokenize = cl::TokenizeGNUCommandLine;
-#endif
-  ExpansionContext ECtx(A, Tokenize);
-  if (Error Err = ECtx.expandResponseFiles(newArgv)) {
-    *Errs << toString(std::move(Err)) << '\n';
-    return false;
-  }
-  argv = &newArgv[0];
-  argc = static_cast<int>(newArgv.size());
-
-  // Copy the program name into ProgName, making sure not to overflow it.
-  ProgramName = std::string(sys::path::filename(StringRef(argv[0])));
-
-  // Check out the positional arguments to collect information about them.
-  unsigned NumPositionalRequired = 0;
-
-  // Determine whether or not there are an unlimited number of positionals
-  bool HasUnlimitedPositionals = false;
-
-  int FirstArg = 1;
-  SubCommand *ChosenSubCommand = &SubCommand::getTopLevel();
-  if (argc >= 2 && argv[FirstArg][0] != '-') {
-    // If the first argument specifies a valid subcommand, start processing
-    // options from the second argument.
-    ChosenSubCommand = LookupSubCommand(StringRef(argv[FirstArg]));
-    if (ChosenSubCommand != &SubCommand::getTopLevel())
-      FirstArg = 2;
-  }
-  GlobalParser->ActiveSubCommand = ChosenSubCommand;
-
-  assert(ChosenSubCommand);
-  auto &ConsumeAfterOpt = ChosenSubCommand->ConsumeAfterOpt;
-  auto &PositionalOpts = ChosenSubCommand->PositionalOpts;
-  auto &SinkOpts = ChosenSubCommand->SinkOpts;
-  auto &OptionsMap = ChosenSubCommand->OptionsMap;
-
-  for (auto *O: DefaultOptions) {
-    addOption(O, true);
-  }
-
-  if (ConsumeAfterOpt) {
-    assert(PositionalOpts.size() > 0 &&
-           "Cannot specify cl::ConsumeAfter without a positional argument!");
-  }
-  if (!PositionalOpts.empty()) {
-
-    // Calculate how many positional values are _required_.
-    bool UnboundedFound = false;
-    for (size_t i = 0, e = PositionalOpts.size(); i != e; ++i) {
-      Option *Opt = PositionalOpts[i];
-      if (RequiresValue(Opt))
-        ++NumPositionalRequired;
-      else if (ConsumeAfterOpt) {
-        // ConsumeAfter cannot be combined with "optional" positional options
-        // unless there is only one positional argument...
-        if (PositionalOpts.size() > 1) {
-          if (!IgnoreErrors)
-            Opt->error("error - this positional option will never be matched, "
-                       "because it does not Require a value, and a "
-                       "cl::ConsumeAfter option is active!");
-          ErrorParsing = true;
-        }
-      } else if (UnboundedFound && !Opt->hasArgStr()) {
-        // This option does not "require" a value...  Make sure this option is
-        // not specified after an option that eats all extra arguments, or this
-        // one will never get any!
-        //
-        if (!IgnoreErrors)
-          Opt->error("error - option can never match, because "
-                     "another positional argument will match an "
-                     "unbounded number of values, and this option"
-                     " does not require a value!");
-        *Errs << ProgramName << ": CommandLine Error: Option '" << Opt->ArgStr
-              << "' is all messed up!\n";
-        *Errs << PositionalOpts.size();
-        ErrorParsing = true;
-      }
-      UnboundedFound |= EatsUnboundedNumberOfValues(Opt);
-    }
-    HasUnlimitedPositionals = UnboundedFound || ConsumeAfterOpt;
-  }
-
-  // PositionalVals - A vector of "positional" arguments we accumulate into
-  // the process at the end.
-  //
-  SmallVector<std::pair<StringRef, unsigned>, 4> PositionalVals;
-
-  // If the program has named positional arguments, and the name has been run
-  // across, keep track of which positional argument was named.  Otherwise put
-  // the positional args into the PositionalVals list...
-  Option *ActivePositionalArg = nullptr;
-
-  // Loop over all of the arguments... processing them.
-  bool DashDashFound = false; // Have we read '--'?
-  for (int i = FirstArg; i < argc; ++i) {
-    Option *Handler = nullptr;
-    Option *NearestHandler = nullptr;
-    std::string NearestHandlerString;
-    StringRef Value;
-    StringRef ArgName = "";
-    bool HaveDoubleDash = false;
-
-    // Check to see if this is a positional argument.  This argument is
-    // considered to be positional if it doesn't start with '-', if it is "-"
-    // itself, or if we have seen "--" already.
-    //
-    if (argv[i][0] != '-' || argv[i][1] == 0 || DashDashFound) {
-      // Positional argument!
-      if (ActivePositionalArg) {
-        ProvidePositionalOption(ActivePositionalArg, StringRef(argv[i]), i);
-        continue; // We are done!
-      }
-
-      if (!PositionalOpts.empty()) {
-        PositionalVals.push_back(std::make_pair(StringRef(argv[i]), i));
-
-        // All of the positional arguments have been fulfulled, give the rest to
-        // the consume after option... if it's specified...
-        //
-        if (PositionalVals.size() >= NumPositionalRequired && ConsumeAfterOpt) {
-          for (++i; i < argc; ++i)
-            PositionalVals.push_back(std::make_pair(StringRef(argv[i]), i));
-          break; // Handle outside of the argument processing loop...
-        }
-
-        // Delay processing positional arguments until the end...
-        continue;
-      }
-    } else if (argv[i][0] == '-' && argv[i][1] == '-' && argv[i][2] == 0 &&
-               !DashDashFound) {
-      DashDashFound = true; // This is the mythical "--"?
-      continue;             // Don't try to process it as an argument itself.
-    } else if (ActivePositionalArg &&
-               (ActivePositionalArg->getMiscFlags() & PositionalEatsArgs)) {
-      // If there is a positional argument eating options, check to see if this
-      // option is another positional argument.  If so, treat it as an argument,
-      // otherwise feed it to the eating positional.
-      ArgName = StringRef(argv[i] + 1);
-      // Eat second dash.
-      if (!ArgName.empty() && ArgName[0] == '-') {
-        HaveDoubleDash = true;
-        ArgName = ArgName.substr(1);
-      }
-
-      Handler = LookupLongOption(*ChosenSubCommand, ArgName, Value,
-                                 LongOptionsUseDoubleDash, HaveDoubleDash);
-      if (!Handler || Handler->getFormattingFlag() != cl::Positional) {
-        ProvidePositionalOption(ActivePositionalArg, StringRef(argv[i]), i);
-        continue; // We are done!
-      }
-    } else { // We start with a '-', must be an argument.
-      ArgName = StringRef(argv[i] + 1);
-      // Eat second dash.
-      if (!ArgName.empty() && ArgName[0] == '-') {
-        HaveDoubleDash = true;
-        ArgName = ArgName.substr(1);
-      }
-
-      Handler = LookupLongOption(*ChosenSubCommand, ArgName, Value,
-                                 LongOptionsUseDoubleDash, HaveDoubleDash);
-
-      // Check to see if this "option" is really a prefixed or grouped argument.
-      if (!Handler && !(LongOptionsUseDoubleDash && HaveDoubleDash))
-        Handler = HandlePrefixedOrGroupedOption(ArgName, Value, ErrorParsing,
-                                                OptionsMap);
-
-      // Otherwise, look for the closest available option to report to the user
-      // in the upcoming error.
-      if (!Handler && SinkOpts.empty())
-        NearestHandler =
-            LookupNearestOption(ArgName, OptionsMap, NearestHandlerString);
-    }
-
-    if (!Handler) {
-      if (SinkOpts.empty()) {
-        *Errs << ProgramName << ": Unknown command line argument '" << argv[i]
-              << "'.  Try: '" << argv[0] << " --help'\n";
-
-        if (NearestHandler) {
-          // If we know a near match, report it as well.
-          *Errs << ProgramName << ": Did you mean '"
-                << PrintArg(NearestHandlerString, 0) << "'?\n";
-        }
-
-        ErrorParsing = true;
-      } else {
-        for (Option *SinkOpt : SinkOpts)
-          SinkOpt->addOccurrence(i, "", StringRef(argv[i]));
-      }
-      continue;
-    }
-
-    // If this is a named positional argument, just remember that it is the
-    // active one...
-    if (Handler->getFormattingFlag() == cl::Positional) {
-      if ((Handler->getMiscFlags() & PositionalEatsArgs) && !Value.empty()) {
-        Handler->error("This argument does not take a value.\n"
-                       "\tInstead, it consumes any positional arguments until "
-                       "the next recognized option.", *Errs);
-        ErrorParsing = true;
-      }
-      ActivePositionalArg = Handler;
-    }
-    else
-      ErrorParsing |= ProvideOption(Handler, ArgName, Value, argc, argv, i);
-  }
-
-  // Check and handle positional arguments now...
-  if (NumPositionalRequired > PositionalVals.size()) {
-      *Errs << ProgramName
-             << ": Not enough positional command line arguments specified!\n"
-             << "Must specify at least " << NumPositionalRequired
-             << " positional argument" << (NumPositionalRequired > 1 ? "s" : "")
-             << ": See: " << argv[0] << " --help\n";
-
-    ErrorParsing = true;
-  } else if (!HasUnlimitedPositionals &&
-             PositionalVals.size() > PositionalOpts.size()) {
-    *Errs << ProgramName << ": Too many positional arguments specified!\n"
-          << "Can specify at most " << PositionalOpts.size()
-          << " positional arguments: See: " << argv[0] << " --help\n";
-    ErrorParsing = true;
-
-  } else if (!ConsumeAfterOpt) {
-    // Positional args have already been handled if ConsumeAfter is specified.
-    unsigned ValNo = 0, NumVals = static_cast<unsigned>(PositionalVals.size());
-    for (size_t i = 0, e = PositionalOpts.size(); i != e; ++i) {
-      if (RequiresValue(PositionalOpts[i])) {
-        ProvidePositionalOption(PositionalOpts[i], PositionalVals[ValNo].first,
-                                PositionalVals[ValNo].second);
-        ValNo++;
-        --NumPositionalRequired; // We fulfilled our duty...
-      }
-
-      // If we _can_ give this option more arguments, do so now, as long as we
-      // do not give it values that others need.  'Done' controls whether the
-      // option even _WANTS_ any more.
-      //
-      bool Done = PositionalOpts[i]->getNumOccurrencesFlag() == cl::Required;
-      while (NumVals - ValNo > NumPositionalRequired && !Done) {
-        switch (PositionalOpts[i]->getNumOccurrencesFlag()) {
-        case cl::Optional:
-          Done = true; // Optional arguments want _at most_ one value
-          [[fallthrough]];
-        case cl::ZeroOrMore: // Zero or more will take all they can get...
-        case cl::OneOrMore:  // One or more will take all they can get...
-          ProvidePositionalOption(PositionalOpts[i],
-                                  PositionalVals[ValNo].first,
-                                  PositionalVals[ValNo].second);
-          ValNo++;
-          break;
-        default:
-          llvm_unreachable("Internal error, unexpected NumOccurrences flag in "
-                           "positional argument processing!");
-        }
-      }
-    }
-  } else {
-    assert(ConsumeAfterOpt && NumPositionalRequired <= PositionalVals.size());
-    unsigned ValNo = 0;
-    for (size_t J = 0, E = PositionalOpts.size(); J != E; ++J)
-      if (RequiresValue(PositionalOpts[J])) {
-        ErrorParsing |= ProvidePositionalOption(PositionalOpts[J],
-                                                PositionalVals[ValNo].first,
-                                                PositionalVals[ValNo].second);
-        ValNo++;
-      }
-
-    // Handle the case where there is just one positional option, and it's
-    // optional.  In this case, we want to give JUST THE FIRST option to the
-    // positional option and keep the rest for the consume after.  The above
-    // loop would have assigned no values to positional options in this case.
-    //
-    if (PositionalOpts.size() == 1 && ValNo == 0 && !PositionalVals.empty()) {
-      ErrorParsing |= ProvidePositionalOption(PositionalOpts[0],
-                                              PositionalVals[ValNo].first,
-                                              PositionalVals[ValNo].second);
-      ValNo++;
-    }
-
-    // Handle over all of the rest of the arguments to the
-    // cl::ConsumeAfter command line option...
-    for (; ValNo != PositionalVals.size(); ++ValNo)
-      ErrorParsing |=
-          ProvidePositionalOption(ConsumeAfterOpt, PositionalVals[ValNo].first,
-                                  PositionalVals[ValNo].second);
-  }
-
-  // Loop over args and make sure all required args are specified!
-  for (const auto &Opt : OptionsMap) {
-    switch (Opt.second->getNumOccurrencesFlag()) {
-    case Required:
-    case OneOrMore:
-      if (Opt.second->getNumOccurrences() == 0) {
-        Opt.second->error("must be specified at least once!");
-        ErrorParsing = true;
-      }
-      [[fallthrough]];
-    default:
-      break;
-    }
-  }
-
-  // Now that we know if -debug is specified, we can use it.
-  // Note that if ReadResponseFiles == true, this must be done before the
-  // memory allocated for the expanded command line is free()d below.
-  LLVM_DEBUG(dbgs() << "Args: ";
-             for (int i = 0; i < argc; ++i) dbgs() << argv[i] << ' ';
-             dbgs() << '\n';);
-
-  // Free all of the memory allocated to the map.  Command line options may only
-  // be processed once!
-  MoreHelp.clear();
-
-  // If we had an error processing our arguments, don't let the program execute
-  if (ErrorParsing) {
-    if (!IgnoreErrors)
-      exit(1);
-    return false;
-  }
-  return true;
-}
-
 //===----------------------------------------------------------------------===//
 // Option Base class implementation
 //
@@ -2312,6 +1953,7 @@ namespace {
 
 class HelpPrinter {
 protected:
+  bool invoked;
   const bool ShowHidden;
   typedef SmallVector<std::pair<const char *, Option *>, 128>
       StrOptionPairVector;
@@ -2335,18 +1977,21 @@ protected:
   }
 
 public:
-  explicit HelpPrinter(bool showHidden) : ShowHidden(showHidden) {}
+  explicit HelpPrinter(bool showHidden) : invoked(false), ShowHidden(showHidden) {}
   virtual ~HelpPrinter() = default;
 
   // Invoke the printer.
   void operator=(bool Value) {
     if (!Value)
       return;
+    invoked = true;
     printHelp();
 
     // Halt the program since help information was printed
-    exit(0);
   }
+
+  operator bool() const { return invoked; }
+  void reset() { invoked = false; }
 
   void printHelp() {
     SubCommand *Sub = GlobalParser->getActiveSubCommand();
@@ -2497,17 +2142,20 @@ protected:
 // at run time which should be invoked.
 class HelpPrinterWrapper {
 private:
+  bool invoked;
   HelpPrinter &UncategorizedPrinter;
   CategorizedHelpPrinter &CategorizedPrinter;
 
 public:
   explicit HelpPrinterWrapper(HelpPrinter &UncategorizedPrinter,
                               CategorizedHelpPrinter &CategorizedPrinter)
-      : UncategorizedPrinter(UncategorizedPrinter),
+      : invoked(false), UncategorizedPrinter(UncategorizedPrinter),
         CategorizedPrinter(CategorizedPrinter) {}
 
   // Invoke the printer.
   void operator=(bool Value);
+  operator bool() const { return invoked; }
+  void reset() { invoked = false; UncategorizedPrinter.reset(); CategorizedPrinter.reset(); }
 };
 
 } // End anonymous namespace
@@ -2536,7 +2184,9 @@ public:
 
 namespace {
 class VersionPrinter {
+  bool invoked;
 public:
+  VersionPrinter() : invoked(false) {}
   void print(std::vector<VersionPrinterTy> ExtraPrinters = {}) {
     raw_ostream &OS = outs();
 #ifdef PACKAGE_VENDOR
@@ -2563,6 +2213,8 @@ public:
     }
   }
   void operator=(bool OptionWasSpecified);
+  operator bool() const { return invoked; }
+  void reset() { invoked = false; }
 };
 
 struct CommandLineCommonOptions {
@@ -2660,6 +2312,378 @@ struct CommandLineCommonOptions {
 // parser and general handling.
 static ManagedStatic<CommandLineCommonOptions> CommonOptions;
 
+/// Reset all options at least once, so that we can parse different options.
+void CommandLineParser::ResetAllOptionOccurrences() {
+  // Reset all option values to look like they have never been seen before.
+  // Options might be reset twice (they can be reference in both OptionsMap
+  // and one of the other members), but that does not harm.
+  for (auto *SC : RegisteredSubCommands) {
+    for (auto &O : SC->OptionsMap)
+      O.second->reset();
+    for (Option *O : SC->PositionalOpts)
+      O->reset();
+    for (Option *O : SC->SinkOpts)
+      O->reset();
+    if (SC->ConsumeAfterOpt)
+      SC->ConsumeAfterOpt->reset();
+  }
+  // reset all globals (--help and friends)
+  CommonOptions->HLOp.getValue().reset();
+  CommonOptions->HLHOp.getValue().reset();
+  CommonOptions->HOp.getValue().reset();
+  CommonOptions->HHOp.getValue().reset();
+  CommonOptions->PrintOptions.setValue(false);
+  CommonOptions->PrintAllOptions.setValue(false);
+  CommonOptions->VersOp.getValue().reset();
+}
+
+bool CommandLineParser::ParseCommandLineOptions(int argc,
+                                                const char *const *argv,
+                                                StringRef Overview,
+                                                raw_ostream *Errs,
+                                                bool LongOptionsUseDoubleDash) {
+  assert(hasOptions() && "No options specified!");
+
+  ProgramOverview = Overview;
+  bool IgnoreErrors = Errs;
+  if (!Errs)
+    Errs = &errs();
+  bool ErrorParsing = false;
+
+  // Expand response files.
+  SmallVector<const char *, 20> newArgv(argv, argv + argc);
+  BumpPtrAllocator A;
+#ifdef _WIN32
+  auto Tokenize = cl::TokenizeWindowsCommandLine;
+#else
+  auto Tokenize = cl::TokenizeGNUCommandLine;
+#endif
+  ExpansionContext ECtx(A, Tokenize);
+  if (Error Err = ECtx.expandResponseFiles(newArgv)) {
+    *Errs << toString(std::move(Err)) << '\n';
+    return false;
+  }
+  argv = &newArgv[0];
+  argc = static_cast<int>(newArgv.size());
+
+  // Copy the program name into ProgName, making sure not to overflow it.
+  ProgramName = std::string(sys::path::filename(StringRef(argv[0])));
+
+  // Check out the positional arguments to collect information about them.
+  unsigned NumPositionalRequired = 0;
+
+  // Determine whether or not there are an unlimited number of positionals
+  bool HasUnlimitedPositionals = false;
+
+  int FirstArg = 1;
+  SubCommand *ChosenSubCommand = &SubCommand::getTopLevel();
+  if (argc >= 2 && argv[FirstArg][0] != '-') {
+    // If the first argument specifies a valid subcommand, start processing
+    // options from the second argument.
+    ChosenSubCommand = LookupSubCommand(StringRef(argv[FirstArg]));
+    if (ChosenSubCommand != &SubCommand::getTopLevel())
+      FirstArg = 2;
+  }
+  GlobalParser->ActiveSubCommand = ChosenSubCommand;
+
+  assert(ChosenSubCommand);
+  auto &ConsumeAfterOpt = ChosenSubCommand->ConsumeAfterOpt;
+  auto &PositionalOpts = ChosenSubCommand->PositionalOpts;
+  auto &SinkOpts = ChosenSubCommand->SinkOpts;
+  auto &OptionsMap = ChosenSubCommand->OptionsMap;
+
+  for (auto *O: DefaultOptions) {
+    addOption(O, true);
+  }
+
+  if (ConsumeAfterOpt) {
+    assert(PositionalOpts.size() > 0 &&
+           "Cannot specify cl::ConsumeAfter without a positional argument!");
+  }
+  if (!PositionalOpts.empty()) {
+
+    // Calculate how many positional values are _required_.
+    bool UnboundedFound = false;
+    for (size_t i = 0, e = PositionalOpts.size(); i != e; ++i) {
+      Option *Opt = PositionalOpts[i];
+      if (RequiresValue(Opt))
+        ++NumPositionalRequired;
+      else if (ConsumeAfterOpt) {
+        // ConsumeAfter cannot be combined with "optional" positional options
+        // unless there is only one positional argument...
+        if (PositionalOpts.size() > 1) {
+          if (!IgnoreErrors)
+            Opt->error("error - this positional option will never be matched, "
+                       "because it does not Require a value, and a "
+                       "cl::ConsumeAfter option is active!");
+          ErrorParsing = true;
+        }
+      } else if (UnboundedFound && !Opt->hasArgStr()) {
+        // This option does not "require" a value...  Make sure this option is
+        // not specified after an option that eats all extra arguments, or this
+        // one will never get any!
+        //
+        if (!IgnoreErrors)
+          Opt->error("error - option can never match, because "
+                     "another positional argument will match an "
+                     "unbounded number of values, and this option"
+                     " does not require a value!");
+        *Errs << ProgramName << ": CommandLine Error: Option '" << Opt->ArgStr
+              << "' is all messed up!\n";
+        *Errs << PositionalOpts.size();
+        ErrorParsing = true;
+      }
+      UnboundedFound |= EatsUnboundedNumberOfValues(Opt);
+    }
+    HasUnlimitedPositionals = UnboundedFound || ConsumeAfterOpt;
+  }
+
+  // PositionalVals - A vector of "positional" arguments we accumulate into
+  // the process at the end.
+  //
+  SmallVector<std::pair<StringRef, unsigned>, 4> PositionalVals;
+
+  // If the program has named positional arguments, and the name has been run
+  // across, keep track of which positional argument was named.  Otherwise put
+  // the positional args into the PositionalVals list...
+  Option *ActivePositionalArg = nullptr;
+
+  // Loop over all of the arguments... processing them.
+  bool DashDashFound = false; // Have we read '--'?
+  for (int i = FirstArg; i < argc; ++i) {
+    Option *Handler = nullptr;
+    Option *NearestHandler = nullptr;
+    std::string NearestHandlerString;
+    StringRef Value;
+    StringRef ArgName = "";
+    bool HaveDoubleDash = false;
+
+    // Check to see if this is a positional argument.  This argument is
+    // considered to be positional if it doesn't start with '-', if it is "-"
+    // itself, or if we have seen "--" already.
+    //
+    if (argv[i][0] != '-' || argv[i][1] == 0 || DashDashFound) {
+      // Positional argument!
+      if (ActivePositionalArg) {
+        ProvidePositionalOption(ActivePositionalArg, StringRef(argv[i]), i);
+        continue; // We are done!
+      }
+
+      if (!PositionalOpts.empty()) {
+        PositionalVals.push_back(std::make_pair(StringRef(argv[i]), i));
+
+        // All of the positional arguments have been fulfulled, give the rest to
+        // the consume after option... if it's specified...
+        //
+        if (PositionalVals.size() >= NumPositionalRequired && ConsumeAfterOpt) {
+          for (++i; i < argc; ++i)
+            PositionalVals.push_back(std::make_pair(StringRef(argv[i]), i));
+          break; // Handle outside of the argument processing loop...
+        }
+
+        // Delay processing positional arguments until the end...
+        continue;
+      }
+    } else if (argv[i][0] == '-' && argv[i][1] == '-' && argv[i][2] == 0 &&
+               !DashDashFound) {
+      DashDashFound = true; // This is the mythical "--"?
+      continue;             // Don't try to process it as an argument itself.
+    } else if (ActivePositionalArg &&
+               (ActivePositionalArg->getMiscFlags() & PositionalEatsArgs)) {
+      // If there is a positional argument eating options, check to see if this
+      // option is another positional argument.  If so, treat it as an argument,
+      // otherwise feed it to the eating positional.
+      ArgName = StringRef(argv[i] + 1);
+      // Eat second dash.
+      if (!ArgName.empty() && ArgName[0] == '-') {
+        HaveDoubleDash = true;
+        ArgName = ArgName.substr(1);
+      }
+
+      Handler = LookupLongOption(*ChosenSubCommand, ArgName, Value,
+                                 LongOptionsUseDoubleDash, HaveDoubleDash);
+      if (!Handler || Handler->getFormattingFlag() != cl::Positional) {
+        ProvidePositionalOption(ActivePositionalArg, StringRef(argv[i]), i);
+        continue; // We are done!
+      }
+    } else { // We start with a '-', must be an argument.
+      ArgName = StringRef(argv[i] + 1);
+      // Eat second dash.
+      if (!ArgName.empty() && ArgName[0] == '-') {
+        HaveDoubleDash = true;
+        ArgName = ArgName.substr(1);
+      }
+
+      Handler = LookupLongOption(*ChosenSubCommand, ArgName, Value,
+                                 LongOptionsUseDoubleDash, HaveDoubleDash);
+
+      // Check to see if this "option" is really a prefixed or grouped argument.
+      if (!Handler && !(LongOptionsUseDoubleDash && HaveDoubleDash))
+        Handler = HandlePrefixedOrGroupedOption(ArgName, Value, ErrorParsing,
+                                                OptionsMap);
+
+      // Otherwise, look for the closest available option to report to the user
+      // in the upcoming error.
+      if (!Handler && SinkOpts.empty())
+        NearestHandler =
+            LookupNearestOption(ArgName, OptionsMap, NearestHandlerString);
+    }
+
+    if (!Handler) {
+      if (SinkOpts.empty()) {
+        *Errs << ProgramName << ": Unknown command line argument '" << argv[i]
+              << "'.  Try: '" << argv[0] << " --help'\n";
+
+        if (NearestHandler) {
+          // If we know a near match, report it as well.
+          *Errs << ProgramName << ": Did you mean '"
+                << PrintArg(NearestHandlerString, 0) << "'?\n";
+        }
+
+        ErrorParsing = true;
+      } else {
+        for (Option *SinkOpt : SinkOpts)
+          SinkOpt->addOccurrence(i, "", StringRef(argv[i]));
+      }
+      continue;
+    }
+
+    // If this is a named positional argument, just remember that it is the
+    // active one...
+    if (Handler->getFormattingFlag() == cl::Positional) {
+      if ((Handler->getMiscFlags() & PositionalEatsArgs) && !Value.empty()) {
+        Handler->error("This argument does not take a value.\n"
+                       "\tInstead, it consumes any positional arguments until "
+                       "the next recognized option.", *Errs);
+        ErrorParsing = true;
+      }
+      ActivePositionalArg = Handler;
+    }
+    else
+      ErrorParsing |= ProvideOption(Handler, ArgName, Value, argc, argv, i);
+  }
+
+  // Check and handle positional arguments now...
+  if (NumPositionalRequired > PositionalVals.size()) {
+      *Errs << ProgramName
+             << ": Not enough positional command line arguments specified!\n"
+             << "Must specify at least " << NumPositionalRequired
+             << " positional argument" << (NumPositionalRequired > 1 ? "s" : "")
+             << ": See: " << argv[0] << " --help\n";
+
+    ErrorParsing = true;
+  } else if (!HasUnlimitedPositionals &&
+             PositionalVals.size() > PositionalOpts.size()) {
+    *Errs << ProgramName << ": Too many positional arguments specified!\n"
+          << "Can specify at most " << PositionalOpts.size()
+          << " positional arguments: See: " << argv[0] << " --help\n";
+    ErrorParsing = true;
+
+  } else if (!ConsumeAfterOpt) {
+    // Positional args have already been handled if ConsumeAfter is specified.
+    unsigned ValNo = 0, NumVals = static_cast<unsigned>(PositionalVals.size());
+    for (size_t i = 0, e = PositionalOpts.size(); i != e; ++i) {
+      if (RequiresValue(PositionalOpts[i])) {
+        ProvidePositionalOption(PositionalOpts[i], PositionalVals[ValNo].first,
+                                PositionalVals[ValNo].second);
+        ValNo++;
+        --NumPositionalRequired; // We fulfilled our duty...
+      }
+
+      // If we _can_ give this option more arguments, do so now, as long as we
+      // do not give it values that others need.  'Done' controls whether the
+      // option even _WANTS_ any more.
+      //
+      bool Done = PositionalOpts[i]->getNumOccurrencesFlag() == cl::Required;
+      while (NumVals - ValNo > NumPositionalRequired && !Done) {
+        switch (PositionalOpts[i]->getNumOccurrencesFlag()) {
+        case cl::Optional:
+          Done = true; // Optional arguments want _at most_ one value
+          [[fallthrough]];
+        case cl::ZeroOrMore: // Zero or more will take all they can get...
+        case cl::OneOrMore:  // One or more will take all they can get...
+          ProvidePositionalOption(PositionalOpts[i],
+                                  PositionalVals[ValNo].first,
+                                  PositionalVals[ValNo].second);
+          ValNo++;
+          break;
+        default:
+          llvm_unreachable("Internal error, unexpected NumOccurrences flag in "
+                           "positional argument processing!");
+        }
+      }
+    }
+  } else {
+    assert(ConsumeAfterOpt && NumPositionalRequired <= PositionalVals.size());
+    unsigned ValNo = 0;
+    for (size_t J = 0, E = PositionalOpts.size(); J != E; ++J)
+      if (RequiresValue(PositionalOpts[J])) {
+        ErrorParsing |= ProvidePositionalOption(PositionalOpts[J],
+                                                PositionalVals[ValNo].first,
+                                                PositionalVals[ValNo].second);
+        ValNo++;
+      }
+
+    // Handle the case where there is just one positional option, and it's
+    // optional.  In this case, we want to give JUST THE FIRST option to the
+    // positional option and keep the rest for the consume after.  The above
+    // loop would have assigned no values to positional options in this case.
+    //
+    if (PositionalOpts.size() == 1 && ValNo == 0 && !PositionalVals.empty()) {
+      ErrorParsing |= ProvidePositionalOption(PositionalOpts[0],
+                                              PositionalVals[ValNo].first,
+                                              PositionalVals[ValNo].second);
+      ValNo++;
+    }
+
+    // Handle over all of the rest of the arguments to the
+    // cl::ConsumeAfter command line option...
+    for (; ValNo != PositionalVals.size(); ++ValNo)
+      ErrorParsing |=
+          ProvidePositionalOption(ConsumeAfterOpt, PositionalVals[ValNo].first,
+                                  PositionalVals[ValNo].second);
+  }
+
+  // Loop over args and make sure all required args are specified!
+  for (const auto &Opt : OptionsMap) {
+    switch (Opt.second->getNumOccurrencesFlag()) {
+    case Required:
+    case OneOrMore:
+      if (Opt.second->getNumOccurrences() == 0) {
+        Opt.second->error("must be specified at least once!");
+        ErrorParsing = true;
+      }
+      [[fallthrough]];
+    default:
+      break;
+    }
+  }
+
+  // Now that we know if -debug is specified, we can use it.
+  // Note that if ReadResponseFiles == true, this must be done before the
+  // memory allocated for the expanded command line is free()d below.
+  LLVM_DEBUG(dbgs() << "Args: ";
+             for (int i = 0; i < argc; ++i) dbgs() << argv[i] << ' ';
+             dbgs() << '\n';);
+
+  // Free all of the memory allocated to the map.  Command line options may only
+  // be processed once!
+  MoreHelp.clear();
+
+  // If we had an error processing our arguments, don't let the program execute
+  if (ErrorParsing) {
+    return false;
+  }
+  return !CommonOptions->HLOp.getValue()
+      && !CommonOptions->HLHOp.getValue()
+      && !CommonOptions->HOp.getValue()
+      && !CommonOptions->HHOp.getValue()
+      && !CommonOptions->PrintOptions.getValue()
+      && !CommonOptions->PrintAllOptions.getValue()
+      && !CommonOptions->VersOp.getValue()
+    && true;
+}
+
 static void initCommonOptions() {
   *CommonOptions;
   initDebugCounterOptions();
@@ -2683,18 +2707,20 @@ void VersionPrinter::operator=(bool OptionWasSpecified) {
   if (!OptionWasSpecified)
     return;
 
+  invoked = true;
+
   if (CommonOptions->OverrideVersionPrinter != nullptr) {
     CommonOptions->OverrideVersionPrinter(outs());
-    exit(0);
+  } else {
+    print(CommonOptions->ExtraVersionPrinters);
   }
-  print(CommonOptions->ExtraVersionPrinters);
-
-  exit(0);
 }
 
 void HelpPrinterWrapper::operator=(bool Value) {
   if (!Value)
     return;
+
+  invoked = true;
 
   // Decide which printer to invoke. If more than one option category is
   // registered then it is useful to show the categorized help instead of
@@ -2799,8 +2825,8 @@ void cl::ResetAllOptionOccurrences() {
   GlobalParser->ResetAllOptionOccurrences();
 }
 
-void LLVMParseCommandLineOptions(int argc, const char *const *argv,
+bool LLVMParseCommandLineOptions(int argc, const char *const *argv,
                                  const char *Overview) {
-  llvm::cl::ParseCommandLineOptions(argc, argv, StringRef(Overview),
+  return llvm::cl::ParseCommandLineOptions(argc, argv, StringRef(Overview),
                                     &llvm::nulls());
 }

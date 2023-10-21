@@ -421,22 +421,24 @@ void lto_codegen_add_must_preserve_symbol(lto_code_gen_t cg,
   unwrap(cg)->addMustPreserveSymbol(symbol);
 }
 
-static void maybeParseOptions(lto_code_gen_t cg) {
+static bool maybeParseOptions(lto_code_gen_t cg) {
   if (optionParsingState != OptParsingState::Done) {
     // Parse options if any were set by the lto_codegen_debug_options* function.
-    unwrap(cg)->parseCodeGenDebugOptions();
+    if (!unwrap(cg)->parseCodeGenDebugOptions())
+      llvm_unreachable("failed to parse options");
     lto_add_attrs(cg);
     optionParsingState = OptParsingState::Done;
   }
+  return true;
 }
 
 bool lto_codegen_write_merged_modules(lto_code_gen_t cg, const char *path) {
-  maybeParseOptions(cg);
-  return !unwrap(cg)->writeMergedModules(path);
+  return maybeParseOptions(cg) && !unwrap(cg)->writeMergedModules(path);
 }
 
 const void *lto_codegen_compile(lto_code_gen_t cg, size_t *length) {
-  maybeParseOptions(cg);
+  if (!maybeParseOptions(cg))
+    return nullptr;
   LibLTOCodeGenerator *CG = unwrap(cg);
   CG->NativeObjectFile = CG->compile();
   if (!CG->NativeObjectFile)
@@ -446,12 +448,12 @@ const void *lto_codegen_compile(lto_code_gen_t cg, size_t *length) {
 }
 
 bool lto_codegen_optimize(lto_code_gen_t cg) {
-  maybeParseOptions(cg);
-  return !unwrap(cg)->optimize();
+  return maybeParseOptions(cg) && !unwrap(cg)->optimize();
 }
 
 const void *lto_codegen_compile_optimized(lto_code_gen_t cg, size_t *length) {
-  maybeParseOptions(cg);
+  if (!maybeParseOptions(cg))
+    return nullptr;
   LibLTOCodeGenerator *CG = unwrap(cg);
   CG->NativeObjectFile = CG->compileOptimized();
   if (!CG->NativeObjectFile)
@@ -461,8 +463,7 @@ const void *lto_codegen_compile_optimized(lto_code_gen_t cg, size_t *length) {
 }
 
 bool lto_codegen_compile_to_file(lto_code_gen_t cg, const char **name) {
-  maybeParseOptions(cg);
-  return !unwrap(cg)->compile_to_file(name);
+  return maybeParseOptions(cg) && !unwrap(cg)->compile_to_file(name);
 }
 
 void lto_set_debug_options(const char *const *options, int number) {
@@ -474,7 +475,9 @@ void lto_set_debug_options(const char *const *options, int number) {
   for (int i = 0; i < number; ++i)
     Options.push_back(options[i]);
 
-  llvm::parseCommandLineOptions(Options);
+  if (!llvm::parseCommandLineOptions(Options)) {
+      llvm_unreachable("failed to parse options");
+  }
   optionParsingState = OptParsingState::Early;
 }
 
@@ -581,7 +584,9 @@ void thinlto_debug_options(const char *const *options, int number) {
   if (number && options) {
     std::vector<const char *> CodegenArgv(1, "libLTO");
     append_range(CodegenArgv, ArrayRef<const char *>(options, number));
-    cl::ParseCommandLineOptions(CodegenArgv.size(), CodegenArgv.data());
+    if (!cl::ParseCommandLineOptions(CodegenArgv.size(), CodegenArgv.data())) {
+        llvm_unreachable("failed to parse options");
+    }
   }
 }
 

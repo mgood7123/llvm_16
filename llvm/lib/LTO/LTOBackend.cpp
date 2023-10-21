@@ -78,10 +78,9 @@ namespace llvm {
 extern cl::opt<bool> NoPGOWarnMismatch;
 }
 
-[[noreturn]] static void reportOpenError(StringRef Path, Twine Msg) {
+static void reportOpenError(StringRef Path, Twine Msg) {
   errs() << "failed to open " << Path << ": " << Msg << '\n';
   errs().flush();
-  exit(1);
 }
 
 Error Config::addSaveTemps(std::string OutputFileName, bool UseInputModulePath,
@@ -123,8 +122,10 @@ Error Config::addSaveTemps(std::string OutputFileName, bool UseInputModulePath,
       raw_fd_ostream OS(Path, EC, sys::fs::OpenFlags::OF_None);
       // Because -save-temps is a debugging feature, we report the error
       // directly and exit.
-      if (EC)
+      if (EC) {
         reportOpenError(Path, EC.message());
+        return false;
+      }
       WriteBitcodeToFile(M, OS, /*ShouldPreserveUseListOrder=*/false);
       return true;
     };

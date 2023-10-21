@@ -141,7 +141,8 @@ int main(int argc, char **argv) {
 
   LLVMContext Context;
   cl::HideUnrelatedOptions(ExtractCat);
-  cl::ParseCommandLineOptions(argc, argv, "llvm extractor\n");
+  if (!cl::ParseCommandLineOptions(argc, argv, "llvm extractor\n"))
+    return 1;
 
   // Use lazy loading, since we only care about selected global values.
   SMDiagnostic Err;

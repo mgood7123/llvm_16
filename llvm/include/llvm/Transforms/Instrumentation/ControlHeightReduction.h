@@ -20,6 +20,7 @@ namespace llvm {
 
 class ControlHeightReductionPass :
       public PassInfoMixin<ControlHeightReductionPass> {
+        bool errored;
 public:
   ControlHeightReductionPass();
   PreservedAnalyses run(Function &F, FunctionAnalysisManager &FAM);

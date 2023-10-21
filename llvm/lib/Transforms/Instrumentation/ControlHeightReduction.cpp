@@ -77,12 +77,12 @@ static cl::opt<unsigned> CHRDupThreshsold(
 static StringSet<> CHRModules;
 static StringSet<> CHRFunctions;
 
-static void parseCHRFilterFiles() {
+static bool parseCHRFilterFiles() {
   if (!CHRModuleList.empty()) {
     auto FileOrErr = MemoryBuffer::getFile(CHRModuleList);
     if (!FileOrErr) {
       errs() << "Error: Couldn't read the chr-module-list file " << CHRModuleList << "\n";
-      std::exit(1);
+      return false;
     }
     StringRef Buf = FileOrErr->get()->getBuffer();
     SmallVector<StringRef, 0> Lines;
@@ -97,7 +97,7 @@ static void parseCHRFilterFiles() {
     auto FileOrErr = MemoryBuffer::getFile(CHRFunctionList);
     if (!FileOrErr) {
       errs() << "Error: Couldn't read the chr-function-list file " << CHRFunctionList << "\n";
-      std::exit(1);
+      return false;
     }
     StringRef Buf = FileOrErr->get()->getBuffer();
     SmallVector<StringRef, 0> Lines;
@@ -108,6 +108,7 @@ static void parseCHRFilterFiles() {
         CHRFunctions.insert(Line);
     }
   }
+  return true;
 }
 
 namespace {
@@ -2075,12 +2076,14 @@ bool CHR::run() {
 namespace llvm {
 
 ControlHeightReductionPass::ControlHeightReductionPass() {
-  parseCHRFilterFiles();
+  errored = parseCHRFilterFiles();
 }
 
 PreservedAnalyses ControlHeightReductionPass::run(
     Function &F,
     FunctionAnalysisManager &FAM) {
+  if (errored)
+    return PreservedAnalyses::all();
   auto &MAMProxy = FAM.getResult<ModuleAnalysisManagerFunctionProxy>(F);
   auto PPSI = MAMProxy.getCachedResult<ProfileSummaryAnalysis>(*F.getParent());
   // If there is no profile summary, we should not do CHR.

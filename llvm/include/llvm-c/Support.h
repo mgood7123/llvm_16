@@ -42,7 +42,7 @@ LLVMBool LLVMLoadLibraryPermanently(const char* Filename);
  *
  * @see llvm::cl::ParseCommandLineOptions()
  */
-void LLVMParseCommandLineOptions(int argc, const char *const *argv,
+bool LLVMParseCommandLineOptions(int argc, const char *const *argv,
                                  const char *Overview);
 
 /**

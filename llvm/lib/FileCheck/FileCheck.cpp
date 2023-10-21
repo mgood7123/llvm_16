@@ -858,6 +858,9 @@ bool Pattern::parsePattern(StringRef PatternStr, StringRef Prefix,
       // Find the closing bracket pair ending the match.  End is going to be an
       // offset relative to the beginning of the match string.
       size_t End = FindRegexVarEnd(UnparsedPatternStr, SM);
+      if (End == (size_t)-1) {
+        return false;
+      }
       StringRef MatchStr = UnparsedPatternStr.substr(0, End);
       bool IsNumBlock = MatchStr.consume_front("#");
 
@@ -1406,7 +1409,7 @@ size_t Pattern::FindRegexVarEnd(StringRef Str, SourceMgr &SM) {
           SM.PrintMessage(SMLoc::getFromPointer(Str.data()),
                           SourceMgr::DK_Error,
                           "missing closing \"]\" for regex variable");
-          exit(1);
+          return (size_t)-1;
         }
         BracketDepth--;
         break;

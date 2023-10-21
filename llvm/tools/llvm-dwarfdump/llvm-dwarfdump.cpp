@@ -780,10 +780,11 @@ int main(int argc, char **argv) {
 
   HideUnrelatedOptions(
       {&DwarfDumpCategory, &SectionCategory, &getColorCategory()});
-  cl::ParseCommandLineOptions(
+  if (!cl::ParseCommandLineOptions(
       argc, argv,
       "pretty-print DWARF debug information in object files"
-      " and debug info archives.\n");
+      " and debug info archives.\n"))
+    return 1;
 
   // FIXME: Audit interactions between these two options and make them
   //        compatible.

@@ -264,7 +264,7 @@ public:
   /// The diagnostic message will be implicitly prefixed with a severity keyword
   /// according to \p DI.getSeverity(), i.e., "error: " for \a DS_Error,
   /// "warning: " for \a DS_Warning, and "note: " for \a DS_Note.
-  void diagnose(const DiagnosticInfo &DI);
+  bool diagnose(const DiagnosticInfo &DI);
 
   /// Registers a yield callback with the given context.
   ///
@@ -297,9 +297,9 @@ public:
   /// be prepared to drop the erroneous construct on the floor and "not crash".
   /// The generated code need not be correct.  The error message will be
   /// implicitly prefixed with "error: " and should not end with a ".".
-  void emitError(uint64_t LocCookie, const Twine &ErrorStr);
-  void emitError(const Instruction *I, const Twine &ErrorStr);
-  void emitError(const Twine &ErrorStr);
+  bool emitError(uint64_t LocCookie, const Twine &ErrorStr);
+  bool emitError(const Instruction *I, const Twine &ErrorStr);
+  bool emitError(const Twine &ErrorStr);
 
   /// Access the object which can disable optional passes and individual
   /// optimizations at compile time.

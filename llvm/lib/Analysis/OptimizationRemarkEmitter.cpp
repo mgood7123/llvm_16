@@ -87,7 +87,8 @@ void OptimizationRemarkEmitter::emit(
     return;
   }
 
-  F->getContext().diagnose(OptDiag);
+  if (!F->getContext().diagnose(OptDiag))
+    llvm_unreachable("OptimizationRemarkEmitter : emit error");
 }
 
 OptimizationRemarkEmitterWrapperPass::OptimizationRemarkEmitterWrapperPass()
