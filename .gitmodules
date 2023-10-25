@@ -10,9 +10,6 @@
 [submodule "argparse"]
 	path = argparse
 	url = https://github.com/p-ranav/argparse
-[submodule "argv_split"]
-	path = argv_split
-	url = https://github.com/bitmeal/argv_split
 [submodule "minizip"]
 	path = minizip
 	url = https://github.com/zlib-ng/minizip-ng
