@@ -1,0 +1,1 @@
+/usr/bin/clang-13  -g0 -O3 CMakeFiles/vt_testcurs.dir/__/demos/testcurs.c.o -o testcurs  libpdcursesstatic.a 

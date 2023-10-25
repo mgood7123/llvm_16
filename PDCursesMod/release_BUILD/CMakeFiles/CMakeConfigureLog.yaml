@@ -1,0 +1,458 @@
+
+---
+events:
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/share/cmake-3.28/Modules/CMakeDetermineSystem.cmake:233 (message)"
+      - "CMakeLists.txt:11 (project)"
+    message: |
+      The system is: Linux - 6.1.0-1parrot1-amd64 - x86_64
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/share/cmake-3.28/Modules/CMakeDetermineCompilerId.cmake:17 (message)"
+      - "/usr/share/cmake-3.28/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
+      - "/usr/share/cmake-3.28/Modules/CMakeDetermineCCompiler.cmake:123 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "CMakeLists.txt:11 (project)"
+    message: |
+      Compiling the C compiler identification source file "CMakeCCompilerId.c" succeeded.
+      Compiler: /usr/bin/clang-13 
+      Build flags: 
+      Id flags:  
+      
+      The output was:
+      0
+      
+      
+      Compilation of the C compiler identification source "CMakeCCompilerId.c" produced "a.out"
+      
+      The C compiler identification is Clang, found in:
+        /home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/release_BUILD/CMakeFiles/3.28.0-rc1/CompilerIdC/a.out
+      
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.28/Modules/CMakeDetermineCompilerABI.cmake:57 (try_compile)"
+      - "/usr/share/cmake-3.28/Modules/CMakeTestCCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:11 (project)"
+    checks:
+      - "Detecting C compiler ABI info"
+    directories:
+      source: "/home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/release_BUILD/CMakeFiles/CMakeScratch/TryCompile-AHqVPt"
+      binary: "/home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/release_BUILD/CMakeFiles/CMakeScratch/TryCompile-AHqVPt"
+    cmakeVariables:
+      CMAKE_C_FLAGS: ""
+      CMAKE_C_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+      CMAKE_MODULE_PATH: ";/home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/cmake"
+    buildResult:
+      variable: "CMAKE_C_ABI_COMPILED"
+      cached: true
+      stdout: |
+        Change Dir: '/home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/release_BUILD/CMakeFiles/CMakeScratch/TryCompile-AHqVPt'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_c748a/fast
+        gmake[1]: Entering directory '/home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/release_BUILD/CMakeFiles/CMakeScratch/TryCompile-AHqVPt'
+        /usr/bin/gmake  -f CMakeFiles/cmTC_c748a.dir/build.make CMakeFiles/cmTC_c748a.dir/build
+        gmake[2]: Entering directory '/home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/release_BUILD/CMakeFiles/CMakeScratch/TryCompile-AHqVPt'
+        Building C object CMakeFiles/cmTC_c748a.dir/CMakeCCompilerABI.c.o
+        /usr/bin/clang-13   -v -MD -MT CMakeFiles/cmTC_c748a.dir/CMakeCCompilerABI.c.o -MF CMakeFiles/cmTC_c748a.dir/CMakeCCompilerABI.c.o.d -o CMakeFiles/cmTC_c748a.dir/CMakeCCompilerABI.c.o -c /usr/share/cmake-3.28/Modules/CMakeCCompilerABI.c
+        Debian clang version 13.0.1-6~deb11u1
+        Target: x86_64-pc-linux-gnu
+        Thread model: posix
+        InstalledDir: /usr/bin
+        Found candidate GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/10
+        Selected GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/10
+        Candidate multilib: .;@m64
+        Selected multilib: .;@m64
+         (in-process)
+         "/usr/lib/llvm-13/bin/clang" -cc1 -triple x86_64-pc-linux-gnu -emit-obj -mrelax-all --mrelax-relocations -disable-free -disable-llvm-verifier -discard-value-names -main-file-name CMakeCCompilerABI.c -mrelocation-model static -mframe-pointer=all -fmath-errno -fno-rounding-math -mconstructor-aliases -munwind-tables -target-cpu x86-64 -tune-cpu generic -debugger-tuning=gdb -v -fcoverage-compilation-dir=/home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/release_BUILD/CMakeFiles/CMakeScratch/TryCompile-AHqVPt -resource-dir /usr/lib/llvm-13/lib/clang/13.0.1 -dependency-file CMakeFiles/cmTC_c748a.dir/CMakeCCompilerABI.c.o.d -MT CMakeFiles/cmTC_c748a.dir/CMakeCCompilerABI.c.o -sys-header-deps -internal-isystem /usr/lib/llvm-13/lib/clang/13.0.1/include -internal-isystem /usr/local/include -internal-isystem /usr/bin/../lib/gcc/x86_64-linux-gnu/10/../../../../x86_64-linux-gnu/include -internal-externc-isystem /usr/include/x86_64-linux-gnu -internal-externc-isystem /include -internal-externc-isystem /usr/include -fdebug-compilation-dir=/home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/release_BUILD/CMakeFiles/CMakeScratch/TryCompile-AHqVPt -ferror-limit 19 -fgnuc-version=4.2.1 -faddrsig -D__GCC_HAVE_DWARF2_CFI_ASM=1 -o CMakeFiles/cmTC_c748a.dir/CMakeCCompilerABI.c.o -x c /usr/share/cmake-3.28/Modules/CMakeCCompilerABI.c
+        clang -cc1 version 13.0.1 based upon LLVM 13.0.1 default target x86_64-pc-linux-gnu
+        ignoring nonexistent directory "/usr/bin/../lib/gcc/x86_64-linux-gnu/10/../../../../x86_64-linux-gnu/include"
+        ignoring nonexistent directory "/include"
+        #include "..." search starts here:
+        #include <...> search starts here:
+         /usr/lib/llvm-13/lib/clang/13.0.1/include
+         /usr/local/include
+         /usr/include/x86_64-linux-gnu
+         /usr/include
+        End of search list.
+        Linking C executable cmTC_c748a
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_c748a.dir/link.txt --verbose=1
+        /usr/bin/clang-13  -v CMakeFiles/cmTC_c748a.dir/CMakeCCompilerABI.c.o -o cmTC_c748a 
+        Debian clang version 13.0.1-6~deb11u1
+        Target: x86_64-pc-linux-gnu
+        Thread model: posix
+        InstalledDir: /usr/bin
+        Found candidate GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/10
+        Selected GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/10
+        Candidate multilib: .;@m64
+        Selected multilib: .;@m64
+         "/usr/bin/ld" --build-id --eh-frame-hdr -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -o cmTC_c748a /lib/x86_64-linux-gnu/crt1.o /lib/x86_64-linux-gnu/crti.o /usr/bin/../lib/gcc/x86_64-linux-gnu/10/crtbegin.o -L/usr/bin/../lib/gcc/x86_64-linux-gnu/10 -L/usr/bin/../lib/gcc/x86_64-linux-gnu/10/../../../../lib64 -L/lib/x86_64-linux-gnu -L/lib/../lib64 -L/usr/lib/x86_64-linux-gnu -L/usr/lib/../lib64 -L/usr/lib/llvm-13/bin/../lib -L/lib -L/usr/lib CMakeFiles/cmTC_c748a.dir/CMakeCCompilerABI.c.o -lgcc --as-needed -lgcc_s --no-as-needed -lc -lgcc --as-needed -lgcc_s --no-as-needed /usr/bin/../lib/gcc/x86_64-linux-gnu/10/crtend.o /lib/x86_64-linux-gnu/crtn.o
+        gmake[2]: Leaving directory '/home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/release_BUILD/CMakeFiles/CMakeScratch/TryCompile-AHqVPt'
+        gmake[1]: Leaving directory '/home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/release_BUILD/CMakeFiles/CMakeScratch/TryCompile-AHqVPt'
+        
+      exitCode: 0
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/share/cmake-3.28/Modules/CMakeDetermineCompilerABI.cmake:127 (message)"
+      - "/usr/share/cmake-3.28/Modules/CMakeTestCCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:11 (project)"
+    message: |
+      Parsed C implicit include dir info: rv=done
+        found start of include info
+        found start of implicit include info
+          add: [/usr/lib/llvm-13/lib/clang/13.0.1/include]
+          add: [/usr/local/include]
+          add: [/usr/include/x86_64-linux-gnu]
+          add: [/usr/include]
+        end of search list found
+        collapse include dir [/usr/lib/llvm-13/lib/clang/13.0.1/include] ==> [/usr/lib/llvm-13/lib/clang/13.0.1/include]
+        collapse include dir [/usr/local/include] ==> [/usr/local/include]
+        collapse include dir [/usr/include/x86_64-linux-gnu] ==> [/usr/include/x86_64-linux-gnu]
+        collapse include dir [/usr/include] ==> [/usr/include]
+        implicit include dirs: [/usr/lib/llvm-13/lib/clang/13.0.1/include;/usr/local/include;/usr/include/x86_64-linux-gnu;/usr/include]
+      
+      
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/share/cmake-3.28/Modules/CMakeDetermineCompilerABI.cmake:159 (message)"
+      - "/usr/share/cmake-3.28/Modules/CMakeTestCCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:11 (project)"
+    message: |
+      Parsed C implicit link information:
+        link line regex: [^( *|.*[/\\])(ld|CMAKE_LINK_STARTFILE-NOTFOUND|([^/\\]+-)?ld|collect2)[^/\\]*( |$)]
+        ignore line: [Change Dir: '/home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/release_BUILD/CMakeFiles/CMakeScratch/TryCompile-AHqVPt']
+        ignore line: []
+        ignore line: [Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_c748a/fast]
+        ignore line: [gmake[1]: Entering directory '/home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/release_BUILD/CMakeFiles/CMakeScratch/TryCompile-AHqVPt']
+        ignore line: [/usr/bin/gmake  -f CMakeFiles/cmTC_c748a.dir/build.make CMakeFiles/cmTC_c748a.dir/build]
+        ignore line: [gmake[2]: Entering directory '/home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/release_BUILD/CMakeFiles/CMakeScratch/TryCompile-AHqVPt']
+        ignore line: [Building C object CMakeFiles/cmTC_c748a.dir/CMakeCCompilerABI.c.o]
+        ignore line: [/usr/bin/clang-13   -v -MD -MT CMakeFiles/cmTC_c748a.dir/CMakeCCompilerABI.c.o -MF CMakeFiles/cmTC_c748a.dir/CMakeCCompilerABI.c.o.d -o CMakeFiles/cmTC_c748a.dir/CMakeCCompilerABI.c.o -c /usr/share/cmake-3.28/Modules/CMakeCCompilerABI.c]
+        ignore line: [Debian clang version 13.0.1-6~deb11u1]
+        ignore line: [Target: x86_64-pc-linux-gnu]
+        ignore line: [Thread model: posix]
+        ignore line: [InstalledDir: /usr/bin]
+        ignore line: [Found candidate GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/10]
+        ignore line: [Selected GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/10]
+        ignore line: [Candidate multilib: .]
+        ignore line: [@m64]
+        ignore line: [Selected multilib: .]
+        ignore line: [@m64]
+        ignore line: [ (in-process)]
+        ignore line: [ "/usr/lib/llvm-13/bin/clang" -cc1 -triple x86_64-pc-linux-gnu -emit-obj -mrelax-all --mrelax-relocations -disable-free -disable-llvm-verifier -discard-value-names -main-file-name CMakeCCompilerABI.c -mrelocation-model static -mframe-pointer=all -fmath-errno -fno-rounding-math -mconstructor-aliases -munwind-tables -target-cpu x86-64 -tune-cpu generic -debugger-tuning=gdb -v -fcoverage-compilation-dir=/home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/release_BUILD/CMakeFiles/CMakeScratch/TryCompile-AHqVPt -resource-dir /usr/lib/llvm-13/lib/clang/13.0.1 -dependency-file CMakeFiles/cmTC_c748a.dir/CMakeCCompilerABI.c.o.d -MT CMakeFiles/cmTC_c748a.dir/CMakeCCompilerABI.c.o -sys-header-deps -internal-isystem /usr/lib/llvm-13/lib/clang/13.0.1/include -internal-isystem /usr/local/include -internal-isystem /usr/bin/../lib/gcc/x86_64-linux-gnu/10/../../../../x86_64-linux-gnu/include -internal-externc-isystem /usr/include/x86_64-linux-gnu -internal-externc-isystem /include -internal-externc-isystem /usr/include -fdebug-compilation-dir=/home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/release_BUILD/CMakeFiles/CMakeScratch/TryCompile-AHqVPt -ferror-limit 19 -fgnuc-version=4.2.1 -faddrsig -D__GCC_HAVE_DWARF2_CFI_ASM=1 -o CMakeFiles/cmTC_c748a.dir/CMakeCCompilerABI.c.o -x c /usr/share/cmake-3.28/Modules/CMakeCCompilerABI.c]
+        ignore line: [clang -cc1 version 13.0.1 based upon LLVM 13.0.1 default target x86_64-pc-linux-gnu]
+        ignore line: [ignoring nonexistent directory "/usr/bin/../lib/gcc/x86_64-linux-gnu/10/../../../../x86_64-linux-gnu/include"]
+        ignore line: [ignoring nonexistent directory "/include"]
+        ignore line: [#include "..." search starts here:]
+        ignore line: [#include <...> search starts here:]
+        ignore line: [ /usr/lib/llvm-13/lib/clang/13.0.1/include]
+        ignore line: [ /usr/local/include]
+        ignore line: [ /usr/include/x86_64-linux-gnu]
+        ignore line: [ /usr/include]
+        ignore line: [End of search list.]
+        ignore line: [Linking C executable cmTC_c748a]
+        ignore line: [/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_c748a.dir/link.txt --verbose=1]
+        ignore line: [/usr/bin/clang-13  -v CMakeFiles/cmTC_c748a.dir/CMakeCCompilerABI.c.o -o cmTC_c748a ]
+        ignore line: [Debian clang version 13.0.1-6~deb11u1]
+        ignore line: [Target: x86_64-pc-linux-gnu]
+        ignore line: [Thread model: posix]
+        ignore line: [InstalledDir: /usr/bin]
+        ignore line: [Found candidate GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/10]
+        ignore line: [Selected GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/10]
+        ignore line: [Candidate multilib: .]
+        ignore line: [@m64]
+        ignore line: [Selected multilib: .]
+        ignore line: [@m64]
+        link line: [ "/usr/bin/ld" --build-id --eh-frame-hdr -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -o cmTC_c748a /lib/x86_64-linux-gnu/crt1.o /lib/x86_64-linux-gnu/crti.o /usr/bin/../lib/gcc/x86_64-linux-gnu/10/crtbegin.o -L/usr/bin/../lib/gcc/x86_64-linux-gnu/10 -L/usr/bin/../lib/gcc/x86_64-linux-gnu/10/../../../../lib64 -L/lib/x86_64-linux-gnu -L/lib/../lib64 -L/usr/lib/x86_64-linux-gnu -L/usr/lib/../lib64 -L/usr/lib/llvm-13/bin/../lib -L/lib -L/usr/lib CMakeFiles/cmTC_c748a.dir/CMakeCCompilerABI.c.o -lgcc --as-needed -lgcc_s --no-as-needed -lc -lgcc --as-needed -lgcc_s --no-as-needed /usr/bin/../lib/gcc/x86_64-linux-gnu/10/crtend.o /lib/x86_64-linux-gnu/crtn.o]
+          arg [/usr/bin/ld] ==> ignore
+          arg [--build-id] ==> ignore
+          arg [--eh-frame-hdr] ==> ignore
+          arg [-m] ==> ignore
+          arg [elf_x86_64] ==> ignore
+          arg [-dynamic-linker] ==> ignore
+          arg [/lib64/ld-linux-x86-64.so.2] ==> ignore
+          arg [-o] ==> ignore
+          arg [cmTC_c748a] ==> ignore
+          arg [/lib/x86_64-linux-gnu/crt1.o] ==> obj [/lib/x86_64-linux-gnu/crt1.o]
+          arg [/lib/x86_64-linux-gnu/crti.o] ==> obj [/lib/x86_64-linux-gnu/crti.o]
+          arg [/usr/bin/../lib/gcc/x86_64-linux-gnu/10/crtbegin.o] ==> obj [/usr/bin/../lib/gcc/x86_64-linux-gnu/10/crtbegin.o]
+          arg [-L/usr/bin/../lib/gcc/x86_64-linux-gnu/10] ==> dir [/usr/bin/../lib/gcc/x86_64-linux-gnu/10]
+          arg [-L/usr/bin/../lib/gcc/x86_64-linux-gnu/10/../../../../lib64] ==> dir [/usr/bin/../lib/gcc/x86_64-linux-gnu/10/../../../../lib64]
+          arg [-L/lib/x86_64-linux-gnu] ==> dir [/lib/x86_64-linux-gnu]
+          arg [-L/lib/../lib64] ==> dir [/lib/../lib64]
+          arg [-L/usr/lib/x86_64-linux-gnu] ==> dir [/usr/lib/x86_64-linux-gnu]
+          arg [-L/usr/lib/../lib64] ==> dir [/usr/lib/../lib64]
+          arg [-L/usr/lib/llvm-13/bin/../lib] ==> dir [/usr/lib/llvm-13/bin/../lib]
+          arg [-L/lib] ==> dir [/lib]
+          arg [-L/usr/lib] ==> dir [/usr/lib]
+          arg [CMakeFiles/cmTC_c748a.dir/CMakeCCompilerABI.c.o] ==> ignore
+          arg [-lgcc] ==> lib [gcc]
+          arg [--as-needed] ==> ignore
+          arg [-lgcc_s] ==> lib [gcc_s]
+          arg [--no-as-needed] ==> ignore
+          arg [-lc] ==> lib [c]
+          arg [-lgcc] ==> lib [gcc]
+          arg [--as-needed] ==> ignore
+          arg [-lgcc_s] ==> lib [gcc_s]
+          arg [--no-as-needed] ==> ignore
+          arg [/usr/bin/../lib/gcc/x86_64-linux-gnu/10/crtend.o] ==> obj [/usr/bin/../lib/gcc/x86_64-linux-gnu/10/crtend.o]
+          arg [/lib/x86_64-linux-gnu/crtn.o] ==> obj [/lib/x86_64-linux-gnu/crtn.o]
+        collapse obj [/usr/bin/../lib/gcc/x86_64-linux-gnu/10/crtbegin.o] ==> [/usr/lib/gcc/x86_64-linux-gnu/10/crtbegin.o]
+        collapse obj [/usr/bin/../lib/gcc/x86_64-linux-gnu/10/crtend.o] ==> [/usr/lib/gcc/x86_64-linux-gnu/10/crtend.o]
+        collapse library dir [/usr/bin/../lib/gcc/x86_64-linux-gnu/10] ==> [/usr/lib/gcc/x86_64-linux-gnu/10]
+        collapse library dir [/usr/bin/../lib/gcc/x86_64-linux-gnu/10/../../../../lib64] ==> [/usr/lib64]
+        collapse library dir [/lib/x86_64-linux-gnu] ==> [/lib/x86_64-linux-gnu]
+        collapse library dir [/lib/../lib64] ==> [/lib64]
+        collapse library dir [/usr/lib/x86_64-linux-gnu] ==> [/usr/lib/x86_64-linux-gnu]
+        collapse library dir [/usr/lib/../lib64] ==> [/usr/lib64]
+        collapse library dir [/usr/lib/llvm-13/bin/../lib] ==> [/usr/lib/llvm-13/lib]
+        collapse library dir [/lib] ==> [/lib]
+        collapse library dir [/usr/lib] ==> [/usr/lib]
+        implicit libs: [gcc;gcc_s;c;gcc;gcc_s]
+        implicit objs: [/lib/x86_64-linux-gnu/crt1.o;/lib/x86_64-linux-gnu/crti.o;/usr/lib/gcc/x86_64-linux-gnu/10/crtbegin.o;/usr/lib/gcc/x86_64-linux-gnu/10/crtend.o;/lib/x86_64-linux-gnu/crtn.o]
+        implicit dirs: [/usr/lib/gcc/x86_64-linux-gnu/10;/usr/lib64;/lib/x86_64-linux-gnu;/lib64;/usr/lib/x86_64-linux-gnu;/usr/lib/llvm-13/lib;/lib;/usr/lib]
+        implicit fwks: []
+      
+      
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.28/Modules/CheckFunctionExists.cmake:86 (try_compile)"
+      - "cmake/gen_config_header.cmake:3 (CHECK_FUNCTION_EXISTS)"
+      - "CMakeLists.txt:26 (include)"
+    checks:
+      - "Looking for vsnprintf"
+    directories:
+      source: "/home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/release_BUILD/CMakeFiles/CMakeScratch/TryCompile-zue5yp"
+      binary: "/home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/release_BUILD/CMakeFiles/CMakeScratch/TryCompile-zue5yp"
+    cmakeVariables:
+      CMAKE_C_FLAGS: ""
+      CMAKE_C_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+      CMAKE_MODULE_PATH: ";/home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/cmake"
+    buildResult:
+      variable: "PDC_HAVE_VSNPRINTF"
+      cached: true
+      stdout: |
+        Change Dir: '/home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/release_BUILD/CMakeFiles/CMakeScratch/TryCompile-zue5yp'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_c8fcd/fast
+        gmake[1]: Entering directory '/home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/release_BUILD/CMakeFiles/CMakeScratch/TryCompile-zue5yp'
+        /usr/bin/gmake  -f CMakeFiles/cmTC_c8fcd.dir/build.make CMakeFiles/cmTC_c8fcd.dir/build
+        gmake[2]: Entering directory '/home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/release_BUILD/CMakeFiles/CMakeScratch/TryCompile-zue5yp'
+        Building C object CMakeFiles/cmTC_c8fcd.dir/CheckFunctionExists.c.o
+        /usr/bin/clang-13   -DCHECK_FUNCTION_EXISTS=vsnprintf -MD -MT CMakeFiles/cmTC_c8fcd.dir/CheckFunctionExists.c.o -MF CMakeFiles/cmTC_c8fcd.dir/CheckFunctionExists.c.o.d -o CMakeFiles/cmTC_c8fcd.dir/CheckFunctionExists.c.o -c /home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/release_BUILD/CMakeFiles/CMakeScratch/TryCompile-zue5yp/CheckFunctionExists.c
+        /home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/release_BUILD/CMakeFiles/CMakeScratch/TryCompile-zue5yp/CheckFunctionExists.c:7:3: warning: incompatible redeclaration of library function 'vsnprintf' [-Wincompatible-library-redeclaration]
+          CHECK_FUNCTION_EXISTS(void);
+          ^
+        <command line>:1:31: note: expanded from here
+        #define CHECK_FUNCTION_EXISTS vsnprintf
+                                      ^
+        /home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/release_BUILD/CMakeFiles/CMakeScratch/TryCompile-zue5yp/CheckFunctionExists.c:7:3: note: 'vsnprintf' is a builtin with type 'int (char *, unsigned long, const char *, struct __va_list_tag *)'
+        <command line>:1:31: note: expanded from here
+        #define CHECK_FUNCTION_EXISTS vsnprintf
+                                      ^
+        1 warning generated.
+        Linking C executable cmTC_c8fcd
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_c8fcd.dir/link.txt --verbose=1
+        /usr/bin/clang-13  -DCHECK_FUNCTION_EXISTS=vsnprintf CMakeFiles/cmTC_c8fcd.dir/CheckFunctionExists.c.o -o cmTC_c8fcd 
+        gmake[2]: Leaving directory '/home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/release_BUILD/CMakeFiles/CMakeScratch/TryCompile-zue5yp'
+        gmake[1]: Leaving directory '/home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/release_BUILD/CMakeFiles/CMakeScratch/TryCompile-zue5yp'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.28/Modules/CheckFunctionExists.cmake:86 (try_compile)"
+      - "cmake/gen_config_header.cmake:4 (CHECK_FUNCTION_EXISTS)"
+      - "CMakeLists.txt:26 (include)"
+    checks:
+      - "Looking for vsscanf"
+    directories:
+      source: "/home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/release_BUILD/CMakeFiles/CMakeScratch/TryCompile-68Gr8t"
+      binary: "/home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/release_BUILD/CMakeFiles/CMakeScratch/TryCompile-68Gr8t"
+    cmakeVariables:
+      CMAKE_C_FLAGS: ""
+      CMAKE_C_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+      CMAKE_MODULE_PATH: ";/home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/cmake"
+    buildResult:
+      variable: "PDC_HAVE_VSSCANF"
+      cached: true
+      stdout: |
+        Change Dir: '/home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/release_BUILD/CMakeFiles/CMakeScratch/TryCompile-68Gr8t'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_b3620/fast
+        gmake[1]: Entering directory '/home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/release_BUILD/CMakeFiles/CMakeScratch/TryCompile-68Gr8t'
+        /usr/bin/gmake  -f CMakeFiles/cmTC_b3620.dir/build.make CMakeFiles/cmTC_b3620.dir/build
+        gmake[2]: Entering directory '/home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/release_BUILD/CMakeFiles/CMakeScratch/TryCompile-68Gr8t'
+        Building C object CMakeFiles/cmTC_b3620.dir/CheckFunctionExists.c.o
+        /usr/bin/clang-13   -DCHECK_FUNCTION_EXISTS=vsscanf -MD -MT CMakeFiles/cmTC_b3620.dir/CheckFunctionExists.c.o -MF CMakeFiles/cmTC_b3620.dir/CheckFunctionExists.c.o.d -o CMakeFiles/cmTC_b3620.dir/CheckFunctionExists.c.o -c /home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/release_BUILD/CMakeFiles/CMakeScratch/TryCompile-68Gr8t/CheckFunctionExists.c
+        /home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/release_BUILD/CMakeFiles/CMakeScratch/TryCompile-68Gr8t/CheckFunctionExists.c:7:3: warning: incompatible redeclaration of library function 'vsscanf' [-Wincompatible-library-redeclaration]
+          CHECK_FUNCTION_EXISTS(void);
+          ^
+        <command line>:1:31: note: expanded from here
+        #define CHECK_FUNCTION_EXISTS vsscanf
+                                      ^
+        /home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/release_BUILD/CMakeFiles/CMakeScratch/TryCompile-68Gr8t/CheckFunctionExists.c:7:3: note: 'vsscanf' is a builtin with type 'int (const char *restrict, const char *restrict, struct __va_list_tag *)'
+        <command line>:1:31: note: expanded from here
+        #define CHECK_FUNCTION_EXISTS vsscanf
+                                      ^
+        1 warning generated.
+        Linking C executable cmTC_b3620
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_b3620.dir/link.txt --verbose=1
+        /usr/bin/clang-13  -DCHECK_FUNCTION_EXISTS=vsscanf CMakeFiles/cmTC_b3620.dir/CheckFunctionExists.c.o -o cmTC_b3620 
+        gmake[2]: Leaving directory '/home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/release_BUILD/CMakeFiles/CMakeScratch/TryCompile-68Gr8t'
+        gmake[1]: Leaving directory '/home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/release_BUILD/CMakeFiles/CMakeScratch/TryCompile-68Gr8t'
+        
+      exitCode: 0
+  -
+    kind: "try_run-v1"
+    backtrace:
+      - "cmake/target_arch.cmake:25 (try_run)"
+      - "cmake/gen_config_header.cmake:39 (get_target_arch)"
+      - "CMakeLists.txt:26 (include)"
+    directories:
+      source: "/home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/release_BUILD/CMakeFiles/CMakeTmp"
+      binary: "/home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/release_BUILD/CMakeFiles/CMakeTmp"
+    cmakeVariables:
+      CMAKE_C_FLAGS: ""
+      CMAKE_C_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+      CMAKE_MODULE_PATH: ";/home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/cmake"
+    buildResult:
+      variable: "compile_result_unused"
+      cached: true
+      stdout: |
+        Change Dir: '/home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/release_BUILD/CMakeFiles/CMakeTmp'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_f5f78/fast
+        gmake[1]: Entering directory '/home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/release_BUILD/CMakeFiles/CMakeTmp'
+        /usr/bin/gmake  -f CMakeFiles/cmTC_f5f78.dir/build.make CMakeFiles/cmTC_f5f78.dir/build
+        gmake[2]: Entering directory '/home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/release_BUILD/CMakeFiles/CMakeTmp'
+        Building C object CMakeFiles/cmTC_f5f78.dir/target_arch_detect.c.o
+        /usr/bin/clang-13    -MD -MT CMakeFiles/cmTC_f5f78.dir/target_arch_detect.c.o -MF CMakeFiles/cmTC_f5f78.dir/target_arch_detect.c.o.d -o CMakeFiles/cmTC_f5f78.dir/target_arch_detect.c.o -c /home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/release_BUILD/target_arch_detect.c
+        /home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/release_BUILD/target_arch_detect.c:8:10: error: cmake_arch x86_64
+                #error cmake_arch x86_64
+                 ^
+        1 error generated.
+        gmake[2]: *** [CMakeFiles/cmTC_f5f78.dir/build.make:79: CMakeFiles/cmTC_f5f78.dir/target_arch_detect.c.o] Error 1
+        gmake[2]: Leaving directory '/home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/release_BUILD/CMakeFiles/CMakeTmp'
+        gmake[1]: *** [Makefile:127: cmTC_f5f78/fast] Error 2
+        gmake[1]: Leaving directory '/home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/release_BUILD/CMakeFiles/CMakeTmp'
+        
+      exitCode: 2
+    runResult:
+      variable: "run_result_unused"
+      cached: true
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.28/Modules/CheckLibraryExists.cmake:69 (try_compile)"
+      - "/usr/share/cmake-3.28/Modules/FindCurses.cmake:107 (CHECK_LIBRARY_EXISTS)"
+      - "ncurses/CMakeLists.txt:14 (include)"
+    checks:
+      - "Looking for wsyncup in /usr/lib/x86_64-linux-gnu/libcurses.so"
+    directories:
+      source: "/home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/release_BUILD/CMakeFiles/CMakeScratch/TryCompile-skAyss"
+      binary: "/home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/release_BUILD/CMakeFiles/CMakeScratch/TryCompile-skAyss"
+    cmakeVariables:
+      CMAKE_C_FLAGS: ""
+      CMAKE_C_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+      CMAKE_MODULE_PATH: ";/home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/cmake"
+    buildResult:
+      variable: "CURSES_CURSES_HAS_WSYNCUP"
+      cached: true
+      stdout: |
+        Change Dir: '/home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/release_BUILD/CMakeFiles/CMakeScratch/TryCompile-skAyss'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_dc372/fast
+        gmake[1]: Entering directory '/home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/release_BUILD/CMakeFiles/CMakeScratch/TryCompile-skAyss'
+        /usr/bin/gmake  -f CMakeFiles/cmTC_dc372.dir/build.make CMakeFiles/cmTC_dc372.dir/build
+        gmake[2]: Entering directory '/home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/release_BUILD/CMakeFiles/CMakeScratch/TryCompile-skAyss'
+        Building C object CMakeFiles/cmTC_dc372.dir/CheckFunctionExists.c.o
+        /usr/bin/clang-13   -DCHECK_FUNCTION_EXISTS=wsyncup -MD -MT CMakeFiles/cmTC_dc372.dir/CheckFunctionExists.c.o -MF CMakeFiles/cmTC_dc372.dir/CheckFunctionExists.c.o.d -o CMakeFiles/cmTC_dc372.dir/CheckFunctionExists.c.o -c /home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/release_BUILD/CMakeFiles/CMakeScratch/TryCompile-skAyss/CheckFunctionExists.c
+        Linking C executable cmTC_dc372
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_dc372.dir/link.txt --verbose=1
+        /usr/bin/clang-13  -DCHECK_FUNCTION_EXISTS=wsyncup CMakeFiles/cmTC_dc372.dir/CheckFunctionExists.c.o -o cmTC_dc372  -lcurses 
+        gmake[2]: Leaving directory '/home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/release_BUILD/CMakeFiles/CMakeScratch/TryCompile-skAyss'
+        gmake[1]: Leaving directory '/home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/release_BUILD/CMakeFiles/CMakeScratch/TryCompile-skAyss'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.28/Modules/CheckLibraryExists.cmake:69 (try_compile)"
+      - "/usr/share/cmake-3.28/Modules/FindCurses.cmake:161 (CHECK_LIBRARY_EXISTS)"
+      - "ncurses/CMakeLists.txt:14 (include)"
+    checks:
+      - "Looking for cbreak in /usr/lib/x86_64-linux-gnu/libncursesw.so"
+    directories:
+      source: "/home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/release_BUILD/CMakeFiles/CMakeScratch/TryCompile-5AekWr"
+      binary: "/home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/release_BUILD/CMakeFiles/CMakeScratch/TryCompile-5AekWr"
+    cmakeVariables:
+      CMAKE_C_FLAGS: ""
+      CMAKE_C_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+      CMAKE_MODULE_PATH: ";/home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/cmake"
+    buildResult:
+      variable: "CURSES_NCURSES_HAS_CBREAK"
+      cached: true
+      stdout: |
+        Change Dir: '/home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/release_BUILD/CMakeFiles/CMakeScratch/TryCompile-5AekWr'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_14e7c/fast
+        gmake[1]: Entering directory '/home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/release_BUILD/CMakeFiles/CMakeScratch/TryCompile-5AekWr'
+        /usr/bin/gmake  -f CMakeFiles/cmTC_14e7c.dir/build.make CMakeFiles/cmTC_14e7c.dir/build
+        gmake[2]: Entering directory '/home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/release_BUILD/CMakeFiles/CMakeScratch/TryCompile-5AekWr'
+        Building C object CMakeFiles/cmTC_14e7c.dir/CheckFunctionExists.c.o
+        /usr/bin/clang-13   -DCHECK_FUNCTION_EXISTS=cbreak -MD -MT CMakeFiles/cmTC_14e7c.dir/CheckFunctionExists.c.o -MF CMakeFiles/cmTC_14e7c.dir/CheckFunctionExists.c.o.d -o CMakeFiles/cmTC_14e7c.dir/CheckFunctionExists.c.o -c /home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/release_BUILD/CMakeFiles/CMakeScratch/TryCompile-5AekWr/CheckFunctionExists.c
+        Linking C executable cmTC_14e7c
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_14e7c.dir/link.txt --verbose=1
+        /usr/bin/clang-13  -DCHECK_FUNCTION_EXISTS=cbreak CMakeFiles/cmTC_14e7c.dir/CheckFunctionExists.c.o -o cmTC_14e7c  -lncursesw 
+        gmake[2]: Leaving directory '/home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/release_BUILD/CMakeFiles/CMakeScratch/TryCompile-5AekWr'
+        gmake[1]: Leaving directory '/home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/release_BUILD/CMakeFiles/CMakeScratch/TryCompile-5AekWr'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.28/Modules/CheckLibraryExists.cmake:69 (try_compile)"
+      - "/usr/share/cmake-3.28/Modules/FindCurses.cmake:163 (CHECK_LIBRARY_EXISTS)"
+      - "ncurses/CMakeLists.txt:14 (include)"
+    checks:
+      - "Looking for nodelay in /usr/lib/x86_64-linux-gnu/libncursesw.so"
+    directories:
+      source: "/home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/release_BUILD/CMakeFiles/CMakeScratch/TryCompile-n5hYDq"
+      binary: "/home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/release_BUILD/CMakeFiles/CMakeScratch/TryCompile-n5hYDq"
+    cmakeVariables:
+      CMAKE_C_FLAGS: ""
+      CMAKE_C_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+      CMAKE_MODULE_PATH: ";/home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/cmake"
+    buildResult:
+      variable: "CURSES_NCURSES_HAS_NODELAY"
+      cached: true
+      stdout: |
+        Change Dir: '/home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/release_BUILD/CMakeFiles/CMakeScratch/TryCompile-n5hYDq'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_c821f/fast
+        gmake[1]: Entering directory '/home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/release_BUILD/CMakeFiles/CMakeScratch/TryCompile-n5hYDq'
+        /usr/bin/gmake  -f CMakeFiles/cmTC_c821f.dir/build.make CMakeFiles/cmTC_c821f.dir/build
+        gmake[2]: Entering directory '/home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/release_BUILD/CMakeFiles/CMakeScratch/TryCompile-n5hYDq'
+        Building C object CMakeFiles/cmTC_c821f.dir/CheckFunctionExists.c.o
+        /usr/bin/clang-13   -DCHECK_FUNCTION_EXISTS=nodelay -MD -MT CMakeFiles/cmTC_c821f.dir/CheckFunctionExists.c.o -MF CMakeFiles/cmTC_c821f.dir/CheckFunctionExists.c.o.d -o CMakeFiles/cmTC_c821f.dir/CheckFunctionExists.c.o -c /home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/release_BUILD/CMakeFiles/CMakeScratch/TryCompile-n5hYDq/CheckFunctionExists.c
+        Linking C executable cmTC_c821f
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_c821f.dir/link.txt --verbose=1
+        /usr/bin/clang-13  -DCHECK_FUNCTION_EXISTS=nodelay CMakeFiles/cmTC_c821f.dir/CheckFunctionExists.c.o -o cmTC_c821f  -lncursesw 
+        gmake[2]: Leaving directory '/home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/release_BUILD/CMakeFiles/CMakeScratch/TryCompile-n5hYDq'
+        gmake[1]: Leaving directory '/home/DATA/git/Gecko/HTML/qparse/ManagedObject/llvm_mcjit/PDCursesMod/release_BUILD/CMakeFiles/CMakeScratch/TryCompile-n5hYDq'
+        
+      exitCode: 0
+...

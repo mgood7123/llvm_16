@@ -1,0 +1,1 @@
+/usr/bin/clang-13  -g0 -O3 CMakeFiles/ncurses_rain.dir/__/demos/rain.c.o -o rain  -lncursesw /usr/lib/x86_64-linux-gnu/libformw.so 

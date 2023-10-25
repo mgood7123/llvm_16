@@ -1,0 +1,1 @@
+/usr/bin/clang-13  -g0 -O3 CMakeFiles/vt_firework.dir/__/demos/firework.c.o -o firework  libpdcursesstatic.a 

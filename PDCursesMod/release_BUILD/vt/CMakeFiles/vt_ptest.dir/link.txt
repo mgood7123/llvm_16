@@ -1,0 +1,1 @@
+/usr/bin/clang-13  -g0 -O3 CMakeFiles/vt_ptest.dir/__/demos/ptest.c.o -o ptest  libpdcursesstatic.a 

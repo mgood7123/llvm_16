@@ -115,7 +115,7 @@ if (LIBRARY_LLVM_18_STATIC_NEEDS_GENERATION)
   set(LLVM_OPTIMIZED_TABLEGEN ON CACHE BOOL "" FORCE)
   set(LLVM_ENABLE_EH ON CACHE BOOL "" FORCE)
   set(LLVM_ENABLE_RTTI ON CACHE BOOL "" FORCE)
-  set(LLVM_ENABLE_PROJECTS "clang" CACHE STRING "" FORCE)
+  set(LLVM_ENABLE_PROJECTS "clang;lldb" CACHE STRING "" FORCE)
 
   if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(LLVM_UNREACHABLE_OPTIMIZE OFF CACHE BOOL "" FORCE)
@@ -216,12 +216,39 @@ else()
 endif()
 
 add_subdirectory(clang_driver)
+add_subdirectory(replxx)
+set(ARGPARSE_INSTALL OFF CACHE BOOL "" FORCE)
+set(ARGPARSE_BUILD_SAMPLES OFF CACHE BOOL "" FORCE)
+set(ARGPARSE_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+add_subdirectory(argparse)
 
 add_library(llvm_orcjit STATIC src/jit.cpp)
 target_include_directories(llvm_orcjit PUBLIC include)
 target_link_libraries(llvm_orcjit clang_driver)
 
-#add_executable(llvm_orcjit_example src/example.cpp)
-#target_link_libraries(llvm_orcjit_example llvm_orcjit)
-#target_compile_options(llvm_orcjit_example PRIVATE "-O0")
-#target_compile_options(llvm_orcjit_example PRIVATE "-g3")
+set(PDC_BUILD_SHARED OFF CACHE BOOL "" FORCE)
+set(PDC_SDL2_BUILD OFF CACHE BOOL "" FORCE)
+set(PDC_SDL2_DEPS_BUILD OFF CACHE BOOL "" FORCE)
+set(PDC_GL_BUILD OFF CACHE BOOL "" FORCE)
+add_subdirectory(PDCursesMod)
+
+add_library(pdcurses STATIC empty.c)
+target_link_libraries(pdcurses vt_pdcursesstatic)
+target_include_directories(pdcurses PUBLIC PDCursesMod)
+
+add_subdirectory(minizip)
+
+add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/gen.zip
+    COMMAND ${CMAKE_COMMAND} CC=clang CXX=clang++ -B 
+    DEPENDS gen
+    VERBATIM
+)
+add_dependencies(test1 test2_run)
+
+add_executable(llvm_orcjit_example src/example.cpp)
+target_link_libraries(llvm_orcjit_example llvm_orcjit replxx argparse pdcurses)
+target_compile_options(replxx PRIVATE "-O0")
+target_compile_options(replxx PRIVATE "-g3")
+target_compile_options(llvm_orcjit_example PRIVATE "-O0")
+target_compile_options(llvm_orcjit_example PRIVATE "-g3")

@@ -1,0 +1,1 @@
+/usr/bin/clang-13  -g0 -O3 CMakeFiles/ncurses_testcurs.dir/__/demos/testcurs.c.o -o testcurs  -lncursesw /usr/lib/x86_64-linux-gnu/libformw.so 

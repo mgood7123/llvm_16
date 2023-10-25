@@ -1,0 +1,1 @@
+/usr/bin/clang-13  -g0 -O3 CMakeFiles/ncurses_ozdemo.dir/__/demos/ozdemo.c.o -o ozdemo  -lncursesw /usr/lib/x86_64-linux-gnu/libformw.so 

@@ -1,0 +1,1 @@
+/usr/bin/clang-13  -g0 -O3 CMakeFiles/vt_rain.dir/__/demos/rain.c.o -o rain  libpdcursesstatic.a 
