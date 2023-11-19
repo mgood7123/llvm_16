@@ -29,7 +29,7 @@
 
 let
     nixpkgs = fetchTarball "https://github.com/NixOS/nixpkgs/tarballs/release-22.11";
-    host = import <nixpkgs> {};
+    host = import nixpkgs {};
     common = target:
         target.stdenv.mkDerivation {
             name = "ncurses5";
