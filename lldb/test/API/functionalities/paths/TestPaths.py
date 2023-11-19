@@ -35,11 +35,11 @@ class TestPaths(TestBase):
 
         shlib_dir = lldb.SBHostOS.GetLLDBPath(lldb.ePathTypeLLDBShlibDir).GetDirectory()
         if lldbplatformutil.getHostPlatform() == "windows":
-            filenames = ["liblldb.dll"]
+            filenames = ["liblldbAPI.dll"]
         elif lldbplatformutil.getHostPlatform() == "macosx":
-            filenames = ["LLDB", "liblldb.dylib"]
+            filenames = ["LLDB", "liblldbAPI.dylib"]
         else:
-            filenames = ["liblldb.so"]
+            filenames = ["liblldbAPI.so"]
         self.assertTrue(
             any([os.path.exists(os.path.join(shlib_dir, f)) for f in filenames]),
             "shlib_dir = " + shlib_dir,

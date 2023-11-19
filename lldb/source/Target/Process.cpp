@@ -375,32 +375,54 @@ ProcessSP Process::FindPlugin(lldb::TargetSP target_sp,
 
   ProcessSP process_sp;
   ProcessCreateInstance create_callback = nullptr;
+  Log *log = GetLog(LLDBLog::Process);
+  LLDB_LOG(log, "attempting to find plugin '{0}'", plugin_name);
   if (!plugin_name.empty()) {
+    LLDB_LOG(log, "plugin name is not empty");
+    LLDB_LOG(log, "attempting to obtain process create callback");
     create_callback =
         PluginManager::GetProcessCreateCallbackForPluginName(plugin_name);
     if (create_callback) {
+      LLDB_LOG(log, "process create callback is valid");
+      LLDB_LOG(log, "creating callback");
       process_sp = create_callback(target_sp, listener_sp, crash_file_path,
                                    can_connect);
       if (process_sp) {
+        LLDB_LOG(log, "callback is valid");
         if (process_sp->CanDebug(target_sp, true)) {
+          LLDB_LOG(log, "callback can debug");
           process_sp->m_process_unique_id = ++g_process_unique_id;
-        } else
+        } else {
+          LLDB_LOG(log, "callback cannot debug");
           process_sp.reset();
+        }
+      } else {
+        LLDB_LOG(log, "callback is not valid");
       }
+    } else {
+      LLDB_LOG(log, "process create callback is not valid");
     }
   } else {
+    LLDB_LOG(log, "plugin name is empty");
     for (uint32_t idx = 0;
          (create_callback =
               PluginManager::GetProcessCreateCallbackAtIndex(idx)) != nullptr;
          ++idx) {
+      LLDB_LOG(log, "creating callback");
       process_sp = create_callback(target_sp, listener_sp, crash_file_path,
                                    can_connect);
       if (process_sp) {
+        LLDB_LOG(log, "callback is valid");
         if (process_sp->CanDebug(target_sp, false)) {
+          LLDB_LOG(log, "callback can debug");
           process_sp->m_process_unique_id = ++g_process_unique_id;
           break;
-        } else
+        } else {
+          LLDB_LOG(log, "callback cannot debug");
           process_sp.reset();
+        }
+      } else {
+        LLDB_LOG(log, "callback is not valid");
       }
     }
   }

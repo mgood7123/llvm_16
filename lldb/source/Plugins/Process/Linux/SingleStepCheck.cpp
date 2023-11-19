@@ -66,6 +66,7 @@ bool WorkaroundNeeded() {
   // needed if we find at least one broken cpu.
 
   Log *log = GetLog(POSIXLog::Thread);
+  LLDB_LOG(log, "calling fork() in 'bool WorkaroundNeeded()'");
   ::pid_t child_pid = fork();
   if (child_pid == -1) {
     LLDB_LOG(log, "failed to fork(): {0}", Status(errno, eErrorTypePOSIX));

@@ -2,7 +2,7 @@ add_lldb_unittest(APITests
   SBCommandInterpreterTest.cpp
 
   LINK_LIBS
-    liblldb
+    liblldbAPI
   )
 
 if(Python3_RPATH)

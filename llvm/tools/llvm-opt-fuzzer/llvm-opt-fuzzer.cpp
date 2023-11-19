@@ -189,14 +189,16 @@ extern "C" LLVM_ATTRIBUTE_USED int LLVMFuzzerInitialize(int *argc,
   //
 
   handleExecNameEncodedOptimizerOpts(*argv[0]);
-  parseFuzzerCLOpts(*argc, *argv);
+  if (!parseFuzzerCLOpts(*argc, *argv)) {
+    return 1;
+  }
 
   // Create TargetMachine
   //
 
   if (TargetTripleStr.empty()) {
     errs() << *argv[0] << ": -mtriple must be specified\n";
-    exit(1);
+    return 1;
   }
   ExitOnError ExitOnErr(std::string(*argv[0]) + ": error:");
   TM = ExitOnErr(codegen::createTargetMachineForTriple(
@@ -207,14 +209,14 @@ extern "C" LLVM_ATTRIBUTE_USED int LLVMFuzzerInitialize(int *argc,
 
   if (PassPipeline.empty()) {
     errs() << *argv[0] << ": at least one pass should be specified\n";
-    exit(1);
+    return 1;
   }
 
   PassBuilder PB(TM.get());
   ModulePassManager MPM;
   if (auto Err = PB.parsePassPipeline(MPM, PassPipeline)) {
     errs() << *argv[0] << ": " << toString(std::move(Err)) << "\n";
-    exit(1);
+    return 1;
   }
 
   // Create mutator

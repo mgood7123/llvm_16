@@ -9,8 +9,9 @@
 #include <tmpfile.h>
 #include <filesystem>
 
-extern int format_main(int argc, const char **argv);
 extern int clang_main(int Argc, char **Argv, const llvm::ToolContext &ToolContext);
+extern int format_main(int argc, const char **argv);
+extern int lldb_main(int argc, const char **argv);
 
 struct ClangDriver {
 
@@ -92,6 +93,15 @@ struct ClangDriver {
         copy.insert(copy.begin(), "/llvm/mc/jit/clang-format");
         llvm::cl::ResetAllOptionOccurrences();
         return format_main(copy.size(), copy.data());
+    }
+    static inline int call_lldb(const llvm::SmallVector<const char*> & args) {
+        llvm::SmallVector<const char*> copy = args;
+
+        // path does not need to exist
+        //
+        copy.insert(copy.begin(), "/llvm/mc/jit/clang-format");
+        llvm::cl::ResetAllOptionOccurrences();
+        return lldb_main(copy.size(), copy.data());
     }
     
     // we cannot `: raw_fd_ostream` since that requires pre-setup of our file

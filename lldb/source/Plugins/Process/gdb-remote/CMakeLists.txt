@@ -15,7 +15,7 @@ if(HAVE_LIBCOMPRESSION)
 endif()
 
 if(LLVM_ENABLE_ZLIB)
-  list(APPEND LLDB_SYSTEM_LIBS ZLIB::ZLIB)
+  list(APPEND LLDB_SYSTEM_LIBS ${ZLIB_LIBRARIES})
 endif()
 
 add_lldb_library(lldbPluginProcessGDBRemote PLUGIN

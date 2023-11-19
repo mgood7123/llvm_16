@@ -174,34 +174,50 @@ void Target::Dump(Stream *s, lldb::DescriptionLevel description_level) {
 }
 
 void Target::CleanupProcess() {
+  Log *log = GetLog(LLDBLog::Platform);
   // Do any cleanup of the target we need to do between process instances.
   // NB It is better to do this before destroying the process in case the
   // clean up needs some help from the process.
+  LLDB_LOG(log, "current process is clearing all breakpoint sites");
   m_breakpoint_list.ClearAllBreakpointSites();
   m_internal_breakpoint_list.ClearAllBreakpointSites();
+  LLDB_LOG(log, "current process is resetting breakpoint hit counts");
   ResetBreakpointHitCounts();
   // Disable watchpoints just on the debugger side.
+  LLDB_LOG(log, "current process is disabling watchpoints");
   std::unique_lock<std::recursive_mutex> lock;
   this->GetWatchpointList().GetListMutex(lock);
   DisableAllWatchpoints(false);
+  LLDB_LOG(log, "current process is resetting watchpoint hit counts");
   ClearAllWatchpointHitCounts();
   ClearAllWatchpointHistoricValues();
   m_latest_stop_hook_id = 0;
 }
 
 void Target::DeleteCurrentProcess() {
+  Log *log = GetLog(LLDBLog::Platform);
+  LLDB_LOG(log, "attempting to delete current process");
   if (m_process_sp) {
     // We dispose any active tracing sessions on the current process
+    LLDB_LOG(log, "current process is resetting trace");
     m_trace_sp.reset();
+    LLDB_LOG(log, "current process is clearing history");
     m_section_load_history.Clear();
-    if (m_process_sp->IsAlive())
+    if (m_process_sp->IsAlive()) {
+      LLDB_LOG(log, "current process is alive, destroying");
       m_process_sp->Destroy(false);
+    }
 
+    LLDB_LOG(log, "current process finalizing");
     m_process_sp->Finalize();
 
+    LLDB_LOG(log, "current process is cleaning up");
     CleanupProcess();
 
+    LLDB_LOG(log, "current process is deleting");
     m_process_sp.reset();
+  } else {
+    LLDB_LOG(log, "current process is already deleted");
   }
 }
 
@@ -209,9 +225,16 @@ const lldb::ProcessSP &Target::CreateProcess(ListenerSP listener_sp,
                                              llvm::StringRef plugin_name,
                                              const FileSpec *crash_file,
                                              bool can_connect) {
-  if (!listener_sp)
+  Log *log = GetLog(LLDBLog::Platform);
+  LLDB_LOG(log, "attempting to create process for plugin name '{0}'", plugin_name);
+  if (!listener_sp) {
+    LLDB_LOG(log, "listener_sp evaluates to false, obtaining GetDebugger().GetListener()");
     listener_sp = GetDebugger().GetListener();
+    LLDB_LOG(log, "obtained GetDebugger().GetListener()");
+  }
+  LLDB_LOG(log, "deleting current process");
   DeleteCurrentProcess();
+  LLDB_LOG(log, "finnding plugin '{0}', can_connect = {1}", plugin_name, can_connect);
   m_process_sp = Process::FindPlugin(shared_from_this(), plugin_name,
                                      listener_sp, crash_file, can_connect);
   return m_process_sp;

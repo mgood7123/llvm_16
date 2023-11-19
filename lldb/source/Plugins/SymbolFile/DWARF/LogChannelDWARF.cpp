@@ -7,6 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "LogChannelDWARF.h"
+#include "llvm/Support/Threading.h"
 
 using namespace lldb_private;
 

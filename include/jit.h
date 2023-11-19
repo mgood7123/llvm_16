@@ -34,9 +34,5 @@ class JIT {
     void run_static_initializer();
     void run_static_deinitializer();
 
-    inline void dump(llvm::raw_ostream & os) {
-        os << "--- JIT execution session dump START---\n";
-        jit->getExecutionSession().dump(os);
-        os << "--- JIT execution session dump END ---\n";
-    }
+    void dump(llvm::raw_ostream & os);
 };

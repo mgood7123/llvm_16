@@ -274,8 +274,10 @@ void NativeProcessWindows::StopThread(lldb::tid_t thread_id,
   for (uint32_t i = 0; i < m_threads.size(); ++i) {
     auto t = static_cast<NativeThreadWindows *>(m_threads[i].get());
     Status error = t->DoStop();
-    if (error.Fail())
-      exit(1);
+    if (error.Fail()) {
+      LLDB_LOG(log, "Process {0} failed to stop thread with id {1}", GetID(), thread_id);
+      return;
+    }
   }
   SetStopReasonForThread(*thread, reason, description);
 }

@@ -10,6 +10,7 @@
 #include "lldb/Utility/Log.h"
 #include "llvm/ADT/ArrayRef.h"
 #include <cstdarg>
+#include "llvm/Support/Threading.h"
 
 using namespace lldb_private;
 
@@ -46,6 +47,7 @@ static constexpr Log::Category g_categories[] = {
      LLDBLog::Object},
     {{"os"}, {"log OperatingSystem plugin related activities"}, LLDBLog::OS},
     {{"platform"}, {"log platform events and activities"}, LLDBLog::Platform},
+    {{"pluginmanager"}, {"log plugin manager events"}, LLDBLog::PluginManager},
     {{"process"}, {"log process events and activities"}, LLDBLog::Process},
     {{"script"}, {"log events about the script interpreter"}, LLDBLog::Script},
     {{"state"},
@@ -79,5 +81,8 @@ template <> Log::Channel &lldb_private::LogChannelFor<LLDBLog>() {
 }
 
 void lldb_private::InitializeLldbChannel() {
-  Log::Register("lldb", g_log_channel);
+  static llvm::once_flag g_once_flag;
+  llvm::call_once(g_once_flag, []() {
+    Log::Register("lldb", g_log_channel);
+  });
 }

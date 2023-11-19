@@ -11,7 +11,7 @@ if(TARGET lldb-target-fuzzer)
   target_include_directories(lldb-target-fuzzer PRIVATE ..)
   target_link_libraries(lldb-target-fuzzer
     PRIVATE
-    liblldb
+    liblldbAPI
     lldbFuzzerUtils
     )
 

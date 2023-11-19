@@ -124,3 +124,8 @@ FIND_PACKAGE_HANDLE_STANDARD_ARGS(Z3
                                   VERSION_VAR Z3_VERSION_STRING)
 
 mark_as_advanced(Z3_INCLUDE_DIR Z3_LIBRARIES)
+
+message(STATUS "Z3: found :         ${Z3_FOUND}")
+message(STATUS "Z3: include_dirs :  ${Z3_INCLUDE_DIR}")
+message(STATUS "Z3: lib :           ${Z3_LIBRARIES}")
+message(STATUS "Z3: version :       ${Z3_VERSION_STRING}")

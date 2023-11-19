@@ -653,31 +653,6 @@ endif()
 
 # Keep the version requirements in sync with bindings/ocaml/README.txt.
 set(LLVM_BINDINGS "")
-include(FindOCaml)
-include(AddOCaml)
-if(WIN32 OR NOT LLVM_ENABLE_BINDINGS)
-  message(STATUS "OCaml bindings disabled.")
-else()
-  find_package(OCaml)
-  if( NOT OCAML_FOUND )
-    message(STATUS "OCaml bindings disabled.")
-  else()
-    if( OCAML_VERSION VERSION_LESS "4.00.0" )
-      message(STATUS "OCaml bindings disabled, need OCaml >=4.00.0.")
-    else()
-      find_ocamlfind_package(ctypes VERSION 0.4 OPTIONAL)
-      if( HAVE_OCAML_CTYPES )
-        message(STATUS "OCaml bindings enabled.")
-        set(LLVM_BINDINGS "${LLVM_BINDINGS} ocaml")
-
-        set(LLVM_OCAML_INSTALL_PATH "${OCAML_STDLIB_PATH}" CACHE STRING
-            "Install directory for LLVM OCaml packages")
-      else()
-        message(STATUS "OCaml bindings disabled, need ctypes >=0.4.")
-      endif()
-    endif()
-  endif()
-endif()
 
 string(REPLACE " " ";" LLVM_BINDINGS_LIST "${LLVM_BINDINGS}")
 

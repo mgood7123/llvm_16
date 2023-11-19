@@ -10,6 +10,15 @@
 [submodule "argparse"]
 	path = argparse
 	url = https://github.com/p-ranav/argparse
-[submodule "minizip"]
-	path = minizip
-	url = https://github.com/zlib-ng/minizip-ng
+[submodule "libzip"]
+	path = libzip
+	url = https://github.com/nih-at/libzip
+[submodule "wineditline"]
+	path = wineditline
+	url = https://github.com/winlibs/wineditline
+[submodule "ZPack"]
+	path = ZPack
+	url = https://github.com/LeadRDRK/ZPack
+[submodule "xz"]
+	path = xz
+	url = https://github.com/tukaani-project/xz

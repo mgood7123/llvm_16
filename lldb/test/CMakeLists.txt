@@ -118,8 +118,8 @@ if(TARGET lldb-vscode)
   add_lldb_test_dependency(lldb-vscode)
 endif()
 
-if(TARGET liblldb)
-  add_lldb_test_dependency(liblldb)
+if(TARGET liblldbAPI)
+  add_lldb_test_dependency(liblldbAPI)
 endif()
 
 if(TARGET lldb-framework)

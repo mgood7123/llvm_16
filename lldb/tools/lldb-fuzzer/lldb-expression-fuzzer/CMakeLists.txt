@@ -35,7 +35,7 @@ if(CLANG_ENABLE_PROTO_FUZZER)
       clangHandleCXX
       clangCXXProto
       clangProtoToCXX
-      liblldb
+      liblldbAPI
       )
 
     add_custom_command(TARGET lldb-expression-fuzzer PRE_BUILD

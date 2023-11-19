@@ -9,6 +9,7 @@
 #include "lldb/Host/PseudoTerminal.h"
 #include "lldb/Host/Config.h"
 #include "lldb/Host/FileSystem.h"
+#include "lldb/Utility/Log.h"
 #include "llvm/Support/Errc.h"
 #include "llvm/Support/Errno.h"
 #include <cassert>
@@ -22,6 +23,10 @@
 #endif
 
 #include "lldb/Host/PosixApi.h"
+
+#if defined(__linux__) || defined(__FreeBSD__) || defined(__NetBSD__)
+#include "Plugins/Process/POSIX/ProcessPOSIXLog.h"
+#endif
 
 #if defined(__APPLE__)
 #include <Availability.h>
@@ -141,6 +146,8 @@ llvm::Expected<lldb::pid_t> PseudoTerminal::Fork() {
   if (llvm::Error Err = OpenFirstAvailablePrimary(O_RDWR | O_CLOEXEC))
     return std::move(Err);
 
+  Log *log = GetLog(POSIXLog::Thread);
+  LLDB_LOG(log, "calling fork() in 'llvm::Expected<lldb::pid_t> PseudoTerminal::Fork()'");
   pid_t pid = ::fork();
   if (pid < 0) {
     return llvm::errorCodeToError(

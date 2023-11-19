@@ -304,13 +304,18 @@ getCopyFromParts(SelectionDAG &DAG, const SDLoc &DL, const SDValue *Parts,
 static void diagnosePossiblyInvalidConstraint(LLVMContext &Ctx, const Value *V,
                                               const Twine &ErrMsg) {
   const Instruction *I = dyn_cast_or_null<Instruction>(V);
-  if (!V)
+  if (!V) {
     Ctx.emitError(ErrMsg);
+    return;
+  }
 
   const char *AsmError = ", possible invalid constraint for vector type";
-  if (const CallInst *CI = dyn_cast<CallInst>(I))
-    if (CI->isInlineAsm())
+  if (const CallInst *CI = dyn_cast<CallInst>(I)) {
+    if (CI->isInlineAsm()) {
       Ctx.emitError(I, ErrMsg + AsmError);
+      return;
+    }
+  }
 
   Ctx.emitError(I, ErrMsg);
 }

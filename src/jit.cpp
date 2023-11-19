@@ -59,7 +59,7 @@ std::unique_ptr<llvm::orc::LLJIT> build_jit() {
         llvm::errs() << "Warning: This JIT may not work for platforms other than Linux.\n";
 
     //
-    // Jit compile with -O0
+    // Jit compile with -O3
     //
     // this seems to have no effect
     //
@@ -112,4 +112,10 @@ void JIT::run_static_initializer() {
 }
 void JIT::run_static_deinitializer() {
     ExitOnErr(jit->deinitialize(jit->getMainJITDylib()));
+}
+
+void JIT::dump(llvm::raw_ostream & os) {
+        os << "--- JIT execution session dump START---\n";
+        jit->getExecutionSession().dump(os);
+        os << "--- JIT execution session dump END ---\n";
 }

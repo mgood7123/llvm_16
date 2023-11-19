@@ -2136,9 +2136,12 @@ void MachineInstr::emitError(StringRef Msg) const {
     }
   }
 
-  if (const MachineBasicBlock *MBB = getParent())
-    if (const MachineFunction *MF = MBB->getParent())
+  if (const MachineBasicBlock *MBB = getParent()) {
+    if (const MachineFunction *MF = MBB->getParent()) {
       MF->getMMI().getModule()->getContext().emitError(LocCookie, Msg);
+      return;
+    }
+  }
   report_fatal_error(Msg);
 }
 

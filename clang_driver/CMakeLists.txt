@@ -18,7 +18,7 @@ add_library(clang_driver STATIC
 
 target_include_directories(clang_driver PUBLIC include)
 
-target_link_libraries(clang_driver LLVM_18_STATIC CLANG_18_STATIC tmpfile)
+target_link_libraries(clang_driver LLVM_18_STATIC CLANG_18_STATIC LLDB_18_STATIC tmpfile)
 
 target_compile_options(tmpfile PRIVATE "-O0")
 target_compile_options(tmpfile PRIVATE "-g3")

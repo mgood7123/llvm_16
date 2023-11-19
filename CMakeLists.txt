@@ -1,9 +1,11 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.12)
 
 project(llvm_mcjit C CXX)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if(NOT COMMAND testBuilder_build)
     add_subdirectory(testBuilder)
@@ -15,17 +17,52 @@ unset(LIBRARY_LLVM_18_STATIC_NEEDS_GENERATION CACHE)
 
 unset(LIBRARY_LLVM_18_STATIC)
 unset(LIBRARY_LLVM_18_STATIC CACHE)
+
+unset(LIBRARY_LLVM_18_STATIC_PATH)
+unset(LIBRARY_LLVM_18_STATIC_PATH CACHE)
+#set(LIBRARY_LLVM_18_STATIC_PATH ${CMAKE_BINARY_DIR})
+set(LIBRARY_LLVM_18_STATIC_PATH ${CMAKE_CURRENT_SOURCE_DIR}/release_BUILD)
+
+# clang and gcc don't default-print colored diagnostics when invoked from Ninja.
+if (UNIX AND
+    CMAKE_GENERATOR MATCHES "Ninja" AND
+    (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR
+    (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND
+      NOT (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.9))))
+  append("-fdiagnostics-color" CMAKE_C_FLAGS CMAKE_CXX_FLAGS)
+endif()
+
+# lld doesn't print colored diagnostics when invoked from Ninja
+if (UNIX AND CMAKE_GENERATOR MATCHES "Ninja")
+  include(LLVMCheckLinkerFlag)
+  llvm_check_linker_flag(CXX "-Wl,--color-diagnostics" LINKER_SUPPORTS_COLOR_DIAGNOSTICS)
+  append_if(LINKER_SUPPORTS_COLOR_DIAGNOSTICS "-Wl,--color-diagnostics"
+    CMAKE_EXE_LINKER_FLAGS CMAKE_MODULE_LINKER_FLAGS CMAKE_SHARED_LINKER_FLAGS)
+endif()
+
+if (false)
+  message(STATUS "START OF CMAKE VARIABLES")
+  get_cmake_property(_variableNames VARIABLES)
+  list (SORT _variableNames)
+  foreach (_variableName ${_variableNames})
+    #if (NOT _variableName MATCHES "CMAKE_*" AND NOT _variableName MATCHES "PC_*" AND NOT _variableName MATCHES "_CIF_SOURCE_CONTENT")
+      message(STATUS "${_variableName}=${${_variableName}}")
+    #endif()
+  endforeach()
+  message(STATUS "END OF CMAKE VARIABLES")
+endif()
+
 find_library(
   LIBRARY_LLVM_18_STATIC
   NAMES LLVM_18_STATIC
-  PATHS ${CMAKE_BINARY_DIR}
+  PATHS ${LIBRARY_LLVM_18_STATIC_PATH}
   NO_DEFAULT_PATH NO_PACKAGE_ROOT_PATH
   NO_CMAKE_PATH NO_CMAKE_ENVIRONMENT_PATH
   NO_SYSTEM_ENVIRONMENT_PATH NO_CMAKE_SYSTEM_PATH
   NO_CMAKE_FIND_ROOT_PATH
 )
 if ("${LIBRARY_LLVM_18_STATIC}" STREQUAL "LIBRARY_LLVM_18_STATIC-NOTFOUND")
-  message(STATUS "LLVM_18_STATIC NOT FOUND, generating")
+  message(STATUS "LLVM_18_STATIC NOT FOUND, generating\n")
   set(LIBRARY_LLVM_18_STATIC_NEEDS_GENERATION TRUE)
 else()
   unset(LIBRARY_CLANG_18_STATIC)
@@ -33,24 +70,279 @@ else()
   find_library(
     LIBRARY_CLANG_18_STATIC
     NAMES CLANG_18_STATIC
-    PATHS ${CMAKE_BINARY_DIR}
+    PATHS ${LIBRARY_LLVM_18_STATIC_PATH}
     NO_DEFAULT_PATH NO_PACKAGE_ROOT_PATH
     NO_CMAKE_PATH NO_CMAKE_ENVIRONMENT_PATH
     NO_SYSTEM_ENVIRONMENT_PATH NO_CMAKE_SYSTEM_PATH
     NO_CMAKE_FIND_ROOT_PATH
   )
   if ("${LIBRARY_CLANG_18_STATIC}" STREQUAL "LIBRARY_CLANG_18_STATIC-NOTFOUND")
-    message(STATUS "CLANG_18_STATIC NOT FOUND, generating")
+    message(STATUS "CLANG_18_STATIC NOT FOUND, generating\n")
     set(LIBRARY_LLVM_18_STATIC_NEEDS_GENERATION TRUE)
   else()
-    if (NOT EXISTS ${CMAKE_BINARY_DIR}/LLVM_18_STATIC.target_link_libraries)
-      message(WARNING "LLVM_18_STATIC.target_link_libraries (list of required system libs) NOT FOUND, generating")
+    unset(LIBRARY_LLDB_18_STATIC)
+    unset(LIBRARY_LLDB_18_STATIC CACHE)
+    find_library(
+      LIBRARY_LLDB_18_STATIC
+      NAMES LLDB_18_STATIC
+      PATHS ${LIBRARY_LLVM_18_STATIC_PATH}
+      NO_DEFAULT_PATH NO_PACKAGE_ROOT_PATH
+      NO_CMAKE_PATH NO_CMAKE_ENVIRONMENT_PATH
+      NO_SYSTEM_ENVIRONMENT_PATH NO_CMAKE_SYSTEM_PATH
+      NO_CMAKE_FIND_ROOT_PATH
+    )
+    if ("${LIBRARY_LLDB_18_STATIC}" STREQUAL "LIBRARY_LLDB_18_STATIC-NOTFOUND")
+      message(STATUS "LLDB_18_STATIC NOT FOUND, generating\n")
       set(LIBRARY_LLVM_18_STATIC_NEEDS_GENERATION TRUE)
     else()
-      set(LIBRARY_LLVM_18_STATIC_NEEDS_GENERATION FALSE)
+      if (NOT EXISTS ${LIBRARY_LLVM_18_STATIC_PATH}/LLVM_18_STATIC.target_link_libraries)
+        message(WARNING "LLVM_18_STATIC.target_link_libraries (list of required system libs) NOT FOUND, generating\n")
+        set(LIBRARY_LLVM_18_STATIC_NEEDS_GENERATION TRUE)
+      else()
+        if (NOT EXISTS ${LIBRARY_LLVM_18_STATIC_PATH}/LLVM_18_STATIC.lldb_server_path)
+          message(WARNING "LLVM_18_STATIC.lldb_server_path (path to built lldb-server executable) NOT FOUND, generating\n")
+          set(LIBRARY_LLVM_18_STATIC_NEEDS_GENERATION TRUE)
+        else()
+          set(LIBRARY_LLVM_18_STATIC_NEEDS_GENERATION FALSE)
+        endif()
+      endif()
     endif()
   endif()
 endif()
+
+# clang and gcc don't default-print colored diagnostics when invoked from Ninja.
+if (UNIX AND
+    CMAKE_GENERATOR MATCHES "Ninja" AND
+    (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR
+    (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND
+      NOT (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.9))))
+  append("-fdiagnostics-color" CMAKE_C_FLAGS CMAKE_CXX_FLAGS)
+endif()
+
+# lld doesn't print colored diagnostics when invoked from Ninja
+if (UNIX AND CMAKE_GENERATOR MATCHES "Ninja")
+  include(LLVMCheckLinkerFlag)
+  llvm_check_linker_flag(CXX "-Wl,--color-diagnostics" LINKER_SUPPORTS_COLOR_DIAGNOSTICS)
+  append_if(LINKER_SUPPORTS_COLOR_DIAGNOSTICS "-Wl,--color-diagnostics"
+    CMAKE_EXE_LINKER_FLAGS CMAKE_MODULE_LINKER_FLAGS CMAKE_SHARED_LINKER_FLAGS)
+endif()
+
+macro (exec)
+    unset(command_list)
+    unset(command_list CACHE)
+
+    string(REGEX MATCHALL "([^\"' \r\n\t;\\]+|[\\].|\"([^\"\\]+|[\\].)*\")+( +([^\"' \r\n\t;\\]+|[\\].|\"([^\"\\]+|[\\].)*\")+)*" command_list "${ARGN}")
+
+    unset(command_str)
+    unset(command_str CACHE)
+
+    foreach(ARG IN ITEMS ${command_list})
+        if (command_str)
+          string(APPEND command_str " ")
+        endif()
+
+        string(APPEND command_str "'${ARG}'")
+    endforeach()
+
+    execute_process(
+        COMMAND ${command_list}
+        COMMAND_ECHO STDOUT
+        RESULT_VARIABLE EXEC_FAILED
+    )
+    if (EXEC_FAILED)
+        message(FATAL_ERROR "failed to execute command: '${command_str}'")
+    endif()
+
+endmacro()
+
+macro(exit)
+  message(FATAL_ERROR "exiting")
+endmacro()
+
+if (NOT NIX_SHELL)
+  message(STATUS "bootstrapping build environment")
+
+  # locate nix
+  macro(find_nix)
+    function(find_nix_program PROGRAM_VAR program)
+      # we need which
+      find_program(WHICH_COMMAND NAMES which REQUIRED)
+      if (NOT WHICH_COMMAND)
+          message(FATAL_ERROR "could not locate 'which' command")
+      endif()
+      execute_process(
+          COMMAND ${WHICH_COMMAND} ${program}
+          OUTPUT_VARIABLE PROGRAM
+          RESULT_VARIABLE EXEC_FAILED
+      )
+      if (EXEC_FAILED)
+          message(FATAL_ERROR "failed to find program: '${program}'")
+      endif()
+      set(${PROGRAM_VAR} ${PROGRAM} PARENT_SCOPE)
+    endfunction()
+
+    find_nix_program(NIX_COMMAND nix)
+    find_nix_program(NIX_SHELL_COMMAND nix-shell)
+    find_nix_program(NIX_BUILD_COMMAND nix-build)
+  endmacro()
+
+  find_nix()
+
+  macro (exec_build)
+
+      unset(command_list)
+      unset(command_list CACHE)
+
+      string(REGEX MATCHALL "([^\"' \r\n\t;\\]+|[\\].|\"([^\"\\]+|[\\].)*\")+( +([^\"' \r\n\t;\\]+|[\\].|\"([^\"\\]+|[\\].)*\")+)*" command_list "${ARGN}")
+
+      unset(command_str)
+      unset(command_str CACHE)
+
+      foreach(ARG IN ITEMS ${command_list})
+          if (command_str)
+            string(APPEND command_str " ")
+          endif()
+
+          string(APPEND command_str "'${ARG}'")
+      endforeach()
+
+      execute_process(
+          COMMAND ${command_list}
+          COMMAND_ECHO STDOUT
+          WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/BOOTSTRAP_NIX_BUILD_DIR
+          RESULT_VARIABLE EXEC_FAILED
+      )
+      if (EXEC_FAILED)
+          message(FATAL_ERROR "failed to execute command: '${command_str}'")
+      endif()
+
+  endmacro()
+
+  #if (NOT EXISTS ${CMAKE_BINARY_DIR}/BOOTSTRAP_NIX_BUILD_DIR)
+  #    execute_process(
+  #        COMMAND "${CMAKE_COMMAND}" -E make_directory "${CMAKE_BINARY_DIR}/BOOTSTRAP_NIX_BUILD_DIR"
+  #        RESULT_VARIABLE BOOTSTRAP_NIX_BUILD_DIR__COMMAND_FAILED
+  #    )
+  #    if (BOOTSTRAP_NIX_BUILD_DIR__COMMAND_FAILED)
+  #        message(FATAL_ERROR "failed to create directory '${CMAKE_BINARY_DIR}/BOOTSTRAP_NIX_BUILD_DIR'")
+  #    endif()
+  #endif()
+
+  exec(${NIX_SHELL_COMMAND} --version)
+
+  unset(HAS_CMAKE_COLOR)
+  unset(HAS_CMAKE_COLOR CACHE)
+
+  if (CMAKE_COLOR_MAKEFILE OR CMAKE_COLOR_DIAGNOSTICS)
+    set(HAS_CMAKE_COLOR ON)
+  endif()
+
+  #exec_build(${NIX_BUILD_COMMAND} --no-out-link ${CMAKE_CURRENT_SOURCE_DIR}/build.nix)
+
+  exec(
+    ${NIX_SHELL_COMMAND}
+      --pure
+      ${CMAKE_CURRENT_SOURCE_DIR}/nix/linux.nix
+      --run
+        "pwd \; CLICOLOR_FORCE=${HAS_CMAKE_COLOR} cmake -D CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -D CMAKE_COLOR_MAKEFILE=${CMAKE_COLOR_MAKEFILE} -D CMAKE_COLOR_DIAGNOSTICS=${CMAKE_COLOR_DIAGNOSTICS} -D NIX_SHELL=1 -D NIX_SHELL_OS_LINUX=1 -B NIX_SHELL_BOOTSTRAP_BUILD__LINUX ${CMAKE_CURRENT_SOURCE_DIR}\; true"
+  )
+
+  exec(
+    ${NIX_SHELL_COMMAND}
+      --pure
+      ${CMAKE_CURRENT_SOURCE_DIR}/nix/mingw-ncurses.nix
+      --run "true"
+  )
+
+  exec(
+    ${NIX_SHELL_COMMAND}
+      --pure
+      ${CMAKE_CURRENT_SOURCE_DIR}/nix/mingw.nix
+      --run
+        "pwd \; CLICOLOR_FORCE=${HAS_CMAKE_COLOR} cmake -D CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -D CMAKE_COLOR_MAKEFILE=${CMAKE_COLOR_MAKEFILE} -D CMAKE_COLOR_DIAGNOSTICS=${CMAKE_COLOR_DIAGNOSTICS} -D NIX_SHELL=1 -D NIX_SHELL_OS_WINDOWS=1 -B NIX_SHELL_BOOTSTRAP_BUILD__WINDOWS ${CMAKE_CURRENT_SOURCE_DIR}\; true"
+  )
+
+  exit()
+endif()
+
+message(WARNING "we are inside a bootstrap build environment")
+
+include(build_root/build_root.cmake)
+
+build_root_init(${CMAKE_CURRENT_SOURCE_DIR}/cmake/packages ${CMAKE_CURRENT_BINARY_DIR}/BUILD_ROOT)
+
+message("CMAKE_SYSTEM_NAME = ${CMAKE_SYSTEM_NAME}")
+message("CMAKE_C_COMPILER = ${CMAKE_C_COMPILER}")
+
+
+if (NIX_SHELL_OS_WINDOWS)
+  build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/wineditline . libedit
+  "" # no extra c flags
+  "" # no extra cxx flags
+  "
+    -D BUILD_SHARED_LIBS=ON
+  ")
+endif()
+
+build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/lzma2301 . 7z
+"" # no extra c flags
+"" # no extra cxx flags
+"
+  -D BUILD_SHARED_LIBS=ON
+")
+
+find_package(LibEdit REQUIRED)
+find_package(ZLIB REQUIRED)
+find_package(LZ4 REQUIRED)
+find_package(LZMA REQUIRED)
+find_package(7z REQUIRED)
+find_package(zstd REQUIRED)
+find_package(xxHash REQUIRED)
+find_package(BZIP2 REQUIRED)
+find_package(LibXml2 REQUIRED)
+find_package(OpenSSL REQUIRED)
+find_package(EXPAT REQUIRED)
+find_package(Archive REQUIRED)
+
+message(STATUS "LIBEDIT LIBS: ${LibEdit_LIBRARIES}")
+message(STATUS "ZLIB LIBS: ${ZLIB_LIBRARIES}")
+message(STATUS "LZ4 LIBS: ${LZ4_LIBRARIES}")
+message(STATUS "LZMA LIBS: ${LZMA_LIBRARIES}")
+message(STATUS "7Z LIBS: ${7Z_LIBRARIES}")
+message(STATUS "ZSTD LIB: ${zstd_LIBRARY}")
+message(STATUS "XXHASH LIBS: ${xxHash_LIBRARIES}")
+message(STATUS "BZip2 LIBS: ${BZIP2_LIBRARIES}")
+message(STATUS "Xml2 LIBS: ${LIBXML2_LIBRARIES}")
+message(STATUS "OpenSSL LIBS: ${OPENSSL_LIBRARIES}")
+message(STATUS "Expat LIBS: ${EXPAT_LIBRARIES}")
+message(STATUS "Archive LIBS: ${ARCHIVE_LIBRARIES}")
+message(STATUS "LIBEDIT INCLUDE_DIRECTORIES: ${LibEdit_INCLUDE_DIRS}")
+message(STATUS "ZLIB INCLUDE_DIRECTORIES: ${ZLIB_INCLUDE_DIRS}")
+message(STATUS "LZ4 INCLUDE_DIRECTORIES: ${LZ4_INCLUDE_DIRS}")
+message(STATUS "LZMA INCLUDE_DIRECTORIES: ${LZMA_INCLUDE_DIRS}")
+message(STATUS "7Z INCLUDE_DIRECTORIES: ${7Z_INCLUDE_DIRS}")
+message(STATUS "ZSTD INCLUDE_DIRECTORIES: ${zstd_INCLUDE_DIRS}")
+message(STATUS "XXHASH INCLUDE_DIRECTORIES: ${xxHash_INCLUDE_DIRS}")
+message(STATUS "Xml2 INCLUDE_DIRECTORIES: ${LIBXML2_INCLUDE_DIRS}")
+message(STATUS "OpenSSL INCLUDE_DIRECTORIES: ${OPENSSL_INCLUDE_DIR}")
+message(STATUS "Expat INCLUDE_DIRECTORIES: ${EXPAT_INCLUDE_DIRS}")
+message(STATUS "Archive INCLUDE_DIRECTORIES: ${ARCHIVE_INCLUDE_DIRS}")
+message(STATUS "ZLIB_TARGET = ${ZLIB_TARGET}")
+message(STATUS "LZ4_TARGET = ${LZ4_TARGET}")
+message(STATUS "LZMA_TARGET = ${LZMA_TARGET}")
+message(STATUS "7Z_TARGET = ${7Z_TARGET}")
+message(STATUS "zstd_TARGET = ${zstd_TARGET}")
+message(STATUS "xxHash_TARGET = ${xxHash_TARGET}")
+message(STATUS "BZIP2_TARGET = ${BZIP2_TARGET}")
+message(STATUS "LIBXML2_TARGET = ${LIBXML2_TARGET}")
+message(STATUS "OPENSSL_CRYPTO_TARGET = ${OPENSSL_CRYPTO_TARGET}")
+message(STATUS "OPENSSL_SSL_TARGET = ${OPENSSL_SSL_TARGET}")
+message(STATUS "EXPAT_TARGET = ${EXPAT_TARGET}")
+message(STATUS "ARCHIVE_TARGET = ${ARCHIVE_TARGET}")
+exit()
+set(ZPACK_USE_SYSTEM_LZ4 ON CACHE BOOL "" FORCE)
+set(ZPACK_USE_SYSTEM_ZSTD ON CACHE BOOL "" FORCE)
+set(ZPACK_USE_SYSTEM_XXHASH ON CACHE BOOL "" FORCE)
 
 if (LIBRARY_LLVM_18_STATIC_NEEDS_GENERATION)
 
@@ -62,10 +354,10 @@ if (LIBRARY_LLVM_18_STATIC_NEEDS_GENERATION)
   # du -shc ./release_BUILD/llvm/lib/* | grep -e "clang.*\.a" | sed -e "s/.*libclang/list\(APPEND LLVM_MC_JIT_LINK_LIBS clang/g" -e "s/\.a/\)/g" > clang_libs.cmake
 
   list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMSupportBlake3)
-  list(APPEND LLVM_MC_JIT_LINK_LIBS libclang)
 
   include(./llvm_libs.cmake)
   include(./clang_libs.cmake)
+  include(./lldb_libs.cmake)
 
   if(CMAKE_SYSTEM_NAME MATCHES "Linux" )
 
@@ -173,58 +465,312 @@ if (LIBRARY_LLVM_18_STATIC_NEEDS_GENERATION)
             endforeach()
           endif()
         endif()
-      else()
+      elseif (${lib} MATCHES "^clang")
         list(APPEND LLVM_MC_JIT_LINK_LIBS_CLANG ${lib})
         if (TARGET obj.${lib})
           list(APPEND CLANG_18_OBJECT_FILES $<TARGET_OBJECTS:obj.${lib}>)
         else()
           list(APPEND CLANG_18_OBJECT_FILES $<TARGET_OBJECTS:${lib}>)
         endif()
+      else()
+
+        # lldbAPI is not a target but liblldbAPI is a target
+        #
+        if (${lib} MATCHES "^lldb" OR ${lib} MATCHES "^liblldb")
+          list(APPEND LLVM_MC_JIT_LINK_LIBS_LLDB ${lib})
+          if (TARGET obj.${lib})
+            list(APPEND LLDB_18_OBJECT_FILES $<TARGET_OBJECTS:obj.${lib}>)
+          else()
+            list(APPEND LLDB_18_OBJECT_FILES $<TARGET_OBJECTS:${lib}>)
+          endif()
+        endif()
       endif()
+    else()
+      message(WARNING "${lib} is not a target")
     endif()
   endforeach()
 
   list(REMOVE_DUPLICATES LLVM_18_L)
+  list(REMOVE_ITEM z LLVM_18_L)
+  list(REMOVE_ITEM zstd LLVM_18_L)
+  list(REMOVE_ITEM xml2 LLVM_18_L)
 
   message(STATUS "linking against these LLVM libraries : ${LLVM_MC_JIT_LINK_LIBS_LLVM}")
   message(STATUS "linking against these CLANG libraries : ${LLVM_MC_JIT_LINK_LIBS_CLANG}")
+  message(STATUS "linking against these LLDB libraries : ${LLVM_MC_JIT_LINK_LIBS_LLDB}")
   message(STATUS "linking against these system libraries : ${LLVM_18_L}")
 
   add_library(LLVM_18_STATIC STATIC empty.c ${LLVM_18_OBJECT_FILES})
-  target_include_directories(LLVM_18_STATIC PUBLIC ${CMAKE_BINARY_DIR}/llvm/include)
-  target_include_directories(LLVM_18_STATIC PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/llvm/include)
-  target_link_libraries(LLVM_18_STATIC PUBLIC ${LLVM_18_L})
-  file(WRITE ${CMAKE_BINARY_DIR}/LLVM_18_STATIC.target_link_libraries "${LLVM_18_L}")
+  target_include_directories(LLVM_18_STATIC SYSTEM PUBLIC ${LIBRARY_LLVM_18_STATIC_PATH}/llvm/include)
+  target_include_directories(LLVM_18_STATIC SYSTEM PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/llvm/include)
+  target_include_directories(LLVM_18_STATIC SYSTEM INTERFACE ${LibEdit_INCLUDE_DIRS})
+  target_link_libraries(LLVM_18_STATIC PUBLIC ${LLVM_18_L} ${LibEdit_TARGET})
+  file(WRITE ${LIBRARY_LLVM_18_STATIC_PATH}/LLVM_18_STATIC.target_link_libraries "${LLVM_18_L}")
 
   add_library(CLANG_18_STATIC STATIC empty.c ${CLANG_18_OBJECT_FILES})
-  target_include_directories(CLANG_18_STATIC PUBLIC ${CMAKE_BINARY_DIR}/llvm/tools/clang/include)
-  target_include_directories(CLANG_18_STATIC PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/clang/include)
+  target_include_directories(CLANG_18_STATIC SYSTEM PUBLIC ${LIBRARY_LLVM_18_STATIC_PATH}/llvm/tools/clang/include)
+  target_include_directories(CLANG_18_STATIC SYSTEM PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/clang/include)
   target_link_libraries(CLANG_18_STATIC PUBLIC LLVM_18_STATIC)
+
+  add_library(LLDB_18_STATIC STATIC empty.c ${LLDB_18_OBJECT_FILES})
+  target_include_directories(LLDB_18_STATIC SYSTEM PUBLIC ${LIBRARY_LLVM_18_STATIC_PATH}/llvm/tools/lldb/include)
+  target_include_directories(LLDB_18_STATIC SYSTEM PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/lldb/include)
+  target_link_libraries(LLDB_18_STATIC PUBLIC CLANG_18_STATIC)
+
+  file(GENERATE OUTPUT ${LIBRARY_LLVM_18_STATIC_PATH}/LLVM_18_STATIC.lldb_server_path CONTENT $<TARGET_FILE:lldb-server>)
+  
+  set(LLDB_18_SERVER_PATH $<TARGET_FILE:lldb-server>)
+
+  add_dependencies(LLDB_18_STATIC lldb)
+  add_dependencies(LLDB_18_STATIC lldb-server)
+
 else()
+
+  message(STATUS "reusing LLVM_18  - ${LIBRARY_LLVM_18_STATIC}")
+  message(STATUS "reusing CLANG_18 - ${LIBRARY_CLANG_18_STATIC}")
+  message(STATUS "reusing LLDB_18  - ${LIBRARY_LLDB_18_STATIC}")
+
   add_library(LLVM_18_STATIC STATIC IMPORTED)
   set_target_properties(LLVM_18_STATIC PROPERTIES IMPORTED_LOCATION ${LIBRARY_LLVM_18_STATIC})
-  target_include_directories(LLVM_18_STATIC INTERFACE ${CMAKE_BINARY_DIR}/llvm/include)
-  target_include_directories(LLVM_18_STATIC INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/llvm/include)
-  file(READ ${CMAKE_BINARY_DIR}/LLVM_18_STATIC.target_link_libraries LLVM_18_L)
-  target_link_libraries(LLVM_18_STATIC INTERFACE ${LLVM_18_L})
+  target_include_directories(LLVM_18_STATIC SYSTEM INTERFACE ${LIBRARY_LLVM_18_STATIC_PATH}/llvm/include)
+  target_include_directories(LLVM_18_STATIC SYSTEM INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/llvm/include)
+  target_include_directories(LLVM_18_STATIC SYSTEM INTERFACE ${LibEdit_INCLUDE_DIRS})
+  file(READ ${LIBRARY_LLVM_18_STATIC_PATH}/LLVM_18_STATIC.target_link_libraries LLVM_18_L)
+  list(REMOVE_ITEM z LLVM_18_L)
+  list(REMOVE_ITEM zstd LLVM_18_L)
+  list(REMOVE_ITEM xml2 LLVM_18_L)
+  target_link_libraries(LLVM_18_STATIC INTERFACE ${LLVM_18_L} ${LibEdit_TARGET})
 
   add_library(CLANG_18_STATIC STATIC IMPORTED)
   set_target_properties(CLANG_18_STATIC PROPERTIES IMPORTED_LOCATION ${LIBRARY_CLANG_18_STATIC})
-  target_include_directories(CLANG_18_STATIC INTERFACE ${CMAKE_BINARY_DIR}/llvm/tools/clang/include)
-  target_include_directories(CLANG_18_STATIC INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/clang/include)
+  target_include_directories(CLANG_18_STATIC SYSTEM INTERFACE ${LIBRARY_LLVM_18_STATIC_PATH}/llvm/tools/clang/include)
+  target_include_directories(CLANG_18_STATIC SYSTEM INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/clang/include)
   target_link_libraries(CLANG_18_STATIC INTERFACE LLVM_18_STATIC)
+
+  add_library(LLDB_18_STATIC STATIC IMPORTED)
+  set_target_properties(LLDB_18_STATIC PROPERTIES IMPORTED_LOCATION ${LIBRARY_LLDB_18_STATIC})
+  target_include_directories(LLDB_18_STATIC SYSTEM INTERFACE ${LIBRARY_LLVM_18_STATIC_PATH}/llvm/tools/lldb/include)
+  target_include_directories(LLDB_18_STATIC SYSTEM INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/lldb/include)
+  target_link_libraries(LLDB_18_STATIC INTERFACE CLANG_18_STATIC)
+  file(READ ${LIBRARY_LLVM_18_STATIC_PATH}/LLVM_18_STATIC.lldb_server_path LLDB_18_SERVER_PATH)
+
 endif()
 
-add_subdirectory(clang_driver)
-add_subdirectory(replxx)
-set(ARGPARSE_INSTALL OFF CACHE BOOL "" FORCE)
-set(ARGPARSE_BUILD_SAMPLES OFF CACHE BOOL "" FORCE)
-set(ARGPARSE_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-add_subdirectory(argparse)
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+set(LIBZIP_DO_INSTALL OFF CACHE BOOL "" FORCE)
+add_subdirectory(libzip)
+add_subdirectory(ZPack)
 
-add_library(llvm_orcjit STATIC src/jit.cpp)
-target_include_directories(llvm_orcjit PUBLIC include)
-target_link_libraries(llvm_orcjit clang_driver)
+target_compile_definitions(zip PUBLIC ZIP_ALLOCATE_BUFFER)
+
+add_executable(llvm_orcjit_example_packager src/package.cpp)
+target_link_libraries(llvm_orcjit_example_packager zip zpack LLVM_18_STATIC
+    ${ZLIB_TARGET}
+    ${LZ4_TARGET}
+    ${7Z_TARGET}
+    ${zstd_TARGET}
+    ${xxHash_TARGET}
+    ${BZIP2_TARGET}
+    ${LIBXML2_TARGET}
+    ${OPENSSL_CRYPTO_TARGET}
+    ${OPENSSL_SSL_TARGET}
+    ${EXPAT_TARGET}
+    ${ARCHIVE_TARGET}
+    ${LZMA_TARGET}
+)
+
+target_compile_options(zip PRIVATE "-O3")
+target_compile_options(zip PRIVATE "-g0")
+
+target_compile_options(llvm_orcjit_example_packager PRIVATE "-O3")
+target_compile_options(llvm_orcjit_example_packager PRIVATE "-g0")
+
+unset(LLVM_18_STATIC_EMBEDDED_RESOURCES_REAL_INCLUDES)
+unset(LLVM_18_STATIC_EMBEDDED_RESOURCES_REAL_INCLUDES CACHE)
+
+unset(LLVM_18_STATIC_EMBEDDED_RESOURCES_TMP_INCLUDE)
+unset(LLVM_18_STATIC_EMBEDDED_RESOURCES_TMP_INCLUDE CACHE)
+get_target_property(LLVM_18_STATIC_EMBEDDED_RESOURCES_TMP_INCLUDE zip INCLUDE_DIRECTORIES)
+if (LLVM_18_STATIC_EMBEDDED_RESOURCES_TMP_INCLUDE)
+  string(REPLACE ";" " " LLVM_18_STATIC_EMBEDDED_RESOURCES_TMP_INCLUDE "${LLVM_18_STATIC_EMBEDDED_RESOURCES_TMP_INCLUDE}")
+  string(APPEND LLVM_18_STATIC_EMBEDDED_RESOURCES_REAL_INCLUDES ${LLVM_18_STATIC_EMBEDDED_RESOURCES_TMP_INCLUDE})
+endif()
+unset(LLVM_18_STATIC_EMBEDDED_RESOURCES_TMP_INCLUDE)
+unset(LLVM_18_STATIC_EMBEDDED_RESOURCES_TMP_INCLUDE CACHE)
+
+get_target_property(LLVM_18_STATIC_EMBEDDED_RESOURCES_TMP_INCLUDE zip INTERFACE_INCLUDE_DIRECTORIES)
+if (LLVM_18_STATIC_EMBEDDED_RESOURCES_TMP_INCLUDE)
+  string(REPLACE ";" " " LLVM_18_STATIC_EMBEDDED_RESOURCES_TMP_INCLUDE "${LLVM_18_STATIC_EMBEDDED_RESOURCES_TMP_INCLUDE}")
+  string(APPEND LLVM_18_STATIC_EMBEDDED_RESOURCES_REAL_INCLUDES ${LLVM_18_STATIC_EMBEDDED_RESOURCES_TMP_INCLUDE})
+endif()
+unset(LLVM_18_STATIC_EMBEDDED_RESOURCES_TMP_INCLUDE)
+unset(LLVM_18_STATIC_EMBEDDED_RESOURCES_TMP_INCLUDE CACHE)
+
+get_target_property(LLVM_18_STATIC_EMBEDDED_RESOURCES_TMP_INCLUDE zpack INCLUDE_DIRECTORIES)
+if (LLVM_18_STATIC_EMBEDDED_RESOURCES_TMP_INCLUDE)
+  string(REPLACE ";" " " LLVM_18_STATIC_EMBEDDED_RESOURCES_TMP_INCLUDE "${LLVM_18_STATIC_EMBEDDED_RESOURCES_TMP_INCLUDE}")
+  string(APPEND LLVM_18_STATIC_EMBEDDED_RESOURCES_REAL_INCLUDES ${LLVM_18_STATIC_EMBEDDED_RESOURCES_TMP_INCLUDE})
+endif()
+unset(LLVM_18_STATIC_EMBEDDED_RESOURCES_TMP_INCLUDE)
+unset(LLVM_18_STATIC_EMBEDDED_RESOURCES_TMP_INCLUDE CACHE)
+
+get_target_property(LLVM_18_STATIC_EMBEDDED_RESOURCES_TMP_INCLUDE zpack INTERFACE_INCLUDE_DIRECTORIES)
+if (LLVM_18_STATIC_EMBEDDED_RESOURCES_TMP_INCLUDE)
+  string(REPLACE ";" " " LLVM_18_STATIC_EMBEDDED_RESOURCES_TMP_INCLUDE "${LLVM_18_STATIC_EMBEDDED_RESOURCES_TMP_INCLUDE}")
+  string(APPEND LLVM_18_STATIC_EMBEDDED_RESOURCES_REAL_INCLUDES ${LLVM_18_STATIC_EMBEDDED_RESOURCES_TMP_INCLUDE})
+endif()
+unset(LLVM_18_STATIC_EMBEDDED_RESOURCES_TMP_INCLUDE)
+unset(LLVM_18_STATIC_EMBEDDED_RESOURCES_TMP_INCLUDE CACHE)
+
+get_target_property(LLVM_18_STATIC_EMBEDDED_RESOURCES_TMP_INCLUDE LLVM_18_STATIC INCLUDE_DIRECTORIES)
+if (LLVM_18_STATIC_EMBEDDED_RESOURCES_TMP_INCLUDE)
+  string(REPLACE ";" " " LLVM_18_STATIC_EMBEDDED_RESOURCES_TMP_INCLUDE "${LLVM_18_STATIC_EMBEDDED_RESOURCES_TMP_INCLUDE}")
+  string(APPEND LLVM_18_STATIC_EMBEDDED_RESOURCES_REAL_INCLUDES ${LLVM_18_STATIC_EMBEDDED_RESOURCES_TMP_INCLUDE})
+endif()
+unset(LLVM_18_STATIC_EMBEDDED_RESOURCES_TMP_INCLUDE)
+unset(LLVM_18_STATIC_EMBEDDED_RESOURCES_TMP_INCLUDE CACHE)
+
+get_target_property(LLVM_18_STATIC_EMBEDDED_RESOURCES_TMP_INCLUDE LLVM_18_STATIC INTERFACE_INCLUDE_DIRECTORIES)
+if (LLVM_18_STATIC_EMBEDDED_RESOURCES_TMP_INCLUDE)
+  string(REPLACE ";" " " LLVM_18_STATIC_EMBEDDED_RESOURCES_TMP_INCLUDE "${LLVM_18_STATIC_EMBEDDED_RESOURCES_TMP_INCLUDE}")
+  string(APPEND LLVM_18_STATIC_EMBEDDED_RESOURCES_REAL_INCLUDES ${LLVM_18_STATIC_EMBEDDED_RESOURCES_TMP_INCLUDE})
+endif()
+unset(LLVM_18_STATIC_EMBEDDED_RESOURCES_TMP_INCLUDE)
+unset(LLVM_18_STATIC_EMBEDDED_RESOURCES_TMP_INCLUDE CACHE)
+
+add_custom_command(
+  OUTPUT ${CMAKE_BINARY_DIR}/LLVM_18_STATIC_EMBEDDED_RESOURCES/CMakeLists.txt
+  COMMAND
+    ${CMAKE_COMMAND} -E rm -f -- ${CMAKE_BINARY_DIR}/LLVM_18_STATIC_EMBEDDED_RESOURCES/CMakeLists.txt
+  COMMAND
+    ${CMAKE_COMMAND} -E echo removing directory ${CMAKE_BINARY_DIR}/LLVM_18_STATIC_EMBEDDED_RESOURCES/GEN
+  COMMAND
+    ${CMAKE_COMMAND} -E rm -rf -- ${CMAKE_BINARY_DIR}/LLVM_18_STATIC_EMBEDDED_RESOURCES/GEN
+  COMMAND
+    ${CMAKE_COMMAND} -E echo removing directory ${CMAKE_BINARY_DIR}/LLVM_18_STATIC_EMBEDDED_RESOURCES/BUILD
+  COMMAND
+    ${CMAKE_COMMAND} -E rm -rf -- ${CMAKE_BINARY_DIR}/LLVM_18_STATIC_EMBEDDED_RESOURCES/BUILD
+  COMMAND
+    ${CMAKE_COMMAND} -E echo creating directory ${CMAKE_BINARY_DIR}/LLVM_18_STATIC_EMBEDDED_RESOURCES/GEN
+  COMMAND
+    ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/LLVM_18_STATIC_EMBEDDED_RESOURCES/GEN
+  COMMAND
+    lldb $<TARGET_FILE:llvm_orcjit_example_packager>
+
+    OUTPUT_CMAKE ${CMAKE_BINARY_DIR}/LLVM_18_STATIC_EMBEDDED_RESOURCES/CMakeLists.txt
+
+    OUTPUT_FILE_DIRECTORY ${CMAKE_BINARY_DIR}/LLVM_18_STATIC_EMBEDDED_RESOURCES/GEN
+
+    OUTPUT_FILE_NAME llvm_orcjit_example_packaged_zip
+
+    OUTPUT_FILE_SUFFIX archive
+
+    OUTPUT_DATA_LABEL llvm_orcjit_example_packaged_zip_data
+
+    CMAKE_LINK_LIBS
+      ${ZLIB_LIBRARIES}
+      ${LZ4_LIBRARIES}
+      ${7Z_LIBRARIES}
+      ${zstd_LIBRARY}
+      ${xxHash_LIBRARIES}
+      ${BZIP2_LIBRARIES}
+      ${LIBXML2_LIBRARIES}
+      ${OPENSSL_CRYPTO_LIBRARY}
+      ${OPENSSL_SSL_LIBRARY}
+      ${EXPAT_LIBRARIES}
+      ${ARCHIVE_LIBRARIES}
+      ${LZMA_LIBRARIES}
+      $<TARGET_FILE:zip>
+      $<TARGET_FILE:zpack>
+      $<TARGET_FILE:LLVM_18_STATIC>
+    
+    CMAKE_LINK_INCLUDES
+      ${ZLIB_INCLUDE_DIRS}
+      ${LZ4_INCLUDE_DIRS}
+      ${7Z_INCLUDE_DIRS}
+      ${zstd_INCLUDE_DIRS}
+      ${xxHash_INCLUDE_DIRS}
+      ${BZIP2_INCLUDE_DIRS}
+      ${LIBXML2_INCLUDE_DIRS}
+      ${OPENSSL_INCLUDE_DIR}
+      ${EXPAT_INCLUDE_DIRS}
+      ${ARCHIVE_INCLUDE_DIRS}
+      ${LZMA_INCLUDE_DIRS}
+      ${LLVM_18_STATIC_EMBEDDED_RESOURCES_REAL_INCLUDES}
+
+    EXECUTABLES
+      LLDB_SERVER ${LLDB_18_SERVER_PATH}
+
+    STATIC_LIBS
+      LLVM_18 $<TARGET_FILE:LLVM_18_STATIC>
+      CLANG_18 $<TARGET_FILE:CLANG_18_STATIC>
+      LLDB_18 $<TARGET_FILE:LLDB_18_STATIC>
+      CLANG_DRIVER $<TARGET_FILE:clang_driver>
+      LIBEDIT ${LibEdit_LIBRARIES}
+      ZIP $<TARGET_FILE:zip>
+      ZPACK $<TARGET_FILE:zpack>
+      ZLIB ${ZLIB_LIBRARIES}
+      LZ4 ${LZ4_LIBRARIES}
+      7Z ${7Z_LIBRARIES}
+      ZSTD ${zstd_LIBRARY}
+      XXHASH ${xxHash_LIBRARIES}
+      BZIP2 ${BZIP2_LIBRARIES}
+      LIBXML2 ${LIBXML2_LIBRARIES}
+      OPENSSL_CRYPTO ${OPENSSL_CRYPTO_LIBRARY}
+      OPENSSL_SSL ${OPENSSL_SSL_LIBRARY}
+      EXPAT ${EXPAT_LIBRARIES}
+      ARCHIVE ${ARCHIVE_LIBRARIES}
+      LZMA ${LZMA_LIBRARIES}
+
+    SYS_LIBS
+      ${LLVM_18_L}
+
+  DEPENDS llvm_orcjit_example_packager
+)
+
+add_custom_target(llvm_orcjit_example_packaged_zip_gen_cmake DEPENDS ${CMAKE_BINARY_DIR}/LLVM_18_STATIC_EMBEDDED_RESOURCES/CMakeLists.txt)
+
+add_custom_command(
+  OUTPUT ${CMAKE_BINARY_DIR}/LLVM_18_STATIC_EMBEDDED_RESOURCES/BUILD/llvm_orcjit_example_packaged_zip.archive
+  COMMAND
+    ${CMAKE_COMMAND}
+    -DCMAKE_BUILD_TYPE=Debug
+    -B ${CMAKE_BINARY_DIR}/LLVM_18_STATIC_EMBEDDED_RESOURCES/BUILD
+  COMMAND
+    ${CMAKE_COMMAND}
+    --build ${CMAKE_BINARY_DIR}/LLVM_18_STATIC_EMBEDDED_RESOURCES/BUILD
+  WORKING_DIRECTORY
+    ${CMAKE_BINARY_DIR}/LLVM_18_STATIC_EMBEDDED_RESOURCES
+  DEPENDS
+    ${CMAKE_BINARY_DIR}/LLVM_18_STATIC_EMBEDDED_RESOURCES/CMakeLists.txt
+    llvm_orcjit_example_packaged_zip_gen_cmake
+)
+
+add_custom_target(llvm_orcjit_example_packaged_zip_gen_archive DEPENDS ${CMAKE_BINARY_DIR}/LLVM_18_STATIC_EMBEDDED_RESOURCES/BUILD/llvm_orcjit_example_packaged_zip.archive)
+
+add_library(llvm_orcjit_example_packaged_zip_imported_lib STATIC IMPORTED)
+set_target_properties(llvm_orcjit_example_packaged_zip_imported_lib PROPERTIES IMPORTED_LOCATION ${CMAKE_BINARY_DIR}/LLVM_18_STATIC_EMBEDDED_RESOURCES/BUILD/llvm_orcjit_example_packaged_zip.archive)
+add_dependencies(llvm_orcjit_example_packaged_zip_imported_lib llvm_orcjit_example_packaged_zip_gen_archive)
+
+add_library(llvm_orcjit_example_packaged_zip STATIC empty.c)
+target_link_libraries(llvm_orcjit_example_packaged_zip llvm_orcjit_example_packaged_zip_imported_lib zip zpack LLVM_18_STATIC
+    ${ZLIB_TARGET}
+    ${LZ4_TARGET}
+    ${7Z_TARGET}
+    ${zstd_TARGET}
+    ${xxHash_TARGET}
+    ${BZIP2_TARGET}
+    ${LIBXML2_TARGET}
+    ${OPENSSL_CRYPTO_TARGET}
+    ${OPENSSL_SSL_TARGET}
+    ${EXPAT_TARGET}
+    ${ARCHIVE_TARGET}
+    ${LZMA_TARGET}
+)
+
+add_library(llvm_orcjit_example_packaged_zip_extract STATIC src/extract.cpp)
+target_link_libraries(llvm_orcjit_example_packaged_zip_extract llvm_orcjit_example_packaged_zip)
+target_include_directories(llvm_orcjit_example_packaged_zip_extract PRIVATE ${CMAKE_BINARY_DIR}/LLVM_18_STATIC_EMBEDDED_RESOURCES/GEN)
 
 set(PDC_BUILD_SHARED OFF CACHE BOOL "" FORCE)
 set(PDC_SDL2_BUILD OFF CACHE BOOL "" FORCE)
@@ -236,19 +782,29 @@ add_library(pdcurses STATIC empty.c)
 target_link_libraries(pdcurses vt_pdcursesstatic)
 target_include_directories(pdcurses PUBLIC PDCursesMod)
 
-add_subdirectory(minizip)
+add_subdirectory(clang_driver)
 
-add_custom_command(
-    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/gen.zip
-    COMMAND ${CMAKE_COMMAND} CC=clang CXX=clang++ -B 
-    DEPENDS gen
-    VERBATIM
-)
-add_dependencies(test1 test2_run)
+add_subdirectory(replxx)
+set(ARGPARSE_INSTALL OFF CACHE BOOL "" FORCE)
+set(ARGPARSE_BUILD_SAMPLES OFF CACHE BOOL "" FORCE)
+set(ARGPARSE_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+add_subdirectory(argparse)
+
+add_library(llvm_orcjit STATIC src/jit.cpp)
+target_include_directories(llvm_orcjit PUBLIC include)
+target_link_libraries(llvm_orcjit clang_driver)
 
 add_executable(llvm_orcjit_example src/example.cpp)
-target_link_libraries(llvm_orcjit_example llvm_orcjit replxx argparse pdcurses)
+
+target_link_libraries(llvm_orcjit_example llvm_orcjit replxx argparse pdcurses llvm_orcjit_example_packaged_zip_extract)
+
+target_link_options(llvm_orcjit_example PRIVATE "-Wl,--export-dynamic")
+
 target_compile_options(replxx PRIVATE "-O0")
 target_compile_options(replxx PRIVATE "-g3")
+target_compile_options(zip PRIVATE "-O0")
+target_compile_options(zip PRIVATE "-g3")
+target_compile_options(llvm_orcjit_example_packaged_zip_extract PRIVATE "-O0")
+target_compile_options(llvm_orcjit_example_packaged_zip_extract PRIVATE "-g3")
 target_compile_options(llvm_orcjit_example PRIVATE "-O0")
 target_compile_options(llvm_orcjit_example PRIVATE "-g3")

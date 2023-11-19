@@ -90,7 +90,7 @@ class SBBreakpointCallbackCase(TestBase):
         """Build LLDB test from sources, and run expecting 0 exit code"""
 
         # These tests link against host lldb API.
-        # Compiler's target triple must match liblldb triple
+        # Compiler's target triple must match liblldbAPI triple
         # because remote is disabled, we can assume that the os is the same
         # still need to check architecture
         if self.getLldbArchitecture() != self.getArchitecture():

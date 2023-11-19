@@ -40,16 +40,14 @@ void ScriptInterpreterNone::ExecuteInterpreterLoop() {
 }
 
 void ScriptInterpreterNone::Initialize() {
-  static llvm::once_flag g_once_flag;
-
-  llvm::call_once(g_once_flag, []() {
-    PluginManager::RegisterPlugin(GetPluginNameStatic(),
-                                  GetPluginDescriptionStatic(),
-                                  lldb::eScriptLanguageNone, CreateInstance);
-  });
+  PluginManager::RegisterPlugin(GetPluginNameStatic(),
+                                GetPluginDescriptionStatic(),
+                                lldb::eScriptLanguageNone, CreateInstance);
 }
 
-void ScriptInterpreterNone::Terminate() {}
+void ScriptInterpreterNone::Terminate() {
+  PluginManager::UnregisterPlugin(ScriptInterpreterNone::CreateInstance);
+}
 
 lldb::ScriptInterpreterSP
 ScriptInterpreterNone::CreateInstance(Debugger &debugger) {

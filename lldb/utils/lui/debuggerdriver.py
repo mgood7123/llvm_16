@@ -19,7 +19,7 @@ class DebuggerDriver(Thread):
     def __init__(self, debugger, event_queue):
         Thread.__init__(self)
         self.event_queue = event_queue
-        # This is probably not great because it does not give liblldb a chance
+        # This is probably not great because it does not give liblldbAPI a chance
         # to clean up
         self.daemon = True
         self.initialize(debugger)

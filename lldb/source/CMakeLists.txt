@@ -15,6 +15,6 @@ add_subdirectory(Target)
 add_subdirectory(Utility)
 add_subdirectory(Version)
 
-# Build API last.  Since liblldb needs to link against every other target, it needs
+# Build API last.  Since liblldbAPI needs to link against every other target, it needs
 # those targets to have already been created.
 add_subdirectory(API)

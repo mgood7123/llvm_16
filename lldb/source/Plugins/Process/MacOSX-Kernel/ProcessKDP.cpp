@@ -696,15 +696,11 @@ Status ProcessKDP::DoSignal(int signo) {
 }
 
 void ProcessKDP::Initialize() {
-  static llvm::once_flag g_once_flag;
+  PluginManager::RegisterPlugin(GetPluginNameStatic(),
+                                GetPluginDescriptionStatic(), CreateInstance,
+                                DebuggerInitialize);
 
-  llvm::call_once(g_once_flag, []() {
-    PluginManager::RegisterPlugin(GetPluginNameStatic(),
-                                  GetPluginDescriptionStatic(), CreateInstance,
-                                  DebuggerInitialize);
-
-    ProcessKDPLog::Initialize();
-  });
+  ProcessKDPLog::Initialize();
 }
 
 void ProcessKDP::DebuggerInitialize(lldb_private::Debugger &debugger) {

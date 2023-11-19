@@ -9,6 +9,7 @@
 /release_*
 /debug_*
 /debug_asan_*
+/.git.backup
 
 #==============================================================================#
 # File extensions to be ignored anywhere in the tree.

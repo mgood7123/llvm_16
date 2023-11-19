@@ -11,7 +11,7 @@ if(TARGET lldb-commandinterpreter-fuzzer)
   target_include_directories(lldb-commandinterpreter-fuzzer PRIVATE ..)
   target_link_libraries(lldb-commandinterpreter-fuzzer
     PRIVATE
-    liblldb
+    liblldbAPI
     )
 
   # A directory in the build directory is created to hold the fuzzer's

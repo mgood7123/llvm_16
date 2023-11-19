@@ -109,7 +109,7 @@ if(CMAKE_HOST_APPLE)
     if(LLDB_BUILD_FRAMEWORK)
       add_custom_target(debugserver
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        ${system_debugserver_path} $<TARGET_FILE_DIR:liblldb>/Resources
+        ${system_debugserver_path} $<TARGET_FILE_DIR:liblldbAPI>/Resources
         COMMENT "Copying the system debugserver to LLDB.framework's resource directory for testing.")
     else()
       add_custom_target(debugserver

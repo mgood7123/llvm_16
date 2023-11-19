@@ -35,6 +35,10 @@
 #include <sys/personality.h>
 #endif
 
+#if defined(__linux__) || defined(__FreeBSD__) || defined(__NetBSD__)
+#include "Plugins/Process/POSIX/ProcessPOSIXLog.h"
+#endif
+
 using namespace lldb;
 using namespace lldb_private;
 
@@ -266,6 +270,8 @@ ProcessLauncherPosixFork::LaunchProcess(const ProcessLaunchInfo &launch_info,
 
   const ForkLaunchInfo fork_launch_info(launch_info);
 
+  Log *log = GetLog(POSIXLog::Thread);
+  LLDB_LOG(log, "calling fork() in 'HostProcess ProcessLauncherPosixFork::LaunchProcess(const ProcessLaunchInfo &launch_info, Status &error)'");
   ::pid_t pid = ::fork();
   if (pid == -1) {
     // Fork failed

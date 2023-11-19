@@ -14,6 +14,8 @@
 #include "lldb/Interpreter/OptionValueProperties.h"
 #include "lldb/Target/Process.h"
 #include "lldb/Utility/FileSpec.h"
+#include "lldb/Utility/LLDBLog.h"
+#include "lldb/Utility/Log.h"
 #include "lldb/Utility/Status.h"
 #include "lldb/Utility/StringList.h"
 #include "llvm/ADT/StringRef.h"
@@ -244,12 +246,23 @@ public:
   }
 
   typename Instance::CallbackType GetCallbackForName(llvm::StringRef name) {
-    if (name.empty())
+    Log *log = GetLog(LLDBLog::PluginManager);
+    LLDB_LOG(log, "attempting to obtain callback for '{0}'", name);
+    if (name.empty()) {
+      LLDB_LOG(log, "name is empty, return nullptr");
       return nullptr;
-    for (auto &instance : m_instances) {
-      if (name == instance.name)
-        return instance.create_callback;
     }
+    LLDB_LOG(log, "name is not empty", name);
+    LLDB_LOG(log, "finding instance for '{0}'", name);
+    for (auto &instance : m_instances) {
+      if (name == instance.name) {
+        LLDB_LOG(log, "instance '{0}' matches '{1}'", instance.name, name);
+        LLDB_LOG(log, "found instance for '{0}'", name);
+        return instance.create_callback;
+      }
+      LLDB_LOG(log, "instance '{0}' does not match '{1}'", instance.name, name);
+    }
+      LLDB_LOG(log, "failed to find instance for '{0}'", name);
     return nullptr;
   }
 
@@ -286,10 +299,14 @@ static ABIInstances &GetABIInstances() {
 bool PluginManager::RegisterPlugin(llvm::StringRef name,
                                    llvm::StringRef description,
                                    ABICreateInstance create_callback) {
+  Log *log = GetLog(LLDBLog::PluginManager);
+  LLDB_LOG(log, "registering plugin '{0}' for {1}", name, "ABICreateInstance");
   return GetABIInstances().RegisterPlugin(name, description, create_callback);
 }
 
 bool PluginManager::UnregisterPlugin(ABICreateInstance create_callback) {
+  Log *log = GetLog(LLDBLog::PluginManager);
+  LLDB_LOG(log, "unregistering plugin for {0}", "ABICreateInstance");
   return GetABIInstances().UnregisterPlugin(create_callback);
 }
 
@@ -310,11 +327,16 @@ static ArchitectureInstances &GetArchitectureInstances() {
 void PluginManager::RegisterPlugin(llvm::StringRef name,
                                    llvm::StringRef description,
                                    ArchitectureCreateInstance create_callback) {
+  Log *log = GetLog(LLDBLog::PluginManager);
+  LLDB_LOG(log, "registering plugin '{0}' for {1}", name, "ArchitectureCreateInstance");
   GetArchitectureInstances().push_back({name, description, create_callback});
 }
 
 void PluginManager::UnregisterPlugin(
     ArchitectureCreateInstance create_callback) {
+  Log *log = GetLog(LLDBLog::PluginManager);
+  LLDB_LOG(log, "unregistering plugin for {0}", "ArchitectureCreateInstance");
+
   auto &instances = GetArchitectureInstances();
 
   for (auto pos = instances.begin(), end = instances.end(); pos != end; ++pos) {
@@ -348,12 +370,16 @@ static DisassemblerInstances &GetDisassemblerInstances() {
 bool PluginManager::RegisterPlugin(llvm::StringRef name,
                                    llvm::StringRef description,
                                    DisassemblerCreateInstance create_callback) {
+  Log *log = GetLog(LLDBLog::PluginManager);
+  LLDB_LOG(log, "registering plugin '{0}' for {1}", name, "DisassemblerCreateInstance");
   return GetDisassemblerInstances().RegisterPlugin(name, description,
                                                    create_callback);
 }
 
 bool PluginManager::UnregisterPlugin(
     DisassemblerCreateInstance create_callback) {
+  Log *log = GetLog(LLDBLog::PluginManager);
+  LLDB_LOG(log, "unregistering plugin for {0}", "DisassemblerCreateInstance");
   return GetDisassemblerInstances().UnregisterPlugin(create_callback);
 }
 
@@ -382,12 +408,16 @@ bool PluginManager::RegisterPlugin(
     llvm::StringRef name, llvm::StringRef description,
     DynamicLoaderCreateInstance create_callback,
     DebuggerInitializeCallback debugger_init_callback) {
+  Log *log = GetLog(LLDBLog::PluginManager);
+  LLDB_LOG(log, "registering plugin '{0}' for {1}", name, "DynamicLoaderCreateInstance");
   return GetDynamicLoaderInstances().RegisterPlugin(
       name, description, create_callback, debugger_init_callback);
 }
 
 bool PluginManager::UnregisterPlugin(
     DynamicLoaderCreateInstance create_callback) {
+  Log *log = GetLog(LLDBLog::PluginManager);
+  LLDB_LOG(log, "unregistering plugin for {0}", "DynamicLoaderCreateInstance");
   return GetDynamicLoaderInstances().UnregisterPlugin(create_callback);
 }
 
@@ -416,11 +446,15 @@ bool PluginManager::RegisterPlugin(
     llvm::StringRef name, llvm::StringRef description,
     JITLoaderCreateInstance create_callback,
     DebuggerInitializeCallback debugger_init_callback) {
+  Log *log = GetLog(LLDBLog::PluginManager);
+  LLDB_LOG(log, "registering plugin '{0}' for {1}", name, "JITLoaderCreateInstance");
   return GetJITLoaderInstances().RegisterPlugin(
       name, description, create_callback, debugger_init_callback);
 }
 
 bool PluginManager::UnregisterPlugin(JITLoaderCreateInstance create_callback) {
+  Log *log = GetLog(LLDBLog::PluginManager);
+  LLDB_LOG(log, "unregistering plugin for {0}", "JITLoaderCreateInstance");
   return GetJITLoaderInstances().UnregisterPlugin(create_callback);
 }
 
@@ -443,12 +477,16 @@ static EmulateInstructionInstances &GetEmulateInstructionInstances() {
 bool PluginManager::RegisterPlugin(
     llvm::StringRef name, llvm::StringRef description,
     EmulateInstructionCreateInstance create_callback) {
+  Log *log = GetLog(LLDBLog::PluginManager);
+  LLDB_LOG(log, "registering plugin '{0}' for {1}", name, "EmulateInstructionCreateInstance");
   return GetEmulateInstructionInstances().RegisterPlugin(name, description,
                                                          create_callback);
 }
 
 bool PluginManager::UnregisterPlugin(
     EmulateInstructionCreateInstance create_callback) {
+  Log *log = GetLog(LLDBLog::PluginManager);
+  LLDB_LOG(log, "unregistering plugin for {0}", "EmulateInstructionCreateInstance");
   return GetEmulateInstructionInstances().UnregisterPlugin(create_callback);
 }
 
@@ -477,12 +515,16 @@ bool PluginManager::RegisterPlugin(
     llvm::StringRef name, llvm::StringRef description,
     OperatingSystemCreateInstance create_callback,
     DebuggerInitializeCallback debugger_init_callback) {
+  Log *log = GetLog(LLDBLog::PluginManager);
+  LLDB_LOG(log, "registering plugin '{0}' for {1}", name, "OperatingSystemCreateInstance");
   return GetOperatingSystemInstances().RegisterPlugin(
       name, description, create_callback, debugger_init_callback);
 }
 
 bool PluginManager::UnregisterPlugin(
     OperatingSystemCreateInstance create_callback) {
+  Log *log = GetLog(LLDBLog::PluginManager);
+  LLDB_LOG(log, "unregistering plugin for {0}", "OperatingSystemCreateInstance");
   return GetOperatingSystemInstances().UnregisterPlugin(create_callback);
 }
 
@@ -510,11 +552,15 @@ static LanguageInstances &GetLanguageInstances() {
 bool PluginManager::RegisterPlugin(llvm::StringRef name,
                                    llvm::StringRef description,
                                    LanguageCreateInstance create_callback) {
+  Log *log = GetLog(LLDBLog::PluginManager);
+  LLDB_LOG(log, "registering plugin '{0}' for {1}", name, "LanguageCreateInstance");
   return GetLanguageInstances().RegisterPlugin(name, description,
                                                create_callback);
 }
 
 bool PluginManager::UnregisterPlugin(LanguageCreateInstance create_callback) {
+  Log *log = GetLog(LLDBLog::PluginManager);
+  LLDB_LOG(log, "unregistering plugin for {0}", "LanguageCreateInstance");
   return GetLanguageInstances().UnregisterPlugin(create_callback);
 }
 
@@ -554,6 +600,8 @@ bool PluginManager::RegisterPlugin(
     LanguageRuntimeCreateInstance create_callback,
     LanguageRuntimeGetCommandObject command_callback,
     LanguageRuntimeGetExceptionPrecondition precondition_callback) {
+  Log *log = GetLog(LLDBLog::PluginManager);
+  LLDB_LOG(log, "registering plugin '{0}' for {1}", name, "LanguageRuntimeCreateInstance");
   return GetLanguageRuntimeInstances().RegisterPlugin(
       name, description, create_callback, nullptr, command_callback,
       precondition_callback);
@@ -561,6 +609,8 @@ bool PluginManager::RegisterPlugin(
 
 bool PluginManager::UnregisterPlugin(
     LanguageRuntimeCreateInstance create_callback) {
+  Log *log = GetLog(LLDBLog::PluginManager);
+  LLDB_LOG(log, "unregistering plugin for {0}", "LanguageRuntimeCreateInstance");
   return GetLanguageRuntimeInstances().UnregisterPlugin(create_callback);
 }
 
@@ -598,12 +648,16 @@ static SystemRuntimeInstances &GetSystemRuntimeInstances() {
 bool PluginManager::RegisterPlugin(
     llvm::StringRef name, llvm::StringRef description,
     SystemRuntimeCreateInstance create_callback) {
+  Log *log = GetLog(LLDBLog::PluginManager);
+  LLDB_LOG(log, "registering plugin '{0}' for {1}", name, "SystemRuntimeCreateInstance");
   return GetSystemRuntimeInstances().RegisterPlugin(name, description,
                                                     create_callback);
 }
 
 bool PluginManager::UnregisterPlugin(
     SystemRuntimeCreateInstance create_callback) {
+  Log *log = GetLog(LLDBLog::PluginManager);
+  LLDB_LOG(log, "unregistering plugin for {0}", "SystemRuntimeCreateInstance");
   return GetSystemRuntimeInstances().UnregisterPlugin(create_callback);
 }
 
@@ -646,12 +700,16 @@ bool PluginManager::RegisterPlugin(
     ObjectFileGetModuleSpecifications get_module_specifications,
     ObjectFileSaveCore save_core,
     DebuggerInitializeCallback debugger_init_callback) {
+  Log *log = GetLog(LLDBLog::PluginManager);
+  LLDB_LOG(log, "registering plugin '{0}' for {1}", name, "ObjectFileCreateInstance");
   return GetObjectFileInstances().RegisterPlugin(
       name, description, create_callback, create_memory_callback,
       get_module_specifications, save_core, debugger_init_callback);
 }
 
 bool PluginManager::UnregisterPlugin(ObjectFileCreateInstance create_callback) {
+  Log *log = GetLog(LLDBLog::PluginManager);
+  LLDB_LOG(log, "unregistering plugin for {0}", "ObjectFileCreateInstance");
   return GetObjectFileInstances().UnregisterPlugin(create_callback);
 }
 
@@ -745,6 +803,8 @@ bool PluginManager::RegisterPlugin(
     ObjectContainerCreateInstance create_callback,
     ObjectFileGetModuleSpecifications get_module_specifications,
     ObjectContainerCreateMemoryInstance create_memory_callback) {
+  Log *log = GetLog(LLDBLog::PluginManager);
+  LLDB_LOG(log, "registering plugin '{0}' for {1}", name, "ObjectContainerCreateInstance");
   return GetObjectContainerInstances().RegisterPlugin(
       name, description, create_callback, create_memory_callback,
       get_module_specifications);
@@ -752,6 +812,8 @@ bool PluginManager::RegisterPlugin(
 
 bool PluginManager::UnregisterPlugin(
     ObjectContainerCreateInstance create_callback) {
+  Log *log = GetLog(LLDBLog::PluginManager);
+  LLDB_LOG(log, "unregistering plugin for {0}", "ObjectContainerCreateInstance");
   return GetObjectContainerInstances().UnregisterPlugin(create_callback);
 }
 
@@ -791,11 +853,15 @@ bool PluginManager::RegisterPlugin(
     llvm::StringRef name, llvm::StringRef description,
     PlatformCreateInstance create_callback,
     DebuggerInitializeCallback debugger_init_callback) {
+  Log *log = GetLog(LLDBLog::PluginManager);
+  LLDB_LOG(log, "registering plugin '{0}' for {1}", name, "PlatformCreateInstance");
   return GetPlatformInstances().RegisterPlugin(
       name, description, create_callback, debugger_init_callback);
 }
 
 bool PluginManager::UnregisterPlugin(PlatformCreateInstance create_callback) {
+  Log *log = GetLog(LLDBLog::PluginManager);
+  LLDB_LOG(log, "unregistering plugin for {0}", "PlatformCreateInstance");
   return GetPlatformInstances().UnregisterPlugin(create_callback);
 }
 
@@ -840,11 +906,15 @@ bool PluginManager::RegisterPlugin(
     llvm::StringRef name, llvm::StringRef description,
     ProcessCreateInstance create_callback,
     DebuggerInitializeCallback debugger_init_callback) {
+  Log *log = GetLog(LLDBLog::PluginManager);
+  LLDB_LOG(log, "registering plugin '{0}' for {1}", name, "ProcessCreateInstance");
   return GetProcessInstances().RegisterPlugin(
       name, description, create_callback, debugger_init_callback);
 }
 
 bool PluginManager::UnregisterPlugin(ProcessCreateInstance create_callback) {
+  Log *log = GetLog(LLDBLog::PluginManager);
+  LLDB_LOG(log, "unregistering plugin for {0}", "ProcessCreateInstance");
   return GetProcessInstances().UnregisterPlugin(create_callback);
 }
 
@@ -863,6 +933,8 @@ PluginManager::GetProcessCreateCallbackAtIndex(uint32_t idx) {
 
 ProcessCreateInstance
 PluginManager::GetProcessCreateCallbackForPluginName(llvm::StringRef name) {
+  Log *log = GetLog(LLDBLog::PluginManager);
+  LLDB_LOG(log, "attempting to obtain process create callback for '{0}'", name);
   return GetProcessInstances().GetCallbackForName(name);
 }
 
@@ -895,12 +967,16 @@ static RegisterTypeBuilderInstances &GetRegisterTypeBuilderInstances() {
 bool PluginManager::RegisterPlugin(
     llvm::StringRef name, llvm::StringRef description,
     RegisterTypeBuilderCreateInstance create_callback) {
+  Log *log = GetLog(LLDBLog::PluginManager);
+  LLDB_LOG(log, "registering plugin '{0}' for {1}", name, "RegisterTypeBuilderCreateInstance");
   return GetRegisterTypeBuilderInstances().RegisterPlugin(name, description,
                                                           create_callback);
 }
 
 bool PluginManager::UnregisterPlugin(
     RegisterTypeBuilderCreateInstance create_callback) {
+  Log *log = GetLog(LLDBLog::PluginManager);
+  LLDB_LOG(log, "unregistering plugin for {0}", "RegisterTypeBuilderCreateInstance");
   return GetRegisterTypeBuilderInstances().UnregisterPlugin(create_callback);
 }
 
@@ -938,12 +1014,16 @@ bool PluginManager::RegisterPlugin(
     llvm::StringRef name, llvm::StringRef description,
     lldb::ScriptLanguage script_language,
     ScriptInterpreterCreateInstance create_callback) {
+  Log *log = GetLog(LLDBLog::PluginManager);
+  LLDB_LOG(log, "registering plugin '{0}' for {1}", name, "ScriptInterpreterCreateInstance");
   return GetScriptInterpreterInstances().RegisterPlugin(
       name, description, create_callback, script_language);
 }
 
 bool PluginManager::UnregisterPlugin(
     ScriptInterpreterCreateInstance create_callback) {
+  Log *log = GetLog(LLDBLog::PluginManager);
+  LLDB_LOG(log, "unregistering plugin for {0}", "ScriptInterpreterCreateInstance");
   return GetScriptInterpreterInstances().UnregisterPlugin(create_callback);
 }
 
@@ -999,6 +1079,8 @@ bool PluginManager::RegisterPlugin(
     StructuredDataPluginCreateInstance create_callback,
     DebuggerInitializeCallback debugger_init_callback,
     StructuredDataFilterLaunchInfo filter_callback) {
+  Log *log = GetLog(LLDBLog::PluginManager);
+  LLDB_LOG(log, "registering plugin '{0}' for {1}", name, "StructuredDataPluginCreateInstance");
   return GetStructuredDataPluginInstances().RegisterPlugin(
       name, description, create_callback, debugger_init_callback,
       filter_callback);
@@ -1006,6 +1088,8 @@ bool PluginManager::RegisterPlugin(
 
 bool PluginManager::UnregisterPlugin(
     StructuredDataPluginCreateInstance create_callback) {
+  Log *log = GetLog(LLDBLog::PluginManager);
+  LLDB_LOG(log, "unregistering plugin for {0}", "StructuredDataPluginCreateInstance");
   return GetStructuredDataPluginInstances().UnregisterPlugin(create_callback);
 }
 
@@ -1041,11 +1125,15 @@ bool PluginManager::RegisterPlugin(
     llvm::StringRef name, llvm::StringRef description,
     SymbolFileCreateInstance create_callback,
     DebuggerInitializeCallback debugger_init_callback) {
+  Log *log = GetLog(LLDBLog::PluginManager);
+  LLDB_LOG(log, "registering plugin '{0}' for {1}", name, "SymbolFileCreateInstance");
   return GetSymbolFileInstances().RegisterPlugin(
       name, description, create_callback, debugger_init_callback);
 }
 
 bool PluginManager::UnregisterPlugin(SymbolFileCreateInstance create_callback) {
+  Log *log = GetLog(LLDBLog::PluginManager);
+  LLDB_LOG(log, "unregistering plugin for {0}", "SymbolFileCreateInstance");
   return GetSymbolFileInstances().UnregisterPlugin(create_callback);
 }
 
@@ -1067,12 +1155,16 @@ static SymbolVendorInstances &GetSymbolVendorInstances() {
 bool PluginManager::RegisterPlugin(llvm::StringRef name,
                                    llvm::StringRef description,
                                    SymbolVendorCreateInstance create_callback) {
+  Log *log = GetLog(LLDBLog::PluginManager);
+  LLDB_LOG(log, "registering plugin '{0}' for {1}", name, "SymbolVendorCreateInstance");
   return GetSymbolVendorInstances().RegisterPlugin(name, description,
                                                    create_callback);
 }
 
 bool PluginManager::UnregisterPlugin(
     SymbolVendorCreateInstance create_callback) {
+  Log *log = GetLog(LLDBLog::PluginManager);
+  LLDB_LOG(log, "unregistering plugin for {0}", "SymbolVendorCreateInstance");
   return GetSymbolVendorInstances().UnregisterPlugin(create_callback);
 }
 
@@ -1112,6 +1204,8 @@ bool PluginManager::RegisterPlugin(
     TraceCreateInstanceFromBundle create_callback_from_bundle,
     TraceCreateInstanceForLiveProcess create_callback_for_live_process,
     llvm::StringRef schema, DebuggerInitializeCallback debugger_init_callback) {
+  Log *log = GetLog(LLDBLog::PluginManager);
+  LLDB_LOG(log, "registering plugin '{0}' for {1}", name, "TraceCreateInstanceFromBundle");
   return GetTracePluginInstances().RegisterPlugin(
       name, description, create_callback_from_bundle,
       create_callback_for_live_process, schema, debugger_init_callback);
@@ -1119,6 +1213,8 @@ bool PluginManager::RegisterPlugin(
 
 bool PluginManager::UnregisterPlugin(
     TraceCreateInstanceFromBundle create_callback_from_bundle) {
+  Log *log = GetLog(LLDBLog::PluginManager);
+  LLDB_LOG(log, "unregistering plugin for {0}", "TraceCreateInstanceFromBundle");
   return GetTracePluginInstances().UnregisterPlugin(
       create_callback_from_bundle);
 }
@@ -1177,12 +1273,16 @@ bool PluginManager::RegisterPlugin(
     llvm::StringRef name, llvm::StringRef description,
     TraceExporterCreateInstance create_callback,
     ThreadTraceExportCommandCreator create_thread_trace_export_command) {
+  Log *log = GetLog(LLDBLog::PluginManager);
+  LLDB_LOG(log, "registering plugin '{0}' for {1}", name, "TraceExporterCreateInstance");
   return GetTraceExporterInstances().RegisterPlugin(
       name, description, create_callback, create_thread_trace_export_command);
 }
 
 TraceExporterCreateInstance
 PluginManager::GetTraceExporterCreateCallback(llvm::StringRef plugin_name) {
+  Log *log = GetLog(LLDBLog::PluginManager);
+  LLDB_LOG(log, "unregistering plugin for {0}", "TraceExporterCreateInstance");
   return GetTraceExporterInstances().GetCallbackForName(plugin_name);
 }
 
@@ -1217,12 +1317,16 @@ static UnwindAssemblyInstances &GetUnwindAssemblyInstances() {
 bool PluginManager::RegisterPlugin(
     llvm::StringRef name, llvm::StringRef description,
     UnwindAssemblyCreateInstance create_callback) {
+  Log *log = GetLog(LLDBLog::PluginManager);
+  LLDB_LOG(log, "registering plugin '{0}' for {1}", name, "UnwindAssemblyCreateInstance");
   return GetUnwindAssemblyInstances().RegisterPlugin(name, description,
                                                      create_callback);
 }
 
 bool PluginManager::UnregisterPlugin(
     UnwindAssemblyCreateInstance create_callback) {
+  Log *log = GetLog(LLDBLog::PluginManager);
+  LLDB_LOG(log, "unregistering plugin for {0}", "UnwindAssemblyCreateInstance");
   return GetUnwindAssemblyInstances().UnregisterPlugin(create_callback);
 }
 
@@ -1244,12 +1348,16 @@ static MemoryHistoryInstances &GetMemoryHistoryInstances() {
 bool PluginManager::RegisterPlugin(
     llvm::StringRef name, llvm::StringRef description,
     MemoryHistoryCreateInstance create_callback) {
+  Log *log = GetLog(LLDBLog::PluginManager);
+  LLDB_LOG(log, "registering plugin '{0}' for {1}", name, "MemoryHistoryCreateInstance");
   return GetMemoryHistoryInstances().RegisterPlugin(name, description,
                                                     create_callback);
 }
 
 bool PluginManager::UnregisterPlugin(
     MemoryHistoryCreateInstance create_callback) {
+  Log *log = GetLog(LLDBLog::PluginManager);
+  LLDB_LOG(log, "unregistering plugin for {0}", "MemoryHistoryCreateInstance");
   return GetMemoryHistoryInstances().UnregisterPlugin(create_callback);
 }
 
@@ -1285,12 +1393,16 @@ bool PluginManager::RegisterPlugin(
     llvm::StringRef name, llvm::StringRef description,
     InstrumentationRuntimeCreateInstance create_callback,
     InstrumentationRuntimeGetType get_type_callback) {
+  Log *log = GetLog(LLDBLog::PluginManager);
+  LLDB_LOG(log, "registering plugin '{0}' for {1}", name, "InstrumentationRuntimeCreateInstance");
   return GetInstrumentationRuntimeInstances().RegisterPlugin(
       name, description, create_callback, get_type_callback);
 }
 
 bool PluginManager::UnregisterPlugin(
     InstrumentationRuntimeCreateInstance create_callback) {
+  Log *log = GetLog(LLDBLog::PluginManager);
+  LLDB_LOG(log, "unregistering plugin for {0}", "InstrumentationRuntimeCreateInstance");
   return GetInstrumentationRuntimeInstances().UnregisterPlugin(create_callback);
 }
 
@@ -1336,12 +1448,16 @@ bool PluginManager::RegisterPlugin(
     TypeSystemCreateInstance create_callback,
     LanguageSet supported_languages_for_types,
     LanguageSet supported_languages_for_expressions) {
+  Log *log = GetLog(LLDBLog::PluginManager);
+  LLDB_LOG(log, "registering plugin '{0}' for {1}", name, "TypeSystemCreateInstance");
   return GetTypeSystemInstances().RegisterPlugin(
       name, description, create_callback, supported_languages_for_types,
       supported_languages_for_expressions);
 }
 
 bool PluginManager::UnregisterPlugin(TypeSystemCreateInstance create_callback) {
+  Log *log = GetLog(LLDBLog::PluginManager);
+  LLDB_LOG(log, "unregistering plugin for {0}", "TypeSystemCreateInstance");
   return GetTypeSystemInstances().UnregisterPlugin(create_callback);
 }
 
@@ -1387,11 +1503,15 @@ static REPLInstances &GetREPLInstances() {
 bool PluginManager::RegisterPlugin(llvm::StringRef name, llvm::StringRef description,
                                    REPLCreateInstance create_callback,
                                    LanguageSet supported_languages) {
+  Log *log = GetLog(LLDBLog::PluginManager);
+  LLDB_LOG(log, "registering plugin '{0}' for {1}", name, "REPLCreateInstance");
   return GetREPLInstances().RegisterPlugin(name, description, create_callback,
                                            supported_languages);
 }
 
 bool PluginManager::UnregisterPlugin(REPLCreateInstance create_callback) {
+  Log *log = GetLog(LLDBLog::PluginManager);
+  LLDB_LOG(log, "unregistering plugin for {0}", "REPLCreateInstance");
   return GetREPLInstances().UnregisterPlugin(create_callback);
 }
 

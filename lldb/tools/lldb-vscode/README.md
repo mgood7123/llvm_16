@@ -44,7 +44,7 @@ mkdir -p ~/llvm-org.lldb-vscode-0.1.0/bin
 cp package.json ~/llvm-org.lldb-vscode-0.1.0
 cd ~/llvm-org.lldb-vscode-0.1.0/bin
 cp /path/to/a/built/lldb-vscode .
-cp /path/to/a/built/liblldb.so .
+cp /path/to/a/built/liblldbAPI.so .
 ```
 
 If you want to make a stand alone plug-in that you can send to others on macOS
@@ -58,7 +58,7 @@ cp /path/to/a/built/lldb-vscode .
 rsync -av /path/to/a/built/LLDB.framework LLDB.framework
 ```
 
-You might need to create additional directories for the `liblldb.so` or
+You might need to create additional directories for the `liblldbAPI.so` or
 `LLDB.framework` inside or next to the `bin` folder depending on how the
 [rpath](https://en.wikipedia.org/wiki/Rpath) is set in your `lldb-vscode`
 binary. By default the `Debug` builds of LLDB usually includes

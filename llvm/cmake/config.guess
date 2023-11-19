@@ -116,7 +116,7 @@ dummy=$tmp/dummy ;
 tmpfiles="$dummy.c $dummy.o $dummy.rel $dummy" ;
 case $CC_FOR_BUILD,$HOST_CC,$CC in
  ,,)    echo "int x;" > $dummy.c ;
-	for c in cc gcc c89 c99 ; do
+	for c in cc gcc clang c89 c99 ; do
 	  if ($c -c -o $dummy.o $dummy.c) >/dev/null 2>&1 ; then
 	     CC_FOR_BUILD="$c"; break ;
 	  fi ;
@@ -1043,7 +1043,21 @@ EOF
 	echo ${UNAME_MACHINE}-dec-linux-gnu
 	exit ;;
     x86_64:Linux:*:*)
-	echo x86_64-unknown-linux-gnu
+	if (gcc --version > /dev/null) ; then
+		gcc -dumpmachine
+	elif (clang --version > /dev/null) ; then
+		clang -dumpmachine
+	else
+		# we do not have gcc installed, and we do not have clang installed
+		# attempt to detect alpine, which uses a different triple
+		if (grep alpine /etc/os-release > /dev/null) ; then
+			# alpine always uses musl although it also has a glibc compatibility package
+			#   its desciption per 'apk info gcompat' is 'The GNU C Library compatibility layer for musl'
+			echo x86_64-alpine-linux-musl
+		else
+			echo x86_64-unknown-linux-gnu
+		fi
+	fi
 	exit ;;
     xtensa*:Linux:*:*)
 	echo ${UNAME_MACHINE}-unknown-linux-gnu

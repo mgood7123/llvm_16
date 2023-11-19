@@ -5,4 +5,4 @@ add_lldb_tool(lldb-argdumper ADD_TO_FRAMEWORK
     Support
 )
 
-add_dependencies(liblldb lldb-argdumper)
+add_dependencies(liblldbAPI lldb-argdumper)

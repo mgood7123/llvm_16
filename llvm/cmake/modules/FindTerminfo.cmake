@@ -35,6 +35,9 @@ find_package_handle_standard_args(Terminfo
 mark_as_advanced(Terminfo_LIBRARIES
                  Terminfo_LINKABLE)
 
+message(STATUS "TermInfo: found :         ${Terminfo_FOUND}")
+message(STATUS "TermInfo: lib :           ${Terminfo_LIBRARIES}")
+
 if(Terminfo_FOUND)
   if(NOT TARGET Terminfo::terminfo)
     add_library(Terminfo::terminfo UNKNOWN IMPORTED)

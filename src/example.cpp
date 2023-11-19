@@ -1,11 +1,12 @@
 #include <jit.h>
 #include <clang_driver.h>
 
+#include <llvm/IR/DiagnosticInfo.h>
 #include <llvm/Support/CrashRecoveryContext.h>
 #include <llvm/Support/PrettyStackTrace.h>
 #include <llvm/Support/Signals.h>
-#include <llvm/IR/DiagnosticInfo.h>
 
+#if false
 #ifndef __sun
 #define _POSIX_C_SOURCE 200809L
 #else
@@ -274,6 +275,10 @@ void pdcurses_repl() {
     delscreen(screen);
 }
 
+#endif // false
+
+extern int llvm_orcjit_example_packaged_zip_extract(const char * out_dir);
+
 int main(int argc, char *argv[]) {
 
     JIT::main_llvm_init main_init(argc, const_cast<const char**>(argv));
@@ -281,10 +286,31 @@ int main(int argc, char *argv[]) {
     if (!llvm::cl::ParseCommandLineOptions(argc, argv, "JIT"))
       return 1;
 
+    auto dir = std::filesystem::path(TempFile::TempDir()).append("JIT");
+    if (!std::filesystem::exists(dir)) {
+        std::filesystem::create_directory(dir);
+    }
+    auto extracted = dir.append("EXTRACTED");
+    if (!std::filesystem::exists(extracted)) {
+        std::filesystem::create_directory(extracted);
+    }
+
+    llvm_orcjit_example_packaged_zip_extract(extracted.c_str());
+
+    auto LLDB_SERVER_PATH = extracted.append("LLDB_SERVER");
+
+    auto old = ::getenv("LLDB_DEBUGSERVER_PATH");
+    ::setenv("LLDB_DEBUGSERVER_PATH", LLDB_SERVER_PATH.c_str(), 1);
+
     JIT jit;
 
-    ClangDriver::call_clang_format({"--help"});
-    ClangDriver::call_clang_cpp({"--help"});
+    // //ClangDriver::call_clang_format({"--help"});
+    // //ClangDriver::call_clang_cpp({"--help"});
+    // //ClangDriver::call_lldb({"--help"});
+
+    // //ClangDriver::call_clang_format({"--help"});
+    // //ClangDriver::call_clang_cpp({"--help"});
+    // //ClangDriver::call_lldb({"--help"});
 
     auto hello = ClangDriver::SourceFile("hello", "cpp");
 
@@ -307,11 +333,58 @@ int main(int argc, char *argv[]) {
     int res = main_func();
     llvm::outs() << func_name << "() = " << res << "\n";
 
+    // ClangDriver::call_lldb({"/bin/true"});
+    // ClangDriver::call_lldb({"/bin/true"});
+
     //repl_main();
 
-    pdcurses_repl();
+    //pdcurses_repl();
+
+    auto repl_main_src = ClangDriver::SourceFile("repl_main", "cpp");
+
+    repl_main_src << R"(
+#include <lldb/Host/Editline.h>
+#include <lldb/Host/FileSystem.h>
+#include <lldb/Host/Pipe.h>
+#include <lldb/Host/PseudoTerminal.h>
+#include <lldb/Utility/Status.h>
+#include <lldb/Utility/StringList.h>
+
+using namespace lldb_private;
+
+extern "C" void repl_main() {
+  llvm::outs() << "REPL_MAIN from llvm outs\n";
+}
+)";
+
+    repl_main_src.flush();
+
+    ClangDriver::call_clang_format({ClangDriver::default_format_style, "-i", repl_main_src.path()});
+    auto LLVM_18_PATH = extracted.append("LLVM_18.a");
+
+    ClangDriver::call_clang_cpp({
+      "-I", "/home/alpine/llvm_18/llvm/include",
+      "-I", "/home/alpine/llvm_18/clang/include",
+      "-I", "/home/alpine/llvm_18/lldb/include",
+      "-I", "/home/alpine/llvm_18/release_BUILD/llvm/include",
+      "-I", "/home/alpine/llvm_18/release_BUILD/llvm/tools/lldb/include",
+      "-I", "/home/alpine/llvm_18/release_BUILD/LIBEDIT/OUT/include",
+      "-O0", "-g3", "-S", "-emit-llvm",
+      repl_main_src.path(), "-o", repl_main_src.path_ll()
+    });
+    jit.add_IR_module(repl_main_src.path_ll());
+
+    // Look up the JIT'd function, cast it to a function pointer, then call it.
+    void (*repl_main_src_func)(void) = jit.lookup_as_pointer<void(void)>("repl_main");
+    
+    repl_main_src_func();
 
     llvm::outs() << "exiting...\n";
+
+    if (old == nullptr)
+      ::unsetenv("LLDB_DEBUGSERVER_PATH");
+    else
+      ::setenv("LLDB_DEBUGSERVER_PATH", old, 1);
 
     return 0;
 }

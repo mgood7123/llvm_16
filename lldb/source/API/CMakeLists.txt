@@ -20,7 +20,9 @@ if(LLDB_ENABLE_LUA)
   set(lldb_lua_wrapper ${lua_bindings_dir}/LLDBWrapLua.cpp)
 endif()
 
-add_lldb_library(liblldb SHARED ${option_framework}
+set(LLDB_EXPORT_ALL_SYMBOLS ON CACHE BOOL "" FORCE)
+
+add_lldb_library(liblldbAPI STATIC ${option_framework}
   SBAddress.cpp
   SBAttachInfo.cpp
   SBBlock.cpp
@@ -117,22 +119,22 @@ add_lldb_library(liblldb SHARED ${option_framework}
   ${option_install_prefix}
 )
 
-# lib/pythonX.Y/dist-packages/lldb/_lldb.so is a symlink to lib/liblldb.so,
+# lib/pythonX.Y/dist-packages/lldb/_lldb.so is a symlink to lib/liblldbAPI.so,
 # which depends on lib/libLLVM*.so (BUILD_SHARED_LIBS) or lib/libLLVM-10git.so
 # (LLVM_LINK_LLVM_DYLIB). Add an additional rpath $ORIGIN/../../../../lib so
 # that _lldb.so can be loaded from Python.
 if(LLDB_ENABLE_PYTHON AND (BUILD_SHARED_LIBS OR LLVM_LINK_LLVM_DYLIB) AND UNIX AND NOT APPLE)
-  set_property(TARGET liblldb APPEND PROPERTY INSTALL_RPATH "\$ORIGIN/../../../../lib${LLVM_LIBDIR_SUFFIX}")
+  set_property(TARGET liblldbAPI APPEND PROPERTY INSTALL_RPATH "\$ORIGIN/../../../../lib${LLVM_LIBDIR_SUFFIX}")
 endif()
 
 if(Python3_RPATH)
-  set_property(TARGET liblldb APPEND PROPERTY INSTALL_RPATH "${Python3_RPATH}")
-  set_property(TARGET liblldb APPEND PROPERTY BUILD_RPATH   "${Python3_RPATH}")
+  set_property(TARGET liblldbAPI APPEND PROPERTY INSTALL_RPATH "${Python3_RPATH}")
+  set_property(TARGET liblldbAPI APPEND PROPERTY BUILD_RPATH   "${Python3_RPATH}")
 endif()
 
 
 if(LLDB_ENABLE_PYTHON)
-  add_dependencies(liblldb swig_wrapper_python)
+  add_dependencies(liblldbAPI swig_wrapper_python)
 
   if (MSVC)
     set_property(SOURCE ${lldb_python_wrapper} APPEND_STRING PROPERTY COMPILE_FLAGS " /W0")
@@ -153,8 +155,8 @@ if(LLDB_ENABLE_PYTHON)
 endif()
 
 if(LLDB_ENABLE_LUA)
-  add_dependencies(liblldb swig_wrapper_lua)
-  target_include_directories(liblldb PRIVATE ${LUA_INCLUDE_DIR})
+  add_dependencies(liblldbAPI swig_wrapper_lua)
+  target_include_directories(liblldbAPI PRIVATE ${LUA_INCLUDE_DIR})
 
   if (MSVC)
     set_property(SOURCE ${lldb_lua_wrapper} APPEND_STRING PROPERTY COMPILE_FLAGS " /W0")
@@ -165,40 +167,40 @@ if(LLDB_ENABLE_LUA)
   set_source_files_properties(${lldb_lua_wrapper} PROPERTIES GENERATED ON)
 endif()
 
-set_target_properties(liblldb
+set_target_properties(liblldbAPI
   PROPERTIES
   VERSION ${LLDB_VERSION}
 )
 
-target_compile_definitions(liblldb PRIVATE LLDB_IN_LIBLLDB)
+target_compile_definitions(liblldbAPI PRIVATE LLDB_IN_LIBLLDB)
 if (NOT CMAKE_SYSTEM_NAME MATCHES "Windows")
   if (NOT LLDB_EXPORT_ALL_SYMBOLS)
     # If we're not exporting all symbols, we'll want to explicitly set
     # the exported symbols here.  This prevents 'log enable --stack ...'
-    # from working on some systems but limits the liblldb size.
-    MESSAGE("-- Symbols (liblldb): exporting all symbols from the lldb namespace")
-    add_llvm_symbol_exports(liblldb ${CMAKE_CURRENT_SOURCE_DIR}/liblldb.exports)
+    # from working on some systems but limits the liblldbAPI size.
+    MESSAGE("-- Symbols (liblldbAPI): exporting all symbols from the lldb namespace")
+    add_llvm_symbol_exports(liblldbAPI ${CMAKE_CURRENT_SOURCE_DIR}/liblldbAPI.exports)
   elseif (NOT LLDB_EXPORT_ALL_SYMBOLS_EXPORTS_FILE)
     # Don't use an explicit export. Instead, tell the linker to export all symbols.
-    MESSAGE("-- Symbols (liblldb): exporting all symbols from the lldb and lldb_private namespaces")
+    MESSAGE("-- Symbols (liblldbAPI): exporting all symbols from the lldb and lldb_private namespaces")
     MESSAGE(WARNING "Private LLDB symbols frequently change and no API stability is guaranteed. "
                     "Only the SB API is guaranteed to be stable.")
-    add_llvm_symbol_exports(liblldb ${CMAKE_CURRENT_SOURCE_DIR}/liblldb-private.exports)
+    add_llvm_symbol_exports(liblldbAPI ${CMAKE_CURRENT_SOURCE_DIR}/liblldbAPI-private.exports)
   else ()
-    MESSAGE("-- Symbols (liblldb): exporting all symbols specified in the exports "
+    MESSAGE("-- Symbols (liblldbAPI): exporting all symbols specified in the exports "
             " file '${LLDB_EXPORT_ALL_SYMBOLS_EXPORTS_FILE}'")
     MESSAGE(WARNING "Private LLDB symbols frequently change and no API stability is guaranteed. "
                     "Only the SB API is guaranteed to be stable.")
-    add_llvm_symbol_exports(liblldb "${LLDB_EXPORT_ALL_SYMBOLS_EXPORTS_FILE}")
+    add_llvm_symbol_exports(liblldbAPI "${LLDB_EXPORT_ALL_SYMBOLS_EXPORTS_FILE}")
   endif()
-  set_target_properties(liblldb_exports PROPERTIES FOLDER "lldb misc")
+  set_target_properties(liblldbAPI_exports PROPERTIES FOLDER "lldb misc")
 elseif (LLDB_EXPORT_ALL_SYMBOLS)
-  MESSAGE("-- Symbols (liblldb): exporting all symbols from the lldb and lldb_private namespaces")
+  MESSAGE("-- Symbols (liblldbAPI): exporting all symbols from the lldb and lldb_private namespaces")
 
-  # Pull out the various lldb libraries linked into liblldb, these will be used
+  # Pull out the various lldb libraries linked into liblldbAPI, these will be used
   # when looking for symbols to extract. We ignore plugin libraries here,
   # because these symbols aren't publicly exposed.
-  get_target_property(all_liblldb_libs liblldb LINK_LIBRARIES)
+  get_target_property(all_liblldb_libs liblldbAPI LINK_LIBRARIES)
   set(lldb_libs "")
   foreach(lib ${all_liblldb_libs})
     if(TARGET ${lib} AND ${lib} MATCHES "^lldb" AND
@@ -213,7 +215,7 @@ elseif (LLDB_EXPORT_ALL_SYMBOLS)
 
   # Extract all of the private symbols and produce a single file we can use for
   # the exports.
-  set(exported_symbol_file ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/liblldb_private.symbols)
+  set(exported_symbol_file ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/liblldbAPI_private.symbols)
   get_host_tool_path(llvm-nm LLVM_NM llvm_nm_exe llvm_nm_target)
   add_custom_command(
     OUTPUT ${exported_symbol_file}
@@ -224,24 +226,24 @@ elseif (LLDB_EXPORT_ALL_SYMBOLS)
     DEPENDS ${LLDB_SOURCE_DIR}/scripts/msvc_extract_private_symbols.py
       ${lldb_libs} ${llvm_nm_target}
     VERBATIM
-    COMMENT "Generating liblldb private export list"
+    COMMENT "Generating liblldbAPI private export list"
   )
 
-  add_llvm_symbol_exports(liblldb ${exported_symbol_file})
-  set_target_properties(liblldb_exports PROPERTIES FOLDER "lldb misc")
+  add_llvm_symbol_exports(liblldbAPI ${exported_symbol_file})
+  set_target_properties(liblldbAPI_exports PROPERTIES FOLDER "lldb misc")
 endif()
 
 if (NOT MSVC)
-  set_target_properties(liblldb
+  set_target_properties(liblldbAPI
     PROPERTIES
-    OUTPUT_NAME lldb
+    OUTPUT_NAME lldbAPI
   )
 endif()
 
 # The Clang expression parser in LLDB requires the Clang resource directory to function.
 if (TARGET clang-resource-headers)
-  # If building alongside Clang, just add a dependency to ensure it is build together with liblldb.
-  add_dependencies(liblldb clang-resource-headers)
+  # If building alongside Clang, just add a dependency to ensure it is build together with liblldbAPI.
+  add_dependencies(liblldbAPI clang-resource-headers)
 else()
   # In a standalone build create a symlink from the LLDB library directory that points to the
   # resource directory in the Clang library directory. LLDB searches relative to its install path,
@@ -250,8 +252,8 @@ else()
   # When building the LLDB framework, this isn't necessary as there we copy everything we need into
   # the framework (including the Clang resourece directory).
   if(NOT LLDB_BUILD_FRAMEWORK)
-    set(LLDB_CLANG_RESOURCE_DIR "$<TARGET_FILE_DIR:liblldb>/clang")
-    add_custom_command(TARGET liblldb POST_BUILD
+    set(LLDB_CLANG_RESOURCE_DIR "$<TARGET_FILE_DIR:liblldbAPI>/clang")
+    add_custom_command(TARGET liblldbAPI POST_BUILD
       COMMENT "Linking Clang resource dir into LLDB build directory: ${LLDB_CLANG_RESOURCE_DIR}"
       COMMAND ${CMAKE_COMMAND} -E create_symlink
       "${LLDB_EXTERNAL_CLANG_RESOURCE_DIR}" "${LLDB_CLANG_RESOURCE_DIR}"
@@ -262,13 +264,13 @@ endif()
 if(LLDB_BUILD_FRAMEWORK)
   include(LLDBFramework)
 
-  if (TARGET install-liblldb)
-    add_dependencies(install-liblldb
+  if (TARGET install-liblldbAPI)
+    add_dependencies(install-liblldbAPI
       lldb-framework-cleanup)
   endif()
 
-  if (TARGET install-liblldb-stripped)
-    add_dependencies(install-liblldb-stripped
+  if (TARGET install-liblldbAPI-stripped)
+    add_dependencies(install-liblldbAPI-stripped
       lldb-framework-cleanup)
   endif()
 endif()

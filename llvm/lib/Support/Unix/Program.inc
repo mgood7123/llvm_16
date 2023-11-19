@@ -271,6 +271,7 @@ static bool Execute(ProcessInfo &PI, StringRef Program,
 #endif
 
   // Create a child process.
+  printf("calling fork() in 'static bool Execute(ProcessInfo &PI, StringRef Program, ArrayRef<StringRef> Args, std::optional<ArrayRef<StringRef>> Env, ArrayRef<std::optional<StringRef>> Redirects, unsigned MemoryLimit, std::string *ErrMsg, BitVector *AffinityMask)'");
   int child = fork();
   switch (child) {
   // An error occurred:  Return to the caller.

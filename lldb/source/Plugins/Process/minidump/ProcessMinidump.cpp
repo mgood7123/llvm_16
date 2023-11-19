@@ -170,13 +170,9 @@ ProcessMinidump::~ProcessMinidump() {
 }
 
 void ProcessMinidump::Initialize() {
-  static llvm::once_flag g_once_flag;
-
-  llvm::call_once(g_once_flag, []() {
-    PluginManager::RegisterPlugin(GetPluginNameStatic(),
-                                  GetPluginDescriptionStatic(),
-                                  ProcessMinidump::CreateInstance);
-  });
+  PluginManager::RegisterPlugin(GetPluginNameStatic(),
+                                GetPluginDescriptionStatic(),
+                                ProcessMinidump::CreateInstance);
 }
 
 void ProcessMinidump::Terminate() {

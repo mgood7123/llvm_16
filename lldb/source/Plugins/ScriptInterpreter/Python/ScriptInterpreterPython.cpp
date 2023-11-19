@@ -315,7 +315,7 @@ void ScriptInterpreterPython::SharedLibraryDirectoryHelper(
          it != end; ++it)
       this_file.RemoveLastPathComponent();
     this_file.AppendPathComponent("bin");
-    this_file.AppendPathComponent("liblldb.dll");
+    this_file.AppendPathComponent("liblldbAPI.dll");
   }
 #else
   // The python file is a symlink, so we can find the real library by resolving
@@ -329,17 +329,16 @@ llvm::StringRef ScriptInterpreterPython::GetPluginDescriptionStatic() {
 }
 
 void ScriptInterpreterPython::Initialize() {
-  static llvm::once_flag g_once_flag;
-  llvm::call_once(g_once_flag, []() {
-    PluginManager::RegisterPlugin(GetPluginNameStatic(),
-                                  GetPluginDescriptionStatic(),
-                                  lldb::eScriptLanguagePython,
-                                  ScriptInterpreterPythonImpl::CreateInstance);
-    ScriptInterpreterPythonImpl::Initialize();
-  });
+  PluginManager::RegisterPlugin(GetPluginNameStatic(),
+                                GetPluginDescriptionStatic(),
+                                lldb::eScriptLanguagePython,
+                                ScriptInterpreterPythonImpl::CreateInstance);
+  ScriptInterpreterPythonImpl::Initialize();
 }
 
-void ScriptInterpreterPython::Terminate() {}
+void ScriptInterpreterPython::Terminate() {
+  PluginManager::UnregisterPlugin(ScriptInterpreterPython::CreateInstance);
+}
 
 ScriptInterpreterPythonImpl::Locker::Locker(
     ScriptInterpreterPythonImpl *py_interpreter, uint16_t on_entry,

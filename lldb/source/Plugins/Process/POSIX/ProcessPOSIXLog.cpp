@@ -7,7 +7,6 @@
 //===----------------------------------------------------------------------===//
 
 #include "ProcessPOSIXLog.h"
-
 #include "llvm/Support/Threading.h"
 
 using namespace lldb_private;
@@ -30,5 +29,7 @@ template <> Log::Channel &lldb_private::LogChannelFor<POSIXLog>() {
 
 void ProcessPOSIXLog::Initialize() {
   static llvm::once_flag g_once_flag;
-  llvm::call_once(g_once_flag, []() { Log::Register("posix", g_channel); });
+  llvm::call_once(g_once_flag, []() {
+    Log::Register("posix", g_channel);
+  });
 }

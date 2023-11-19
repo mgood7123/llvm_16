@@ -122,11 +122,13 @@ extern "C" LLVM_ATTRIBUTE_USED int LLVMFuzzerInitialize(int *argc,
   InitializeAllAsmParsers();
 
   handleExecNameEncodedBEOpts(*argv[0]);
-  parseFuzzerCLOpts(*argc, *argv);
+  if (!parseFuzzerCLOpts(*argc, *argv)) {
+    return 1;
+  }
 
   if (TargetTriple.empty()) {
     errs() << *argv[0] << ": -mtriple must be specified\n";
-    exit(1);
+    return 1;
   }
 
   // Set up the pipeline like llc does.

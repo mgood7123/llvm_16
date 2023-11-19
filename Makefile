@@ -100,19 +100,19 @@ ifneq ($(CXXCOMPILER),)
 	CXX_COMPILER_flags = -DCMAKE_CXX_COMPILER="$(CXXCOMPILER)"
 endif
 
-cmake_run_flags += $(C_COMPILER_flags) $(CXX_COMPILER_flags) $(CMAKE_FLAGS)
+cmake_run_flags += $(C_COMPILER_flags) $(CXX_COMPILER_flags)
 
 build_debug: debug_directories
-	cd ${debug_build_dir} ; mkdir EXECUTABLES; cmake -DCMAKE_BUILD_TYPE=Debug $(cmake_run_flags) -DCMAKE_C_FLAGS_DEBUG="$(CFLAGS) -g3 -O0" -DCMAKE_CXX_FLAGS_DEBUG="$(CXXFLAGS) -g3 -O0" .. ; make && if test -e EXECUTABLES ; then cd EXECUTABLES; for file in * ; do mv -v $$file ../../$(debug_executable_dir)/$$FILE ; done ; cd ..; rmdir EXECUTABLES; fi
+	cd ${debug_build_dir} ; if test ! -e EXECUTABLES ; then mkdir EXECUTABLES; fi; cmake -DCMAKE_BUILD_TYPE=Debug $(cmake_run_flags) -DCMAKE_C_FLAGS="$(CFLAGS) -g3 -O0" -DCMAKE_CXX_FLAGS="$(CXXFLAGS) -g3 -O0" .. $(CMAKE_FLAGS) ; make $(MAKE_FLAGS) && if test -e EXECUTABLES ; then cd EXECUTABLES; for file in * ; do mv -v $$file ../../$(debug_executable_dir)/$$FILE ; done ; cd ..; rmdir EXECUTABLES; fi
 
 build_debug_ninja: debug_ninja_directories
-	cd ${debug_ninja_build_dir} ; mkdir EXECUTABLES; cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug $(cmake_run_flags) -DCMAKE_C_FLAGS_DEBUG="$(CFLAGS) -g3 -O0" -DCMAKE_CXX_FLAGS_DEBUG="$(CXXFLAGS) -g3 -O0" .. ; ninja && if test -e EXECUTABLES ; then cd EXECUTABLES; for file in * ; do mv -v $$file ../../$(debug_executable_dir)/$$FILE ; done ; cd ..; rmdir EXECUTABLES; fi
+	cd ${debug_ninja_build_dir} ; if test ! -e EXECUTABLES ; then mkdir EXECUTABLES; fi; cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug $(cmake_run_flags) -DCMAKE_C_FLAGS="$(CFLAGS) -g3 -O0" -DCMAKE_CXX_FLAGS="$(CXXFLAGS) -g3 -O0" .. $(CMAKE_FLAGS) ; ninja && if test -e EXECUTABLES ; then cd EXECUTABLES; for file in * ; do mv -v $$file ../../$(debug_executable_dir)/$$FILE ; done ; cd ..; rmdir EXECUTABLES; fi
 
 build_release: release_directories
-	cd ${release_build_dir} ; mkdir EXECUTABLES; cmake -DCMAKE_BUILD_TYPE=Release $(cmake_run_flags) -DCMAKE_C_FLAGS_RELEASE="$(CFLAGS) -g0 -O3" -DCMAKE_CXX_FLAGS_RELEASE="$(CXXFLAGS) -g0 -O3" .. ; make && if test -e EXECUTABLES ; then cd EXECUTABLES; for file in * ; do mv -v $$file ../../$(release_executable_dir)/$$FILE ; done ; cd ..; rmdir EXECUTABLES; fi
+	cd ${release_build_dir} ; if test ! -e EXECUTABLES ; then mkdir EXECUTABLES; fi; cmake -DCMAKE_BUILD_TYPE=Release $(cmake_run_flags) -DCMAKE_C_FLAGS="$(CFLAGS) -g0 -O3" -DCMAKE_CXX_FLAGS="$(CXXFLAGS) -g0 -O3" .. $(CMAKE_FLAGS) ; make $(MAKE_FLAGS) && if test -e EXECUTABLES ; then cd EXECUTABLES; for file in * ; do mv -v $$file ../../$(release_executable_dir)/$$FILE ; done ; cd ..; rmdir EXECUTABLES; fi
 
 build_release_ninja: release_ninja_directories
-	cd ${release_ninja_build_dir} ; mkdir EXECUTABLES; cmake -G Ninja -DCMAKE_BUILD_TYPE=Release $(cmake_run_flags) -DCMAKE_C_FLAGS_RELEASE="$(CFLAGS) -g0 -O3" -DCMAKE_CXX_FLAGS_RELEASE="$(CXXFLAGS) -g0 -O3" .. ; ninja && if test -e EXECUTABLES ; then cd EXECUTABLES; for file in * ; do mv -v $$file ../../$(release_executable_dir)/$$FILE ; done ; cd ..; rmdir EXECUTABLES; fi
+	cd ${release_ninja_build_dir} ; if test ! -e EXECUTABLES ; then mkdir EXECUTABLES; fi; cmake -G Ninja -DCMAKE_BUILD_TYPE=Release $(cmake_run_flags) -DCMAKE_C_FLAGS="$(CFLAGS) -g0 -O3" -DCMAKE_CXX_FLAGS="$(CXXFLAGS) -g0 -O3" .. $(CMAKE_FLAGS) ; ninja && if test -e EXECUTABLES ; then cd EXECUTABLES; for file in * ; do mv -v $$file ../../$(release_executable_dir)/$$FILE ; done ; cd ..; rmdir EXECUTABLES; fi
 
 
 
@@ -120,10 +120,10 @@ asan_build_flags = -fno-omit-frame-pointer -fsanitize=address -fsanitize-address
 asan_run_flags = ASAN_OPTIONS=verbosity=1:detect_leaks=1:detect_stack_use_after_return=1:check_initialization_order=true:strict_init_order=true:debug=1
 
 build_debug_asan: debug_asan_directories
-	cd ${debug_asan_build_dir} ; mkdir EXECUTABLES; cmake -DCMAKE_BUILD_TYPE=Debug $(cmake_run_flags) -DCMAKE_C_FLAGS_DEBUG="$(CFLAGS) -g3 -O0 ${asan_build_flags}" -DCMAKE_CXX_FLAGS_DEBUG="$(CXXFLAGS) -g3 -O0 ${asan_build_flags}" .. ; make && if test -e EXECUTABLES ; then cd EXECUTABLES; for file in * ; do mv -v $$file ../../$(debug_asan_executable_dir)/$$FILE ; done ; cd ..; rmdir EXECUTABLES; fi
+	cd ${debug_asan_build_dir} ; if test ! -e EXECUTABLES ; then mkdir EXECUTABLES; fi; ${asan_run_flags} cmake -DCMAKE_BUILD_TYPE=Debug $(cmake_run_flags) -DCMAKE_C_FLAGS="$(CFLAGS) -g3 -O0 ${asan_build_flags}" -DCMAKE_CXX_FLAGS="$(CXXFLAGS) -g3 -O0 ${asan_build_flags}" .. ; ${asan_run_flags} make $(MAKE_FLAGS) && if test -e EXECUTABLES ; then cd EXECUTABLES; for file in * ; do mv -v $$file ../../$(debug_asan_executable_dir)/$$FILE ; done ; cd ..; rmdir EXECUTABLES; fi
 
 build_debug_ninja_asan: debug_ninja_asan_directories
-	cd ${debug_ninja_asan_build_dir} ; mkdir EXECUTABLES; cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug $(cmake_run_flags) -DCMAKE_C_FLAGS_DEBUG="$(CFLAGS) -g3 -O0 ${asan_build_flags}" -DCMAKE_CXX_FLAGS_DEBUG="$(CXXFLAGS) -g3 -O0 ${asan_build_flags}" .. ; ninja && if test -e EXECUTABLES ; then cd EXECUTABLES; for file in * ; do mv -v $$file ../../$(debug_asan_executable_dir)/$$FILE ; done ; cd ..; rmdir EXECUTABLES; fi
+	cd ${debug_ninja_asan_build_dir} ; if test ! -e EXECUTABLES ; then mkdir EXECUTABLES; fi; ${asan_run_flags} cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug $(cmake_run_flags) -DCMAKE_C_FLAGS="$(CFLAGS) -g3 -O0 ${asan_build_flags}" -DCMAKE_CXX_FLAGS="$(CXXFLAGS) -g3 -O0 ${asan_build_flags}" .. ; ${asan_run_flags} ninja && if test -e EXECUTABLES ; then cd EXECUTABLES; for file in * ; do mv -v $$file ../../$(debug_asan_executable_dir)/$$FILE ; done ; cd ..; rmdir EXECUTABLES; fi
 
 .PHONY: all
 

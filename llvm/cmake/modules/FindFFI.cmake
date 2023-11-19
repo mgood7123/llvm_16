@@ -70,6 +70,11 @@ mark_as_advanced(FFI_LIBRARIES
                  HAVE_FFI_H
                  HAVE_FFI_FFI_H)
 
+message(STATUS "FFI: found :         ${FFI_FOUND}")
+message(STATUS "FFI: include_dirs :  ${FFI_INCLUDE_DIRS}")
+message(STATUS "FFI: lib :           ${FFI_LIBRARIES}")
+message(STATUS "FFI: have ffi call : ${HAVE_FFI_CALL}")
+
 if(FFI_FOUND)
   if(NOT TARGET FFI::ffi)
     add_library(FFI::ffi UNKNOWN IMPORTED)
