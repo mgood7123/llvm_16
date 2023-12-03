@@ -182,10 +182,13 @@ jobs:
         run: |
           sudo docker container exec --user ubuntu --workdir /home/ubuntu git_local_ubuntu bash -c "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/\$(id -u ubuntu)/bus systemd-run --user --scope --collect /bin/bash -c \"sudo apt install -y google-android-ndk-r25c-installer\""
 
+      - name: copy GITHUB_WORKSPACE directory to docker
+        run: |
+          sudo docker cp $GITHUB_WORKSPACE git_local_ubuntu:/home/ubuntu/git_repo
+
       - name: SYSTEMD - cmake build
         run: |
-          make
-          sudo docker container exec --user ubuntu --workdir /home/ubuntu git_local_ubuntu bash -c "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/\$(id -u ubuntu)/bus systemd-run --user --scope --collect /bin/bash -c \"CC=/lib/android-sdk/ndk/25.2.9519653/toolchains/llvm/prebuilt/linux-x86_64/bin/${{ matrix.clang_prefix }}${{ matrix.android }}-clang CXX=/lib/android-sdk/ndk/25.2.9519653/toolchains/llvm/prebuilt/linux-x86_64/bin/${{ matrix.clang_prefix }}${{ matrix.android }}-clang++\""
+          sudo docker container exec --user ubuntu --workdir /home/ubuntu git_local_ubuntu bash -c "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/\$(id -u ubuntu)/bus systemd-run --user --scope --collect /bin/bash -c \"cd git_repo ; make CC=/lib/android-sdk/ndk/25.2.9519653/toolchains/llvm/prebuilt/linux-x86_64/bin/${{ matrix.clang_prefix }}${{ matrix.android }}-clang CXX=/lib/android-sdk/ndk/25.2.9519653/toolchains/llvm/prebuilt/linux-x86_64/bin/${{ matrix.clang_prefix }}${{ matrix.android }}-clang++\""
 
       # - uses: actions/upload-artifact@v3
       #   with:
