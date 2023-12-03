@@ -24,6 +24,9 @@ if (UNIX AND CMAKE_GENERATOR MATCHES "Ninja")
     CMAKE_EXE_LINKER_FLAGS CMAKE_MODULE_LINKER_FLAGS CMAKE_SHARED_LINKER_FLAGS)
 endif()
 
+list(INSERT CMAKE_MODULE_PATH 0 "${CMAKE_CURRENT_SOURCE_DIR}/cmake/packages")
+
+
 # welp lets attempt to build...
 
 # first up, libedit
@@ -198,9 +201,15 @@ build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/lzma2301 . 7z
 ")
 
 if (APPLE)
+  message(STATUS "PLATFORM APPLE")
 elseif (UNIX AND NOT ANDROID)
+  message(STATUS "PLATFORM LINUX")
 elseif (UNIX AND ANDROID)
-elseif (WIN32)
+  message(STATUS "PLATFORM LINUX ANDROID")
+elseif (WIN32 AND NOT CYGWIN)
+  message(STATUS "PLATFORM WINDOWS")
+elseif (WIN32 AND CYGWIN)
+  message(STATUS "PLATFORM WINDOWS CYGWIN")
 else()
   message(FATAL_ERROR "UNKNOWN PLATFORM")
 endif()
