@@ -133,7 +133,6 @@ unset(extra_cmake_config_list)
   build_root_message("-------- BUILDING CMAKE PROJECT: '${build_dir}' -- CONFIGURING")
   build_root_exec(
     # configure
-    CLICOLOR_FORCE=${HAS_CMAKE_COLOR}
     ${CMAKE_COMMAND}
     -G "${CMAKE_GENERATOR}"
     # "-DCMAKE_COLOR_DIAGNOSTICS=${CMAKE_COLOR_DIAGNOSTICS}"
@@ -161,7 +160,6 @@ unset(extra_cmake_config_list)
   build_root_message("-------- BUILDING CMAKE PROJECT: '${build_dir}' -- BUILDING")
   build_root_exec(
     # build
-    CLICOLOR_FORCE=${HAS_CMAKE_COLOR}
     ${CMAKE_COMMAND}
     --build "${BUILD_ROOT_BUILD_DIRECTORY}/BUILD/${build_dir}"
   )
@@ -169,7 +167,6 @@ unset(extra_cmake_config_list)
   build_root_message("-------- BUILDING CMAKE PROJECT: '${build_dir}' -- INSTALLING")
   build_root_exec(
     # install
-    CLICOLOR_FORCE=${HAS_CMAKE_COLOR}
     ${CMAKE_COMMAND}
     --install
     "${BUILD_ROOT_BUILD_DIRECTORY}/BUILD/${build_dir}"
