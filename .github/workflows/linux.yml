@@ -151,10 +151,13 @@ jobs:
         run: |
           sudo docker container exec --user ubuntu --workdir /home/ubuntu git_local_ubuntu bash -c "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/\$(id -u ubuntu)/bus systemd-run --user --scope --collect /bin/bash -c \"sudo apt install -y cmake\""
 
+      - name: copy GITHUB_WORKSPACE directory to docker
+        run: |
+          sudo docker cp $GITHUB_WORKSPACE git_local_ubuntu:/home/ubuntu/git_repo
+
       - name: SYSTEMD - cmake build
         run: |
-          make
-          sudo docker container exec --user ubuntu --workdir /home/ubuntu git_local_ubuntu bash -c "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/\$(id -u ubuntu)/bus systemd-run --user --scope --collect /bin/bash -c \"make CC=clang CXX=clang++\""
+          sudo docker container exec --user ubuntu --workdir /home/ubuntu git_local_ubuntu bash -c "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/\$(id -u ubuntu)/bus systemd-run --user --scope --collect /bin/bash -c \"cd git_repo ; make CC=clang CXX=clang++\""
 
       # - name: compile program
       #   run: |
