@@ -30,16 +30,16 @@ endif()
 
 if (APPLE)
   message(FATAL_ERROR "APPLE PLATFORM")
-endif()
-if (UNIX AND NOT ANDROID)
+elseif (UNIX AND NOT ANDROID)
   message(FATAL_ERROR "LINUX PLATFORM")
-endif()
-if (UNIX AND ANDROID)
+elseif (UNIX AND ANDROID)
   message(FATAL_ERROR "ANDROID PLATFORM")
-endif()
-if (WINDOWS)
+elseif (WINDOWS)
   message(FATAL_ERROR "WINDOWS PLATFORM")
+else()
+  message(FATAL_ERROR "UNKNOWN PLATFORM")
 endif()
+
 
 
 # if(NOT COMMAND testBuilder_build)
