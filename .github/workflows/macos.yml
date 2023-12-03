@@ -1,0 +1,36 @@
+name: macos
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: macos-latest
+            name: macos
+
+    runs-on: ${{ matrix.os }}
+    
+    name: ${{ matrix.name }}
+    
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v3
+
+      - name: cmake build
+        run: |
+          cmake . --build
+
+      # - uses: actions/upload-artifact@v3
+      #   with:
+      #     name: program-windows.exe
+      #     path: ./program-windows.exe
+      #     retention-days: 1
