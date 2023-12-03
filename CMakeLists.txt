@@ -127,7 +127,7 @@ macro(build_root_add_cmake_package src relative_path_to_cmake_dir build_dir buil
   build_root_exec(
     # configure
     ${CMAKE_COMMAND}
-    -G "Unix Makefile"
+    -G "${CMAKE_GENERATOR}"
     # "-DCMAKE_COLOR_DIAGNOSTICS=${CMAKE_COLOR_DIAGNOSTICS}"
     # "-DCMAKE_COLOR_MAKEFILE=${CMAKE_COLOR_MAKEFILE}"
     # "-DCMAKE_VERBOSE_MAKEFILE=${CMAKE_VERBOSE_MAKEFILE}"
@@ -151,7 +151,6 @@ macro(build_root_add_cmake_package src relative_path_to_cmake_dir build_dir buil
   build_root_exec(
     # build
     ${CMAKE_COMMAND}
-    "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}"
     --build "${BUILD_ROOT_BUILD_DIRECTORY}/BUILD/${build_dir}"
   )
   build_root_message("-------- BUILDING CMAKE PROJECT: '${build_dir}' -- BUILT")
@@ -159,7 +158,6 @@ macro(build_root_add_cmake_package src relative_path_to_cmake_dir build_dir buil
   build_root_exec(
     # install
     ${CMAKE_COMMAND}
-    "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}"
     --install
     "${BUILD_ROOT_BUILD_DIRECTORY}/BUILD/${build_dir}"
   )
