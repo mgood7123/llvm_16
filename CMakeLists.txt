@@ -28,16 +28,16 @@ endif()
 
 # first up, libedit
 
-if (apple)
+if (APPLE)
   message(FATAL_ERROR "APPLE PLATFORM")
 endif()
-if (unix and not android)
+if (UNIX AND NOT ANDROID)
   message(FATAL_ERROR "LINUX PLATFORM")
 endif()
-if (unix and android)
+if (UNIX AND ANDROID)
   message(FATAL_ERROR "ANDROID PLATFORM")
 endif()
-if (windows)
+if (WINDOWS)
   message(FATAL_ERROR "WINDOWS PLATFORM")
 endif()
 
