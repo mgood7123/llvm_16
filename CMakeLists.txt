@@ -28,19 +28,171 @@ endif()
 
 # first up, libedit
 
+# we have make available on all platforms
+
+macro (build_root_exec)
+    unset(command_list)
+    unset(command_list CACHE)
+    string(REGEX MATCHALL "([^\"' \r\n\t;\\]+|[\\].|\"([^\"\\]+|[\\].)*\")+( +([^\"' \r\n\t;\\]+|[\\].|\"([^\"\\]+|[\\].)*\")+)*" command_list "${ARGN}")
+    unset(command_str)
+    unset(command_str CACHE)
+    foreach(ARG IN ITEMS ${command_list})
+        if (command_str)
+          string(APPEND command_str " ")
+        endif()
+        string(APPEND command_str "${ARG}")
+    endforeach()
+    execute_process(
+        COMMAND ${command_list}
+        COMMAND_ECHO STDOUT
+        RESULT_VARIABLE EXEC_FAILED
+    )
+    if (EXEC_FAILED)
+        message(FATAL_ERROR "failed to execute command: '${command_str}'")
+    endif()
+endmacro()
+
+macro(build_root_set_var var value)
+  unset(${var})
+  unset(${var} CACHE)
+  set(${var} ${value})
+endmacro()
+
+macro(build_root_message str)
+  message(STATUS ${str})
+endmacro()
+
+macro(build_root_fatal str)
+  message(FATAL_ERROR ${str})
+endmacro()
+
+macro(build_root_init cmake_packages_dir build_root_dir)
+  if (NOT EXISTS ${cmake_packages_dir})
+    build_root_fatal("error: cmake package directory '${cmake_packages_directory}' does not exist")
+  endif()
+
+  if (NOT EXISTS ${build_root_dir})
+    build_root_exec(mkdir -p ${build_root_dir})
+    build_root_exec(mkdir -p ${build_root_dir}/ROOTFS)
+    build_root_exec(mkdir -p ${build_root_dir}/BUILD)
+    build_root_exec(mkdir -p ${build_root_dir}/SRC)
+    if (NOT EXISTS ${build_root_dir})
+      build_root_fatal("error: failed to create build root directory '${build_root_dir}'")
+    endif()
+  endif()
+
+  build_root_set_var(BUILD_ROOT_CMAKE_PACKAGE_DIRECTORY ${cmake_packages_dir})
+  build_root_set_var(BUILD_ROOT_BUILD_DIRECTORY ${build_root_dir})
+endmacro()
+
+macro(build_root_add_cmake_package src relative_path_to_cmake_dir build_dir build_path_c_flags build_path_cxx_flags extra_cmake_config)
+  build_root_message("BUILD_ROOT_CMAKE_PACKAGE_DIRECTORY is '${BUILD_ROOT_CMAKE_PACKAGE_DIRECTORY}'")
+  build_root_message("BUILD_ROOT_BUILD_DIRECTORY is '${BUILD_ROOT_BUILD_DIRECTORY}'")
+  build_root_set_var(${build_dir}_ROOT ${build_dir})
+  if (NOT EXISTS ${src})
+    build_root_fatal("source directory '${src}' does not exist")
+  endif()
+  if (NOT EXISTS ${src}/${relative_path_to_cmake_dir})
+    build_root_fatal("relative source directory '${relative_path_to_cmake_dir}' does not exist inside source directory '${src}'")
+  endif()
+  if (NOT EXISTS ${src}/${relative_path_to_cmake_dir}/CMakeLists.txt)
+    build_root_fatal("cmake file 'CMakeLists.txt' does not exist inside relative source directory '${relative_path_to_cmake_dir}' inside source directory '${src}'")
+  endif()
+  if (NOT EXISTS ${BUILD_ROOT_BUILD_DIRECTORY}/SRC/${build_dir})
+  build_root_exec(cp -r ${src} ${BUILD_ROOT_BUILD_DIRECTORY}/SRC/${build_dir})
+  endif()
+  if (NOT EXISTS ${BUILD_ROOT_BUILD_DIRECTORY}/BUILD/${build_dir})
+    build_root_exec(mkdir ${BUILD_ROOT_BUILD_DIRECTORY}/BUILD/${build_dir})
+  endif()
+
+  unset(extra_cmake_config_list)
+  unset(extra_cmake_config_list CACHE)
+  string(REGEX MATCHALL "([^\"' \r\n\t;\\]+|[\\].|\"([^\"\\]+|[\\].)*\")+( +([^\"' \r\n\t;\\]+|[\\].|\"([^\"\\]+|[\\].)*\")+)*" extra_cmake_config_list "${extra_cmake_config}")
+  unset(extra_cmake_config_list_str)
+  unset(extra_cmake_config_list_str CACHE)
+  foreach(ARG IN ITEMS ${extra_cmake_config_list})
+      if (extra_cmake_config_list_str)
+        string(APPEND extra_cmake_config_list_str " ")
+      endif()
+      if (extra_cmake_config_list_str_actual)
+        string(APPEND extra_cmake_config_list_str_actual " ")
+      endif()
+      string(APPEND extra_cmake_config_list_str "'${ARG}'")
+      string(APPEND extra_cmake_config_list_str_actual "${ARG}")
+  endforeach()
+
+  build_root_message("-------- BUILDING CMAKE PROJECT: '${build_dir}'")
+  
+  build_root_message("-------- BUILDING CMAKE PROJECT: '${build_dir}' -- CONFIGURING")
+  build_root_exec(
+    # configure
+    ${CMAKE_COMMAND}
+    # "-DCMAKE_COLOR_DIAGNOSTICS=${CMAKE_COLOR_DIAGNOSTICS}"
+    # "-DCMAKE_COLOR_MAKEFILE=${CMAKE_COLOR_MAKEFILE}"
+    # "-DCMAKE_VERBOSE_MAKEFILE=${CMAKE_VERBOSE_MAKEFILE}"
+    # "-DCMAKE_MAKE_PROGRAM=${CMAKE_MAKE_PROGRAM}"
+    "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}"
+    "-DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}"
+    "-DCMAKE_C_STANDARD=${CMAKE_C_STANDARD}"
+    "-DCMAKE_C_STANDARD_REQUIRED=${CMAKE_C_STANDARD_REQUIRED}"
+    "-DCMAKE_C_FLAGS=${CMAKE_C_FLAGS} ${build_path_c_flags}"
+    "-DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}"
+    "-DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD}"
+    "-DCMAKE_CXX_STANDARD_REQUIRED=${CMAKE_CXX_STANDARD_REQUIRED}"
+    "-DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS} ${build_path_cxx_flags}"
+    "-DCMAKE_INSTALL_PREFIX=${BUILD_ROOT_BUILD_DIRECTORY}/ROOTFS"
+    -S "${BUILD_ROOT_BUILD_DIRECTORY}/SRC/${build_dir}"
+    -B "${BUILD_ROOT_BUILD_DIRECTORY}/BUILD/${build_dir}"
+    ${extra_cmake_config_list_str_actual}
+  )
+  build_root_message("-------- BUILDING CMAKE PROJECT: '${build_dir}' -- CONFIGURED")
+  build_root_message("-------- BUILDING CMAKE PROJECT: '${build_dir}' -- BUILDING")
+  build_root_exec(
+    # build
+    ${CMAKE_COMMAND}
+    --build "${BUILD_ROOT_BUILD_DIRECTORY}/BUILD/${build_dir}"
+  )
+  build_root_message("-------- BUILDING CMAKE PROJECT: '${build_dir}' -- BUILT")
+  build_root_message("-------- BUILDING CMAKE PROJECT: '${build_dir}' -- INSTALLING")
+  build_root_exec(
+    # install
+    ${CMAKE_COMMAND}
+    --install
+    "${BUILD_ROOT_BUILD_DIRECTORY}/BUILD/${build_dir}"
+  )
+  build_root_message("-------- BUILDING CMAKE PROJECT: '${build_dir}' -- INSTALLED")
+  build_root_message("-------- BUILT CMAKE PROJECT: '${build_dir}'")
+endmacro()
+
+message("CMAKE_SYSTEM_NAME = ${CMAKE_SYSTEM_NAME}")
+message("CMAKE_C_COMPILER = ${CMAKE_C_COMPILER}")
+message("CMAKE_CXX_COMPILER = ${CMAKE_CXX_COMPILER}")
+
+# if (NIX_SHELL_OS_WINDOWS)
+#   build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/wineditline . libedit
+#   "" # no extra c flags
+#   "" # no extra cxx flags
+#   "
+#     -D BUILD_SHARED_LIBS=ON
+#   ")
+# endif()
+
+build_root_init(${CMAKE_CURRENT_SOURCE_DIR}/cmake/packages ${CMAKE_CURRENT_BINARY_DIR}/BUILD_ROOT)
+
+build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/lzma2301 . 7z
+"" # no extra c flags
+"" # no extra cxx flags
+"
+  -D BUILD_SHARED_LIBS=ON
+")
+
 if (APPLE)
-  message(FATAL_ERROR "APPLE PLATFORM")
 elseif (UNIX AND NOT ANDROID)
-  message(FATAL_ERROR "LINUX PLATFORM")
 elseif (UNIX AND ANDROID)
-  message(FATAL_ERROR "ANDROID PLATFORM")
 elseif (WINDOWS)
-  message(FATAL_ERROR "WINDOWS PLATFORM")
 else()
   message(FATAL_ERROR "UNKNOWN PLATFORM")
 endif()
-
-
 
 # if(NOT COMMAND testBuilder_build)
 #     add_subdirectory(testBuilder)
@@ -302,7 +454,7 @@ endif()
 # find_package(ZLIB REQUIRED)
 # find_package(LZ4 REQUIRED)
 # find_package(LZMA REQUIRED)
-# find_package(7z REQUIRED)
+find_package(7z REQUIRED)
 # find_package(zstd REQUIRED)
 # find_package(xxHash REQUIRED)
 # find_package(BZIP2 REQUIRED)
@@ -315,7 +467,7 @@ endif()
 # message(STATUS "ZLIB LIBS: ${ZLIB_LIBRARIES}")
 # message(STATUS "LZ4 LIBS: ${LZ4_LIBRARIES}")
 # message(STATUS "LZMA LIBS: ${LZMA_LIBRARIES}")
-# message(STATUS "7Z LIBS: ${7Z_LIBRARIES}")
+message(STATUS "7Z LIBS: ${7Z_LIBRARIES}")
 # message(STATUS "ZSTD LIB: ${zstd_LIBRARY}")
 # message(STATUS "XXHASH LIBS: ${xxHash_LIBRARIES}")
 # message(STATUS "BZip2 LIBS: ${BZIP2_LIBRARIES}")
@@ -327,7 +479,7 @@ endif()
 # message(STATUS "ZLIB INCLUDE_DIRECTORIES: ${ZLIB_INCLUDE_DIRS}")
 # message(STATUS "LZ4 INCLUDE_DIRECTORIES: ${LZ4_INCLUDE_DIRS}")
 # message(STATUS "LZMA INCLUDE_DIRECTORIES: ${LZMA_INCLUDE_DIRS}")
-# message(STATUS "7Z INCLUDE_DIRECTORIES: ${7Z_INCLUDE_DIRS}")
+message(STATUS "7Z INCLUDE_DIRECTORIES: ${7Z_INCLUDE_DIRS}")
 # message(STATUS "ZSTD INCLUDE_DIRECTORIES: ${zstd_INCLUDE_DIRS}")
 # message(STATUS "XXHASH INCLUDE_DIRECTORIES: ${xxHash_INCLUDE_DIRS}")
 # message(STATUS "Xml2 INCLUDE_DIRECTORIES: ${LIBXML2_INCLUDE_DIRS}")
@@ -337,7 +489,7 @@ endif()
 # message(STATUS "ZLIB_TARGET = ${ZLIB_TARGET}")
 # message(STATUS "LZ4_TARGET = ${LZ4_TARGET}")
 # message(STATUS "LZMA_TARGET = ${LZMA_TARGET}")
-# message(STATUS "7Z_TARGET = ${7Z_TARGET}")
+message(STATUS "7Z_TARGET = ${7Z_TARGET}")
 # message(STATUS "zstd_TARGET = ${zstd_TARGET}")
 # message(STATUS "xxHash_TARGET = ${xxHash_TARGET}")
 # message(STATUS "BZIP2_TARGET = ${BZIP2_TARGET}")
