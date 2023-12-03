@@ -105,7 +105,14 @@ macro(build_root_add_cmake_package src relative_path_to_cmake_dir build_dir buil
     build_root_exec(mkdir ${BUILD_ROOT_BUILD_DIRECTORY}/BUILD/${build_dir})
   endif()
 
-  unset(extra_cmake_config_list)
+  unset(HAS_CMAKE_COLOR)
+  unset(HAS_CMAKE_COLOR CACHE)
+
+  if (CMAKE_COLOR_MAKEFILE OR CMAKE_COLOR_DIAGNOSTICS)
+    set(HAS_CMAKE_COLOR ON)
+  endif()
+
+unset(extra_cmake_config_list)
   unset(extra_cmake_config_list CACHE)
   string(REGEX MATCHALL "([^\"' \r\n\t;\\]+|[\\].|\"([^\"\\]+|[\\].)*\")+( +([^\"' \r\n\t;\\]+|[\\].|\"([^\"\\]+|[\\].)*\")+)*" extra_cmake_config_list "${extra_cmake_config}")
   unset(extra_cmake_config_list_str)
@@ -126,12 +133,13 @@ macro(build_root_add_cmake_package src relative_path_to_cmake_dir build_dir buil
   build_root_message("-------- BUILDING CMAKE PROJECT: '${build_dir}' -- CONFIGURING")
   build_root_exec(
     # configure
+    CLICOLOR_FORCE=${HAS_CMAKE_COLOR}
     ${CMAKE_COMMAND}
     -G "${CMAKE_GENERATOR}"
     # "-DCMAKE_COLOR_DIAGNOSTICS=${CMAKE_COLOR_DIAGNOSTICS}"
     # "-DCMAKE_COLOR_MAKEFILE=${CMAKE_COLOR_MAKEFILE}"
-    # "-DCMAKE_VERBOSE_MAKEFILE=${CMAKE_VERBOSE_MAKEFILE}"
-    # "-DCMAKE_MAKE_PROGRAM=${CMAKE_MAKE_PROGRAM}"
+    "-DCMAKE_MAKE_PROGRAM=${CMAKE_MAKE_PROGRAM}"
+    "-DCMAKE_VERBOSE_MAKEFILE=${CMAKE_VERBOSE_MAKEFILE}"
     "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}"
     "-DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}"
     "-DCMAKE_C_STANDARD=${CMAKE_C_STANDARD}"
@@ -141,6 +149,9 @@ macro(build_root_add_cmake_package src relative_path_to_cmake_dir build_dir buil
     "-DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD}"
     "-DCMAKE_CXX_STANDARD_REQUIRED=${CMAKE_CXX_STANDARD_REQUIRED}"
     "-DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS} ${build_path_cxx_flags}"
+    "-DCMAKE_MODULE_LINKER_FLAGS=${CMAKE_MODULE_LINKER_FLAGS}"
+    "-DCMAKE_SHARED_LINKER_FLAGS=${CMAKE_SHARED_LINKER_FLAGS}"
+    "-DCMAKE_EXE_LINKER_FLAGS=${CMAKE_EXE_LINKER_FLAGS}"
     "-DCMAKE_INSTALL_PREFIX=${BUILD_ROOT_BUILD_DIRECTORY}/ROOTFS"
     -S "${BUILD_ROOT_BUILD_DIRECTORY}/SRC/${build_dir}"
     -B "${BUILD_ROOT_BUILD_DIRECTORY}/BUILD/${build_dir}"
@@ -150,6 +161,7 @@ macro(build_root_add_cmake_package src relative_path_to_cmake_dir build_dir buil
   build_root_message("-------- BUILDING CMAKE PROJECT: '${build_dir}' -- BUILDING")
   build_root_exec(
     # build
+    CLICOLOR_FORCE=${HAS_CMAKE_COLOR}
     ${CMAKE_COMMAND}
     --build "${BUILD_ROOT_BUILD_DIRECTORY}/BUILD/${build_dir}"
   )
@@ -157,6 +169,7 @@ macro(build_root_add_cmake_package src relative_path_to_cmake_dir build_dir buil
   build_root_message("-------- BUILDING CMAKE PROJECT: '${build_dir}' -- INSTALLING")
   build_root_exec(
     # install
+    CLICOLOR_FORCE=${HAS_CMAKE_COLOR}
     ${CMAKE_COMMAND}
     --install
     "${BUILD_ROOT_BUILD_DIRECTORY}/BUILD/${build_dir}"
@@ -190,7 +203,7 @@ build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/lzma2301 . 7z
 if (APPLE)
 elseif (UNIX AND NOT ANDROID)
 elseif (UNIX AND ANDROID)
-elseif (WINDOWS)
+elseif (WIN32)
 else()
   message(FATAL_ERROR "UNKNOWN PLATFORM")
 endif()
