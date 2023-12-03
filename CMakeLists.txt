@@ -127,6 +127,7 @@ macro(build_root_add_cmake_package src relative_path_to_cmake_dir build_dir buil
   build_root_exec(
     # configure
     ${CMAKE_COMMAND}
+    -G "Unix Makefile"
     # "-DCMAKE_COLOR_DIAGNOSTICS=${CMAKE_COLOR_DIAGNOSTICS}"
     # "-DCMAKE_COLOR_MAKEFILE=${CMAKE_COLOR_MAKEFILE}"
     # "-DCMAKE_VERBOSE_MAKEFILE=${CMAKE_VERBOSE_MAKEFILE}"
