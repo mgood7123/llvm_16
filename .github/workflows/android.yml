@@ -184,6 +184,7 @@ jobs:
 
       - name: SYSTEMD - cmake build
         run: |
+          make
           sudo docker container exec --user ubuntu --workdir /home/ubuntu git_local_ubuntu bash -c "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/\$(id -u ubuntu)/bus systemd-run --user --scope --collect /bin/bash -c \"cmake . --build\""
 
       # - uses: actions/upload-artifact@v3
