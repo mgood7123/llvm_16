@@ -69,6 +69,52 @@ macro (build_root_exec)
     endif()
 endmacro()
 
+macro (build_root_exec_cmake)
+    unset(command_list)
+    unset(command_list CACHE)
+    string(REGEX MATCHALL "([^\"' \r\n\t;\\]+|[\\].|\"([^\"\\]+|[\\].)*\")+( +([^\"' \r\n\t;\\]+|[\\].|\"([^\"\\]+|[\\].)*\")+)*" command_list "${ARGN}")
+    unset(command_str)
+    unset(command_str CACHE)
+    foreach(ARG IN ITEMS ${command_list})
+        if (command_str)
+          string(APPEND command_str " ")
+        endif()
+        string(APPEND command_str "${ARG}")
+    endforeach()
+    execute_process(
+        COMMAND
+        ${command_list}
+        "-DCMAKE_COLOR_DIAGNOSTICS=${CMAKE_COLOR_DIAGNOSTICS}"
+        "-DCMAKE_COLOR_MAKEFILE=${CMAKE_COLOR_MAKEFILE}"
+        "-DCMAKE_MAKE_PROGRAM=${CMAKE_MAKE_PROGRAM}"
+        "-DCMAKE_VERBOSE_MAKEFILE=${CMAKE_VERBOSE_MAKEFILE}"
+        "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}"
+        "-DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}"
+        "-DCMAKE_C_STANDARD=${CMAKE_C_STANDARD}"
+        "-DCMAKE_C_STANDARD_REQUIRED=${CMAKE_C_STANDARD_REQUIRED}"
+        "-DCMAKE_C_FLAGS=${CMAKE_C_FLAGS} ${build_path_c_flags}"
+        "-DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}"
+        "-DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD}"
+        "-DCMAKE_CXX_STANDARD_REQUIRED=${CMAKE_CXX_STANDARD_REQUIRED}"
+        "-DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS} ${build_path_cxx_flags}"
+        "-DCMAKE_MODULE_LINKER_FLAGS=${CMAKE_MODULE_LINKER_FLAGS}"
+        "-DCMAKE_SHARED_LINKER_FLAGS=${CMAKE_SHARED_LINKER_FLAGS}"
+        "-DCMAKE_EXE_LINKER_FLAGS=${CMAKE_EXE_LINKER_FLAGS}"
+        "-DCMAKE_INSTALL_PREFIX=${BUILD_ROOT_BUILD_DIRECTORY}/ROOTFS"
+        "-DCMAKE_POLICY_DEFAULT_CMP0074=${CMAKE_POLICY_DEFAULT_CMP0074}"
+        "-DCMAKE_POLICY_DEFAULT_CMP0075=${CMAKE_POLICY_DEFAULT_CMP0075}"
+        "-DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}"
+        "-DCMAKE_SYSROOT=${CMAKE_SYSROOT}"
+        "-DCMAKE_MODULE_PATH=${CMAKE_MODULE_PATH}"
+        "-DCMAKE_SYSTEM_PREFIX_PATH=${CMAKE_SYSTEM_PREFIX_PATH}"
+        COMMAND_ECHO STDOUT
+        RESULT_VARIABLE EXEC_FAILED
+    )
+    if (EXEC_FAILED)
+        message(FATAL_ERROR "failed to execute command: '${command_str}'")
+    endif()
+endmacro()
+
 macro(build_root_set_var var value)
   unset(${var})
   unset(${var} CACHE)
@@ -151,33 +197,10 @@ unset(extra_cmake_config_list)
   build_root_message("-------- BUILDING CMAKE PROJECT: '${build_dir}'")
   
   build_root_message("-------- BUILDING CMAKE PROJECT: '${build_dir}' -- CONFIGURING")
-  build_root_exec(
+  build_root_exec_cmake(
     # configure
     ${CMAKE_COMMAND}
     -G "${CMAKE_GENERATOR}"
-    # "-DCMAKE_COLOR_DIAGNOSTICS=${CMAKE_COLOR_DIAGNOSTICS}"
-    # "-DCMAKE_COLOR_MAKEFILE=${CMAKE_COLOR_MAKEFILE}"
-    "-DCMAKE_MAKE_PROGRAM=${CMAKE_MAKE_PROGRAM}"
-    "-DCMAKE_VERBOSE_MAKEFILE=${CMAKE_VERBOSE_MAKEFILE}"
-    "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}"
-    "-DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}"
-    "-DCMAKE_C_STANDARD=${CMAKE_C_STANDARD}"
-    "-DCMAKE_C_STANDARD_REQUIRED=${CMAKE_C_STANDARD_REQUIRED}"
-    "-DCMAKE_C_FLAGS=${CMAKE_C_FLAGS} ${build_path_c_flags}"
-    "-DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}"
-    "-DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD}"
-    "-DCMAKE_CXX_STANDARD_REQUIRED=${CMAKE_CXX_STANDARD_REQUIRED}"
-    "-DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS} ${build_path_cxx_flags}"
-    "-DCMAKE_MODULE_LINKER_FLAGS=${CMAKE_MODULE_LINKER_FLAGS}"
-    "-DCMAKE_SHARED_LINKER_FLAGS=${CMAKE_SHARED_LINKER_FLAGS}"
-    "-DCMAKE_EXE_LINKER_FLAGS=${CMAKE_EXE_LINKER_FLAGS}"
-    "-DCMAKE_INSTALL_PREFIX=${BUILD_ROOT_BUILD_DIRECTORY}/ROOTFS"
-    "-DCMAKE_POLICY_DEFAULT_CMP0074=${CMAKE_POLICY_DEFAULT_CMP0074}"
-    "-DCMAKE_POLICY_DEFAULT_CMP0075=${CMAKE_POLICY_DEFAULT_CMP0075}"
-    "-DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}"
-    "-DCMAKE_SYSROOT=${CMAKE_SYSROOT}"
-    "-DCMAKE_MODULE_PATH=${CMAKE_MODULE_PATH}"
-    "-DCMAKE_SYSTEM_PREFIX_PATH=${CMAKE_SYSTEM_PREFIX_PATH}"
     -S "${BUILD_ROOT_BUILD_DIRECTORY}/SRC/${build_dir}"
     -B "${BUILD_ROOT_BUILD_DIRECTORY}/BUILD/${build_dir}"
     ${extra_cmake_config_list_str_actual}
