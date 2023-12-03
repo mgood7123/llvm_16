@@ -5,6 +5,10 @@ on:
     branches: [ "main" ]
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 defaults:
   run:
     shell: bash
@@ -184,7 +188,9 @@ jobs:
 
       - name: copy GITHUB_WORKSPACE directory to docker
         run: |
+          echo "copying $GITHUB_WORKSPACE to docker"
           sudo docker cp $GITHUB_WORKSPACE git_local_ubuntu:/home/ubuntu/git_repo
+          sudo docker container exec --user ubuntu --workdir /home/ubuntu git_local_ubuntu bash -c "sudo chown -R ubuntu:ubuntu git_repo"
 
       - name: SYSTEMD - cmake build
         run: |
