@@ -27,8 +27,7 @@ jobs:
 
       - name: cmake build
         run: |
-          make
-          cmake . --build
+          make CC=clang CXX=clang++
 
       # - uses: actions/upload-artifact@v3
       #   with:
