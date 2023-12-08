@@ -11,7 +11,7 @@ concurrency:
 
 defaults:
   run:
-    shell: bash
+    shell: msys2
 
 jobs:
   build:
@@ -20,32 +20,38 @@ jobs:
         include:
           - os: windows-latest
             name: windows
+            sys: mingw32
+          - os: windows-latest
+            name: windows
+            sys: mingw64
+          - os: windows-latest
+            name: windows
+            sys: ucrt64
+          - os: windows-latest
+            name: windows
+            sys: clang64
 
     runs-on: ${{ matrix.os }}
     
-    name: ${{ matrix.name }}
+    name: ${{ matrix.name }}-${{ matrix.sys }}
     
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v3
 
-      - name: which clang
+      - name: '${{ matrix.icon }} Setup MSYS2'
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: ${{matrix.sys}}
+          update: true
+
+      - name: which pacman
         run: |
-          which pacman.exe || true
-          which pacman || true
-          which clang.exe || true
-          which clang++.exe || true
-          which clang-cl.exe || true
-          which clang++-cl.exe || true
-          which clang-cl++.exe || true
-          which clang64.exe || true
-          which clang++64.exe || true
-          which mingw64-clang.exe || true
-          which mingw64-clang++.exe || true
-          which mingwW64-clang.exe || true
-          which mingwW64-clang++.exe || true
-          which mingw-W64-clang.exe || true
-          which mingw-W64-clang++.exe || true
+          which pacman
+
+      - name: pacman help
+        run: |
+          pacman --help
 
       - name: clang help
         run: |
@@ -53,7 +59,7 @@ jobs:
 
       - name: cmake build
         run: |
-          make CC=clang.exe CXX=clang++.exe
+          make CC=clang CXX=clang++
 
       # - uses: actions/upload-artifact@v3
       #   with:
