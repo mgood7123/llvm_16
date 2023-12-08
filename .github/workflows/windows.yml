@@ -36,17 +36,9 @@ jobs:
           msystem: ${{matrix.sys}}
           update: true
 
-      - name: which pacman
+      - name: install packages
         run: |
-          which pacman
-
-      - name: pacman help
-        run: |
-          pacman --help
-
-      - name: clang help
-        run: |
-          clang --help
+          pacman -Syu --noconfirm base base-devel cmake make clang
 
       - name: cmake build
         run: |
