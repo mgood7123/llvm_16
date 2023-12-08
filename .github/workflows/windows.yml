@@ -46,7 +46,7 @@ jobs:
 
       - name: clang help
         run: |
-          clang.exe --help
+          clang --help
 
       - name: cmake build
         run: |
