@@ -38,7 +38,7 @@ jobs:
 
       - name: install packages
         run: |
-          pacman -Syu --noconfirm base base-devel cmake make clang
+          pacman -Syu --noconfirm libedit cmake make clang
 
       - name: cmake build
         run: |
