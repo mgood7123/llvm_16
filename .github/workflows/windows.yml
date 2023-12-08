@@ -29,6 +29,9 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v3
 
+      - name: clang help
+        run: clang.exe --help
+
       - name: cmake build
         run: |
           make CC=clang.exe CXX=clang++.exe
