@@ -35,8 +35,13 @@ jobs:
           which clang++.exe || true
           which clang-cl.exe || true
           which clang++-cl.exe || true
+          which clang-cl++.exe || true
           which clang64.exe || true
           which clang++64.exe || true
+          which mingw64-clang.exe || true
+          which mingw64-clang++.exe || true
+          which mingwW64-clang.exe || true
+          which mingwW64-clang++.exe || true
 
       - name: clang help
         run: |
