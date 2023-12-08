@@ -31,6 +31,8 @@ jobs:
 
       - name: which clang
         run: |
+          which pacman.exe || true
+          which pacman || true
           which clang.exe || true
           which clang++.exe || true
           which clang-cl.exe || true
