@@ -38,7 +38,7 @@ jobs:
 
       - name: install packages
         run: |
-          pacman -Syu --noconfirm libedit cmake make clang
+          pacman -Syu --noconfirm --needed --arch=clang-x86-64 libedit cmake make clang
 
       - name: cmake build
         run: |
