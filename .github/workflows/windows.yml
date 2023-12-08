@@ -20,20 +20,11 @@ jobs:
         include:
           - os: windows-latest
             name: windows
-            sys: mingw32
-          - os: windows-latest
-            name: windows
-            sys: mingw64
-          - os: windows-latest
-            name: windows
-            sys: ucrt64
-          - os: windows-latest
-            name: windows
             sys: clang64
 
     runs-on: ${{ matrix.os }}
     
-    name: ${{ matrix.name }}-${{ matrix.sys }}
+    name: ${{ matrix.name }} - ${{ matrix.sys }}
     
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
