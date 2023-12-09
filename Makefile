@@ -84,27 +84,33 @@ release_ninja_directories: | $(release_ninja_build_dir_target) $(release_executa
 debug_asan_directories: | $(debug_asan_build_dir_target) $(debug_asan_executable_dir_target)
 debug_ninja_asan_directories: | $(debug_ninja_asan_build_dir_target) $(debug_asan_executable_dir_target)
 
-ifeq ($(CMAKE),)
-	CMAKE = cmake
+ifneq ($(CMAKE),)
+else
+  CMAKE = cmake
 endif
 
-ifeq ($(MAKE),)
+ifneq ($(MAKE),)
+else
 	MAKE = make
 endif
 
-ifeq ($(NINJA),)
+ifneq ($(NINJA),)
+else
 	NINJA = ninja
 endif
 
-ifeq ($(VALGRIND),)
+ifneq ($(VALGRIND),)
+else
 	VALGRIND = valgrind
 endif
 
-ifeq ($(GDB),)
+ifneq ($(GDB),)
+else
 	GDB = gdb
 endif
 
-ifeq ($(LLDB),)
+ifneq ($(LLDB),)
+else
 	LLDB = lldb
 endif
 
