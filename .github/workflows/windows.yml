@@ -55,7 +55,7 @@ jobs:
 
       - name: cmake build
         run: |
-          mingw32-make CMAKE=mingw32-cmake CC=mingw32-clang CXX=mingw32-clang++
+          mingw32-make CC=mingw32-clang CXX=mingw32-clang++
 
       # - uses: actions/upload-artifact@v3
       #   with:
