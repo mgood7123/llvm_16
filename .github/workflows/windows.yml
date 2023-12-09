@@ -36,9 +36,12 @@ jobs:
           msystem: ${{matrix.sys}}
           update: true
 
+     - name: install pacboy
+        run: |
+          pacman -Syu --noconfirm --needed pactoys
+
       - name: install packages
         run: |
-          # pacman -Syu --noconfirm --needed pacboy
           pacboy -S --noconfirm --needed libedit:p clang:p make:p cmake:p
 
       - name: cmake build
