@@ -36,9 +36,18 @@ jobs:
           msystem: ${{matrix.sys}}
           update: true
 
+      - name: update packages
+        run: |
+          pacman -Sy
+
       - name: install pacboy
         run: |
           pacman -Syu --noconfirm --needed pactoys
+
+      - name: update packages
+        run: |
+          pacboy -Sy
+
 
       - name: install packages
         run: |
