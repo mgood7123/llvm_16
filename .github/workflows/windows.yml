@@ -55,7 +55,7 @@ jobs:
 
       - name: cmake build
         run: |
-          make CC=clang CXX=clang++
+          mingw-w64-clang-x86_64-make CC=mingw-w64-clang-x86_64-clang CXX=mingw-w64-clang-x86_64-clang++
 
       # - uses: actions/upload-artifact@v3
       #   with:
