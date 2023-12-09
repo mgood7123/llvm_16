@@ -150,10 +150,10 @@ asan_build_flags = -fno-omit-frame-pointer -fsanitize=address -fsanitize-address
 asan_run_flags = ASAN_OPTIONS=verbosity=1:detect_leaks=1:detect_stack_use_after_return=1:check_initialization_order=true:strict_init_order=true:debug=1
 
 build_debug_asan: debug_asan_directories
-	cd ${debug_asan_build_dir} ; if test ! -e EXECUTABLES ; then mkdir EXECUTABLES; fi; ${asan_run_flags} $(CMAKE) -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Debug $(cmake_run_flags) -DCMAKE_C_FLAGS="$(CFLAGS) -g3 -O0 ${asan_build_flags}" -DCMAKE_CXX_FLAGS="$(CXXFLAGS) -g3 -O0 ${asan_build_flags}" .. ; ${asan_run_flags} $(MAKE) $(MAKE_FLAGS) && if test -e EXECUTABLES ; then cd EXECUTABLES; for file in * ; do mv -v $$file ../../$(debug_asan_executable_dir)/$$FILE ; done ; cd ..; rmdir EXECUTABLES; fi
+	cd ${debug_asan_build_dir} ; if test ! -e EXECUTABLES ; then mkdir EXECUTABLES; fi; ${asan_run_flags} $(CMAKE) -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Debug $(cmake_run_flags) -DCMAKE_C_FLAGS="$(CFLAGS) -g3 -O0 ${asan_build_flags}" -DCMAKE_CXX_FLAGS="$(CXXFLAGS) -g3 -O0 ${asan_build_flags}" .. $(CMAKE_FLAGS) ; ${asan_run_flags} $(MAKE) $(MAKE_FLAGS) && if test -e EXECUTABLES ; then cd EXECUTABLES; for file in * ; do mv -v $$file ../../$(debug_asan_executable_dir)/$$FILE ; done ; cd ..; rmdir EXECUTABLES; fi
 
 build_debug_ninja_asan: debug_ninja_asan_directories
-	cd ${debug_ninja_asan_build_dir} ; if test ! -e EXECUTABLES ; then mkdir EXECUTABLES; fi; ${asan_run_flags} $(CMAKE) -G Ninja -DCMAKE_BUILD_TYPE=Debug $(cmake_run_flags) -DCMAKE_C_FLAGS="$(CFLAGS) -g3 -O0 ${asan_build_flags}" -DCMAKE_CXX_FLAGS="$(CXXFLAGS) -g3 -O0 ${asan_build_flags}" .. ; ${asan_run_flags} $(NINJA) && if test -e EXECUTABLES ; then cd EXECUTABLES; for file in * ; do mv -v $$file ../../$(debug_asan_executable_dir)/$$FILE ; done ; cd ..; rmdir EXECUTABLES; fi
+	cd ${debug_ninja_asan_build_dir} ; if test ! -e EXECUTABLES ; then mkdir EXECUTABLES; fi; ${asan_run_flags} $(CMAKE) -G Ninja -DCMAKE_BUILD_TYPE=Debug $(cmake_run_flags) -DCMAKE_C_FLAGS="$(CFLAGS) -g3 -O0 ${asan_build_flags}" -DCMAKE_CXX_FLAGS="$(CXXFLAGS) -g3 -O0 ${asan_build_flags}" .. $(CMAKE_FLAGS) ; ${asan_run_flags} $(NINJA) && if test -e EXECUTABLES ; then cd EXECUTABLES; for file in * ; do mv -v $$file ../../$(debug_asan_executable_dir)/$$FILE ; done ; cd ..; rmdir EXECUTABLES; fi
 
 .PHONY: all
 
