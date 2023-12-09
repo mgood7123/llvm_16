@@ -24,7 +24,7 @@ jobs:
 
     runs-on: ${{ matrix.os }}
     
-    name: ${{ matrix.name }} - ${{ matrix.sys }}
+    name: ${{ matrix.name }}
     
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
