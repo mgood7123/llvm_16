@@ -36,7 +36,7 @@ jobs:
           msystem: ${{matrix.sys}}
           update: true
 
-     - name: install pacboy
+      - name: install pacboy
         run: |
           pacman -Syu --noconfirm --needed pactoys
 
