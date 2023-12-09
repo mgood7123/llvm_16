@@ -38,8 +38,8 @@ jobs:
 
       - name: install packages
         run: |
-          pacman -Syu --noconfirm --needed pactoys
-          pactoys -S --noconfirm --needed libedit:p clang:p make:p cmake:p
+          pacman -Syu --noconfirm --needed pacboy
+          pacboy -S --noconfirm --needed libedit:p clang:p make:p cmake:p
 
       - name: cmake build
         run: |
