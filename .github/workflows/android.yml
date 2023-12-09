@@ -77,6 +77,10 @@ jobs:
         run: |
           sudo docker container exec --user root git_local_ubuntu bash -c "echo 'ubuntu ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/ubuntu"
 
+      - name: update packages
+        run: |
+          sudo docker container exec git_local_ubuntu bash -c "sudo apt update"
+
       - name: install apt-utils
         run: |
           sudo docker container exec git_local_ubuntu bash -c "sudo apt install -y apt-utils"
