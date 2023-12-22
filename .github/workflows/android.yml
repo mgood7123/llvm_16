@@ -18,36 +18,36 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: ubuntu-latest
-            name: android 19
-            android: 19
-            arch: 1686
-            clang_prefix: i686-linux-android
+          # - os: ubuntu-latest
+          #   name: android 19
+          #   android: 19
+          #   arch: 1686
+          #   clang_prefix: i686-linux-android
           - os: ubuntu-latest
             name: android 19
             android: 19
             arch: armv7a
             clang_prefix: armv7a-linux-androideabi
-          - os: ubuntu-latest
-            name: android 21
-            android: 21
-            arch: 1686
-            clang_prefix: i686-linux-android
-          - os: ubuntu-latest
-            name: android 21
-            android: 21
-            arch: armv7a
-            clang_prefix: armv7a-linux-androideabi
-          - os: ubuntu-latest
-            name: android 21
-            android: 21
-            arch: x86_64
-            clang_prefix: x86_64-linux-android
-          - os: ubuntu-latest
-            name: android 21
-            android: 21
-            arch: aarch64
-            clang_prefix: aarch64-linux-android
+          # - os: ubuntu-latest
+          #   name: android 21
+          #   android: 21
+          #   arch: 1686
+          #   clang_prefix: i686-linux-android
+          # - os: ubuntu-latest
+          #   name: android 21
+          #   android: 21
+          #   arch: armv7a
+          #   clang_prefix: armv7a-linux-androideabi
+          # - os: ubuntu-latest
+          #   name: android 21
+          #   android: 21
+          #   arch: x86_64
+          #   clang_prefix: x86_64-linux-android
+          # - os: ubuntu-latest
+          #   name: android 21
+          #   android: 21
+          #   arch: aarch64
+          #   clang_prefix: aarch64-linux-android
 
     runs-on: ${{ matrix.os }}
 
