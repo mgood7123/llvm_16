@@ -86,7 +86,7 @@ debug_ninja_asan_directories: | $(debug_ninja_asan_build_dir_target) $(debug_asa
 
 ifneq ($(CMAKE),)
 else
-  CMAKE = cmake
+  	CMAKE = cmake
 endif
 
 ifneq ($(MAKE),)
