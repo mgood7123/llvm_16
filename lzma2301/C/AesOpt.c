@@ -610,7 +610,7 @@ VAES_COMPAT_STUB (AesCtr_Code_HW)
 #if defined(__ARM_FEATURE_AES)
 #warning __ARM_FEATURE_AES defined SUCCESS
 #else
-#warning __ARM_FEATURE_AES not defined FAILED
+#warning __ARM_FEATURE_AES defined FAILED
 #endif
 #include <arm_neon.h>
 #endif
