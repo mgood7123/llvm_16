@@ -597,21 +597,6 @@ VAES_COMPAT_STUB (AesCtr_Code_HW)
 #include <arm64_neon.h>
 #else
 #warning including_arm32_neon
-#if defined(__ARM_ARCH)
-#warning __ARM_ARCH defined
-#if __ARM_ARCH >= 8
-#warning __ARM_ARCH >= 8 SUCCESS
-#else
-#warning __ARM_ARCH >= 8 FAILED
-#endif
-#else
-#warning __ARM_ARCH not defined
-#endif
-#if defined(__ARM_FEATURE_AES)
-#warning __ARM_FEATURE_AES defined SUCCESS
-#else
-#warning __ARM_FEATURE_AES defined FAILED
-#endif
 #include <arm_neon.h>
 #endif
 
