@@ -206,7 +206,7 @@ jobs:
 
       - name: SYSTEMD - cmake build
         run: |
-          sudo docker container exec --user ubuntu --workdir /home/ubuntu git_local_ubuntu bash -c "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/\$(id -u ubuntu)/bus systemd-run --user --scope --collect /bin/bash -c \"cd git_repo ; NDK=/lib/android-sdk/ndk/25.2.9519653; NDK_LINUX=\$NDK/toolchains/llvm/prebuilt/linux-x86_64; NDK_CLANG_PREFIX=${{ matrix.clang_prefix }}${{ matrix.android }}; make CC=\$NDK_LINUX/bin/${NDK_CLANG_PREFIX}-clang CXX=\$NDK_LINUX/bin/${NDK_CLANG_PREFIX}-clang++ CMAKE_FLAGS=-DCMAKE_VERBOSE_MAKEFILE=TRUE\""
+          sudo docker container exec --user ubuntu --workdir /home/ubuntu git_local_ubuntu bash -c "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/\$(id -u ubuntu)/bus systemd-run --user --scope --collect /bin/bash -c \"cd git_repo ; NDK=/lib/android-sdk/ndk/25.2.9519653; NDK_LINUX=\\$NDK/toolchains/llvm/prebuilt/linux-x86_64; NDK_CLANG_PREFIX=${{ matrix.clang_prefix }}${{ matrix.android }}; make CC=\\$NDK_LINUX/bin/\\${NDK_CLANG_PREFIX}-clang CXX=\\$NDK_LINUX/bin/\\${NDK_CLANG_PREFIX}-clang++ CMAKE_FLAGS=\\"-DCMAKE_VERBOSE_MAKEFILE=TRUE\\"\""
 
       # - uses: actions/upload-artifact@v3
       #   with:
