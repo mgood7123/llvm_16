@@ -15,6 +15,7 @@ defaults:
 
 jobs:
   build:
+    if: ${{ endsWith(github.event.head_commit.message, '- macos') || true }}
     strategy:
       matrix:
         include:
@@ -22,12 +23,12 @@ jobs:
             name: macos
 
     runs-on: ${{ matrix.os }}
-    
+
     name: ${{ matrix.name }}
-    
+
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
 

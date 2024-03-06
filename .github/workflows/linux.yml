@@ -15,6 +15,7 @@ defaults:
 
 jobs:
   build:
+    if: ${{ endsWith(github.event.head_commit.message, '- linux') || true }}
     strategy:
       matrix:
         include:
@@ -23,12 +24,12 @@ jobs:
             flatpak_id: com.smallville7123.Hello
 
     runs-on: ${{ matrix.os }}
-    
+
     name: ${{ matrix.name }}
-    
+
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
 
@@ -47,7 +48,7 @@ jobs:
       - name: start docker container
         run: |
           sudo docker container start git_local_ubuntu
-      
+
       - name: allow ubuntu user to sudo
         run: |
           sudo docker container exec --user root git_local_ubuntu bash -c "echo 'ubuntu ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/ubuntu"
@@ -149,7 +150,7 @@ jobs:
       - name: SYSTEMD - install clang-17
         run: |
           sudo docker container exec --user ubuntu --workdir /home/ubuntu git_local_ubuntu bash -c "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/\$(id -u ubuntu)/bus systemd-run --user --scope --collect /bin/bash -c \"sudo apt install -y clang-17 clang-format-17 lldb-17 lld-17 clang-tidy-17 clang-tools-17 flang-17 llvm-17-linker-tools llvm-17-tools llvm-17-runtime llvm-17-tools mlir-17-tools libmlir-17\""
-      
+
       - name: SYSTEMD - make clang-17 default
         run: |
           sudo docker cp ./update_alternatives_clang.sh git_local_ubuntu:/home/ubuntu/update_alternatives_clang.sh
@@ -251,7 +252,7 @@ jobs:
       #     sudo docker container exec --user ubuntu --workdir /home/ubuntu git_local_ubuntu bash -c "echo \"      - type: file\" >> ${{ matrix.flatpak_id }}.yml"
       #     sudo docker container exec --user ubuntu --workdir /home/ubuntu git_local_ubuntu bash -c "echo \"        path: \$HOME/program-linux\" >> ${{ matrix.flatpak_id }}.yml"
       #     sudo docker container exec --user ubuntu --workdir /home/ubuntu git_local_ubuntu bash -c "echo \"        dest-filename: program-linux\" >> ${{ matrix.flatpak_id }}.yml"
-        
+
       # - name: SYSTEMD - build flatpak package
       #   run: |
       #     sudo docker container exec --user ubuntu --workdir /home/ubuntu git_local_ubuntu bash -c "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/\$(id -u ubuntu)/bus systemd-run --user --scope --collect /bin/bash -c \"flatpak-builder -y --user --install build-dir ${{ matrix.flatpak_id }}.yml\""

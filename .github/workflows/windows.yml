@@ -15,6 +15,7 @@ defaults:
 
 jobs:
   build:
+    if: ${{ endsWith(github.event.head_commit.message, '- windows') || true }}
     strategy:
       matrix:
         include:
@@ -23,15 +24,15 @@ jobs:
             sys: clang64
 
     runs-on: ${{ matrix.os }}
-    
+
     name: ${{ matrix.name }}
-    
+
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
-    
+
       - name: '${{ matrix.icon }} Setup MSYS2'
         uses: msys2/setup-msys2@v2
         with:
