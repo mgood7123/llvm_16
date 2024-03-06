@@ -7,7 +7,6 @@
 #include "CpuArch.h"
 
 #ifdef MY_CPU_X86_OR_AMD64
-#warning including__x86__x86_64
 
   #if defined(__INTEL_COMPILER)
     #if (__INTEL_COMPILER >= 1110)
@@ -555,8 +554,7 @@ VAES_COMPAT_STUB (AesCtr_Code_HW)
 #endif // ! USE_INTEL_VAES
 
 
-#elif defined(MY_CPU_ARM_OR_ARM64) && defined(MY_CPU_LE)
-#warning including__arm__arm64
+#elif defined(MY_CPU_ARM_OR_ARM64) && defined(MY_CPU_LE) && ! defined(__ANDROID__)
 
   #if defined(__clang__)
     #if (__clang_major__ >= 8) // fix that check
@@ -593,10 +591,8 @@ VAES_COMPAT_STUB (AesCtr_Code_HW)
 #endif
 
 #if defined(_MSC_VER) && defined(MY_CPU_ARM64)
-#warning including_arm64_neon
 #include <arm64_neon.h>
 #else
-#warning including_arm32_neon
 #include <arm_neon.h>
 #endif
 
