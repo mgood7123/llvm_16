@@ -48,10 +48,9 @@ jobs:
         run: |
           pacboy -Sy
 
-
       - name: install packages
         run: |
-          pacboy -S --noconfirm --needed clang:p make:p cmake:p
+          pacboy -S --noconfirm --needed clang:p make:p cmake:p automake:p
 
       - name: cmake build
         run: |
