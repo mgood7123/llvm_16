@@ -339,9 +339,13 @@ macro(build_root_add_makefile_package src relative_path_to_makefile_dir build_di
       build_root_message("-------- BUILDING MAKEFILE PROJECT: '${build_dir}' -- GENERATED")
   endif()
   if (BUILD_ROOT_____________HAS_C)
+      build_root_message("-------- BUILDING MAKEFILE PROJECT: '${build_dir}' -- CONFIGURING (--help)")
+      build_root_exec_working_directory(${BUILD_ROOT_____________HAS_DIR}
+        ./configure --help
+      )
       build_root_message("-------- BUILDING MAKEFILE PROJECT: '${build_dir}' -- CONFIGURING")
       build_root_exec_working_directory(${BUILD_ROOT_____________HAS_DIR}
-        ./configure ${extra_makefile_config_list_str_actual}
+        ./configure --prefix=${BUILD_ROOT_BUILD_DIRECTORY}/ROOTFS ${extra_makefile_config_list_str_actual}
       )
       if (NOT EXISTS ${BUILD_ROOT_____________HAS_DIR}/Makefile)
           build_root_fatal("'configure' failed to generate a 'Makefile' file inside the directory '${BUILD_ROOT_____________HAS_DIR}'")
