@@ -13,12 +13,12 @@
 [submodule "libzip"]
 	path = libzip
 	url = https://github.com/nih-at/libzip
-[submodule "wineditline"]
-	path = wineditline
-	url = https://github.com/winlibs/wineditline
 [submodule "ZPack"]
 	path = ZPack
 	url = https://github.com/LeadRDRK/ZPack
 [submodule "xz"]
 	path = xz
 	url = https://github.com/tukaani-project/xz
+[submodule "wineditline"]
+	path = wineditline
+	url = https://github.com/mgood7123/wineditline-llvm
