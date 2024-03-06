@@ -394,7 +394,7 @@ message("ANDROID_STL = ${ANDROID_STL}")
 
 build_root_init(${CMAKE_CURRENT_SOURCE_DIR}/cmake/packages ${CMAKE_CURRENT_BINARY_DIR}/BUILD_ROOT)
 
-if (WINDOWS)
+if (WIN32)
     build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/wineditline . libedit
     "" # no extra c flags
     "" # no extra cxx flags
@@ -674,7 +674,7 @@ build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/lzma2301 . 7z
 #   -D BUILD_SHARED_LIBS=ON
 # ")
 
-# find_package(LibEdit REQUIRED)
+find_package(LibEdit REQUIRED)
 # find_package(ZLIB REQUIRED)
 # find_package(LZ4 REQUIRED)
 # find_package(LZMA REQUIRED)
@@ -687,7 +687,7 @@ find_package(7z REQUIRED)
 # find_package(EXPAT REQUIRED)
 # find_package(Archive REQUIRED)
 
-# message("LIBEDIT LIBS: ${LibEdit_LIBRARIES}")
+message("LIBEDIT LIBS: ${LibEdit_LIBRARIES}")
 # message("ZLIB LIBS: ${ZLIB_LIBRARIES}")
 # message("LZ4 LIBS: ${LZ4_LIBRARIES}")
 # message("LZMA LIBS: ${LZMA_LIBRARIES}")
@@ -699,7 +699,7 @@ message("7Z LIBS: ${7Z_LIBRARIES}")
 # message("OpenSSL LIBS: ${OPENSSL_LIBRARIES}")
 # message("Expat LIBS: ${EXPAT_LIBRARIES}")
 # message("Archive LIBS: ${ARCHIVE_LIBRARIES}")
-# message("LIBEDIT INCLUDE_DIRECTORIES: ${LibEdit_INCLUDE_DIRS}")
+message("LIBEDIT INCLUDE_DIRECTORIES: ${LibEdit_INCLUDE_DIRS}")
 # message("ZLIB INCLUDE_DIRECTORIES: ${ZLIB_INCLUDE_DIRS}")
 # message("LZ4 INCLUDE_DIRECTORIES: ${LZ4_INCLUDE_DIRS}")
 # message("LZMA INCLUDE_DIRECTORIES: ${LZMA_INCLUDE_DIRS}")
@@ -742,7 +742,7 @@ message("7Z_TARGET = ${7Z_TARGET}")
 #   include(./clang_libs.cmake)
 #   include(./lldb_libs.cmake)
 
-#   if(CMAKE_SYSTEM_NAME MATCHES "Linux" )
+#   if(UNIX)
 
 #     include(CheckIncludeFile)
 #     check_include_file("opagent.h" HAVE_OPAGENT_H)
@@ -757,7 +757,7 @@ message("7Z_TARGET = ${7Z_TARGET}")
 
 #   endif()
 
-#   if(CMAKE_SYSTEM_NAME MATCHES "Windows" OR CMAKE_SYSTEM_NAME MATCHES "Linux" )
+#   if(WIN32 OR UNIX)
 #     set(LLVM_USE_INTEL_JITEVENTS ON CACHE BOOL "" FORCE)
 #     list(APPEND LLVM_MC_JIT_LINK_LIBS LLVMIntelJITEvents)
 #   endif()
