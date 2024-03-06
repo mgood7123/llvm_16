@@ -11,7 +11,7 @@ defaults:
 
 jobs:
   build:
-    if: ${{ endsWith(github.event.head_commit.message, '- macos') || true }}
+    if: ${{ (! endsWith(github.event.head_commit.message, '- android') && ! endsWith(github.event.head_commit.message, '- windows') && ! endsWith(github.event.head_commit.message, '- linux') && endsWith(github.event.head_commit.message, '- macos')) || true }}
     concurrency:
       group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
       cancel-in-progress: true
