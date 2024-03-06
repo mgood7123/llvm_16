@@ -18,33 +18,34 @@ jobs:
     strategy:
       matrix:
         include:
-          # - os: ubuntu-latest
-          #   name: android 19
-          #   android_abi: armeabi-v7a
-          #   android_arm_neon: TRUE
-          #   android_arm_mode: thumb
-          #   android_platform: 19
-          #   android_stl: c++_static
-          #   arch: armv7a
-          #   clang_prefix: armv7a-linux-androideabi
-          # - os: ubuntu-latest
-          #   name: android 19
-          #   android_abi: x86
-          #   android_arm_neon: FALSE
-          #   android_arm_mode: thumb
-          #   android_platform: 19
-          #   android_stl: c++_static
-          #   arch: 1686
-          #   clang_prefix: i686-linux-android
-          # - os: ubuntu-latest
-          #   name: android 21
-          #   android_abi: armeabi-v7a
-          #   android_arm_neon: TRUE
-          #   android_arm_mode: thumb
-          #   android_platform: 21
-          #   android_stl: c++_static
-          #   arch: armv7a
-          #   clang_prefix: armv7a-linux-androideabi
+          - os: ubuntu-latest
+            name: android 19
+            android_abi: armeabi-v7a
+            android_arm_neon: TRUE
+            android_arm_mode: thumb
+            android_platform: 19
+            android_stl: c++_static
+            arch: armv7a
+            clang_prefix: armv7a-linux-androideabi
+          - os: ubuntu-latest
+            name: android 19
+            android_abi: x86
+            # disabling neon is no longer supported even if we do not target it
+            android_arm_neon: TRUE
+            android_arm_mode: thumb
+            android_platform: 19
+            android_stl: c++_static
+            arch: 1686
+            clang_prefix: i686-linux-android
+          - os: ubuntu-latest
+            name: android 21
+            android_abi: armeabi-v7a
+            android_arm_neon: TRUE
+            android_arm_mode: thumb
+            android_platform: 21
+            android_stl: c++_static
+            arch: armv7a
+            clang_prefix: armv7a-linux-androideabi
           - os: ubuntu-latest
             name: android 21
             android_abi: arm64-v8a
@@ -54,19 +55,21 @@ jobs:
             android_stl: c++_static
             arch: aarch64
             clang_prefix: aarch64-linux-android
-          # - os: ubuntu-latest
-          #   name: android 21
-          #   android_abi: x86
-          #   android_arm_neon: FALSE
-          #   android_arm_mode: thumb
-          #   android_platform: 21
-          #   android_stl: c++_static
-          #   arch: 1686
-          #   clang_prefix: i686-linux-android
+          - os: ubuntu-latest
+            name: android 21
+            android_abi: x86
+            # disabling neon is no longer supported even if we do not target it
+            android_arm_neon: TRUE
+            android_arm_mode: thumb
+            android_platform: 21
+            android_stl: c++_static
+            arch: 1686
+            clang_prefix: i686-linux-android
           - os: ubuntu-latest
             name: android 21
             android_abi: x86_64
-            android_arm_neon: FALSE
+            # disabling neon is no longer supported even if we do not target it
+            android_arm_neon: TRUE
             android_arm_mode: thumb
             android_platform: 21
             android_stl: c++_static
