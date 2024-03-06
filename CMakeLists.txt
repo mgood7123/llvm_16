@@ -69,6 +69,29 @@ macro (build_root_exec)
     endif()
 endmacro()
 
+macro (build_root_exec_working_directory working_directory)
+    unset(command_list)
+    unset(command_list CACHE)
+    string(REGEX MATCHALL "([^\"' \r\n\t;\\]+|[\\].|\"([^\"\\]+|[\\].)*\")+( +([^\"' \r\n\t;\\]+|[\\].|\"([^\"\\]+|[\\].)*\")+)*" command_list "${ARGN}")
+    unset(command_str)
+    unset(command_str CACHE)
+    foreach(ARG IN ITEMS ${command_list})
+        if (command_str)
+          string(APPEND command_str " ")
+        endif()
+        string(APPEND command_str "${ARG}")
+    endforeach()
+    execute_process(
+        COMMAND ${command_list}
+        COMMAND_ECHO STDOUT
+        RESULT_VARIABLE EXEC_FAILED
+        WORKING_DIRECTORY ${working_directory}
+    )
+    if (EXEC_FAILED)
+        message(FATAL_ERROR "failed to execute command: 'cd ${working_directory} ; ${command_str}'")
+    endif()
+endmacro()
+
 macro (build_root_exec_cmake)
     unset(command_list)
     unset(command_list CACHE)
@@ -305,8 +328,8 @@ macro(build_root_add_makefile_package src relative_path_to_makefile_dir build_di
 
   if (BUILD_ROOT_____________HAS_A)
       build_root_message("-------- BUILDING MAKEFILE PROJECT: '${build_dir}' -- GENERATING")
-      build_root_exec(
-        cd ${BUILD_ROOT_____________HAS_DIR} ; ./autogen.sh
+      build_root_exec_working_directory(${BUILD_ROOT_____________HAS_DIR}
+        ./autogen.sh
       )
       if (NOT EXISTS ${BUILD_ROOT_____________HAS_DIR}/configure)
           build_root_fatal("'autogen.sh' failed to generate a 'configure' file inside the directory '${BUILD_ROOT_____________HAS_DIR}'")
@@ -317,8 +340,8 @@ macro(build_root_add_makefile_package src relative_path_to_makefile_dir build_di
   endif()
   if (BUILD_ROOT_____________HAS_C)
       build_root_message("-------- BUILDING MAKEFILE PROJECT: '${build_dir}' -- CONFIGURING")
-      build_root_exec(
-        cd ${BUILD_ROOT_____________HAS_DIR} ; ./configure ${extra_makefile_config_list_str_actual}
+      build_root_exec_working_directory(${BUILD_ROOT_____________HAS_DIR}
+        ./configure ${extra_makefile_config_list_str_actual}
       )
       if (NOT EXISTS ${BUILD_ROOT_____________HAS_DIR}/Makefile)
           build_root_fatal("'configure' failed to generate a 'Makefile' file inside the directory '${BUILD_ROOT_____________HAS_DIR}'")
@@ -329,14 +352,14 @@ macro(build_root_add_makefile_package src relative_path_to_makefile_dir build_di
   endif()
   if (BUILD_ROOT_____________HAS_M)
       build_root_message("-------- BUILDING MAKEFILE PROJECT: '${build_dir}' -- BUILDING")
-      build_root_exec(
-        cd ${BUILD_ROOT_____________HAS_DIR} ; make
+      build_root_exec_working_directory(${BUILD_ROOT_____________HAS_DIR}
+        make
       )
       build_root_message("-------- BUILDING MAKEFILE PROJECT: '${build_dir}' -- BUILT")
   endif()
   build_root_message("-------- BUILDING MAKEFILE PROJECT: '${build_dir}' -- INSTALLING")
-  build_root_exec(
-    cd ${BUILD_ROOT_____________HAS_DIR} ; make install
+  build_root_exec_working_directory(${BUILD_ROOT_____________HAS_DIR}
+    make install
   )
   build_root_message("-------- BUILDING MAKEFILE PROJECT: '${build_dir}' -- INSTALLED")
   build_root_message("-------- BUILT MAKEFILE PROJECT: '${build_dir}'")
