@@ -11,6 +11,8 @@
 find_package(PkgConfig QUIET)
 pkg_check_modules(PC_7Z QUIET 7Z)
 
+set(CMAKE_FIND_DEBUG_MODE TRUE)
+
 find_path(7Z_INCLUDE_DIRS NAMES 7zVersion.h
   PATHS ${CMAKE_CURRENT_BINARY_DIR}/BUILD_ROOT/include
   NO_DEFAULT_PATH
@@ -31,6 +33,8 @@ find_library(7Z_LIBRARIES NAMES 7z
   NO_CMAKE_SYSTEM_PATH
   NO_CMAKE_FIND_ROOT_PATH
 )
+
+set(CMAKE_FIND_DEBUG_MODE FALSE)
 
 include(CheckIncludeFile)
 if(7Z_INCLUDE_DIRS AND EXISTS "${7Z_INCLUDE_DIRS}/7zVersion.h")
