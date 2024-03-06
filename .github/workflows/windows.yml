@@ -41,6 +41,12 @@ jobs:
       - name: update packages
         run: |
           echo "github.event.head_commit.message = '${{github.event.head_commit.message}}'"
+          echo "endsWith(github.event.head_commit.message, '- android') = ${{ endsWith(github.event.head_commit.message, '- android') }}"
+          echo "endsWith(github.event.head_commit.message, '- windows') = ${{ endsWith(github.event.head_commit.message, '- windows') }}"
+          echo "endsWith(github.event.head_commit.message, '- linux') = ${{ endsWith(github.event.head_commit.message, '- linux') }}"
+          echo "endsWith(github.event.head_commit.message, '- macos') = ${{ endsWith(github.event.head_commit.message, '- macos') }}"
+          echo "(! endsWith(github.event.head_commit.message, '- android') && endsWith(github.event.head_commit.message, '- windows') && ! endsWith(github.event.head_commit.message, '- linux') && ! endsWith(github.event.head_commit.message, '- macos')) = ${{ (! endsWith(github.event.head_commit.message, '- android') && endsWith(github.event.head_commit.message, '- windows') && ! endsWith(github.event.head_commit.message, '- linux') && ! endsWith(github.event.head_commit.message, '- macos')) }}"
+          echo "(! endsWith(github.event.head_commit.message, '- android') && endsWith(github.event.head_commit.message, '- windows') && ! endsWith(github.event.head_commit.message, '- linux') && ! endsWith(github.event.head_commit.message, '- macos')) || true = ${{ (! endsWith(github.event.head_commit.message, '- android') && endsWith(github.event.head_commit.message, '- windows') && ! endsWith(github.event.head_commit.message, '- linux') && ! endsWith(github.event.head_commit.message, '- macos')) || true }}"
           pacman -Sy
 
       - name: install pacboy
