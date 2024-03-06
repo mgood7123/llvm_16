@@ -50,7 +50,7 @@ jobs:
 
       - name: install packages
         run: |
-          pacboy -S --noconfirm --needed clang:p make:p cmake:p automake:p
+          pacboy -S --noconfirm --needed clang:p make:p cmake:p autotools:p
 
       - name: cmake build
         run: |
