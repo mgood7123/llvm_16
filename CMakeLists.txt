@@ -170,7 +170,7 @@ macro(build_root_add_cmake_package src relative_path_to_cmake_dir build_dir buil
     build_root_fatal("cmake file 'CMakeLists.txt' does not exist inside relative source directory '${relative_path_to_cmake_dir}' inside source directory '${src}'")
   endif()
   if (NOT EXISTS ${BUILD_ROOT_BUILD_DIRECTORY}/SRC/${build_dir})
-  build_root_exec(cp -r ${src} ${BUILD_ROOT_BUILD_DIRECTORY}/SRC/${build_dir})
+    build_root_exec(cp -r ${src} ${BUILD_ROOT_BUILD_DIRECTORY}/SRC/${build_dir})
   endif()
   if (NOT EXISTS ${BUILD_ROOT_BUILD_DIRECTORY}/BUILD/${build_dir})
     build_root_exec(mkdir ${BUILD_ROOT_BUILD_DIRECTORY}/BUILD/${build_dir})
@@ -183,7 +183,7 @@ macro(build_root_add_cmake_package src relative_path_to_cmake_dir build_dir buil
     set(HAS_CMAKE_COLOR ON)
   endif()
 
-unset(extra_cmake_config_list)
+  unset(extra_cmake_config_list)
   unset(extra_cmake_config_list CACHE)
   string(REGEX MATCHALL "([^\"' \r\n\t;\\]+|[\\].|\"([^\"\\]+|[\\].)*\")+( +([^\"' \r\n\t;\\]+|[\\].|\"([^\"\\]+|[\\].)*\")+)*" extra_cmake_config_list "${extra_cmake_config}")
   unset(extra_cmake_config_list_str)
@@ -206,7 +206,7 @@ unset(extra_cmake_config_list)
     # configure
     ${CMAKE_COMMAND}
     -G "${CMAKE_GENERATOR}"
-    -S "${BUILD_ROOT_BUILD_DIRECTORY}/SRC/${build_dir}"
+    -S "${BUILD_ROOT_BUILD_DIRECTORY}/SRC/${build_dir}/${relative_path_to_cmake_dir}"
     -B "${BUILD_ROOT_BUILD_DIRECTORY}/BUILD/${build_dir}"
     ${extra_cmake_config_list_str_actual}
   )
@@ -227,6 +227,119 @@ unset(extra_cmake_config_list)
   )
   build_root_message("-------- BUILDING CMAKE PROJECT: '${build_dir}' -- INSTALLED")
   build_root_message("-------- BUILT CMAKE PROJECT: '${build_dir}'")
+endmacro()
+
+macro(build_root_add_makefile_package src relative_path_to_makefile_dir build_dir build_path_c_flags build_path_cxx_flags extra_makefile_config)
+  build_root_message("BUILD_ROOT_BUILD_DIRECTORY is '${BUILD_ROOT_BUILD_DIRECTORY}'")
+  build_root_set_var(${build_dir}_ROOT ${build_dir})
+  if (NOT EXISTS ${src})
+    build_root_fatal("source directory '${src}' does not exist")
+  endif()
+  if (NOT EXISTS ${src}/${relative_path_to_makefile_dir})
+    build_root_fatal("relative source directory '${relative_path_to_makefile_dir}' does not exist inside source directory '${src}'")
+  endif()
+  if (NOT EXISTS ${BUILD_ROOT_BUILD_DIRECTORY}/SRC/${build_dir})
+    build_root_exec(cp -r ${src} ${BUILD_ROOT_BUILD_DIRECTORY}/SRC/${build_dir})
+  endif()
+  if (NOT EXISTS ${BUILD_ROOT_BUILD_DIRECTORY}/BUILD/${build_dir})
+    build_root_exec(cp -r ${src} ${BUILD_ROOT_BUILD_DIRECTORY}/BUILD/${build_dir})
+  endif()
+  
+  unset(extra_makefile_config_list)
+  unset(extra_makefile_config_list CACHE)
+  string(REGEX MATCHALL "([^\"' \r\n\t;\\]+|[\\].|\"([^\"\\]+|[\\].)*\")+( +([^\"' \r\n\t;\\]+|[\\].|\"([^\"\\]+|[\\].)*\")+)*" extra_makefile_config_list "${extra_makefile_config}")
+  unset(extra_makefile_config_list_str)
+  unset(extra_makefile_config_list_str CACHE)
+  foreach(ARG IN ITEMS ${extra_makefile_config_list})
+      if (extra_makefile_config_list_str)
+        string(APPEND extra_makefile_config_list_str " ")
+      endif()
+      if (extra_makefile_config_list_str_actual)
+        string(APPEND extra_makefile_config_list_str_actual " ")
+      endif()
+      string(APPEND extra_makefile_config_list_str "'${ARG}'")
+      string(APPEND extra_makefile_config_list_str_actual "${ARG}")
+  endforeach()
+
+  build_root_message("-------- BUILDING MAKEFILE PROJECT: '${build_dir}'")
+
+  unset(BUILD_ROOT_____________HAS_M)
+  unset(BUILD_ROOT_____________HAS_M CACHE)
+  unset(BUILD_ROOT_____________HAS_C)
+  unset(BUILD_ROOT_____________HAS_C CACHE)
+  unset(BUILD_ROOT_____________HAS_A)
+  unset(BUILD_ROOT_____________HAS_A CACHE)
+  unset(BUILD_ROOT_____________HAS_DIR)
+  unset(BUILD_ROOT_____________HAS_DIR CACHE)
+  if (NOT EXISTS ${BUILD_ROOT_BUILD_DIRECTORY}/SRC/${build_dir}/${relative_path_to_makefile_dir}/Makefile)
+      if (NOT EXISTS ${BUILD_ROOT_BUILD_DIRECTORY}/SRC/${build_dir}/${relative_path_to_makefile_dir}/configure)
+          if (NOT EXISTS ${BUILD_ROOT_BUILD_DIRECTORY}/SRC/${build_dir}/${relative_path_to_makefile_dir}/autogen.sh)
+              if (NOT EXISTS ${BUILD_ROOT_BUILD_DIRECTORY}/SRC/${build_dir}/Makefile)
+                  if (NOT EXISTS ${BUILD_ROOT_BUILD_DIRECTORY}/SRC/${build_dir}/configure)
+                      if (NOT EXISTS ${BUILD_ROOT_BUILD_DIRECTORY}/SRC/${build_dir}/autogen.sh)
+                          build_root_fatal("could not find any of the following files 'Makefile', 'configure', 'autogen.sh', searched inside relative source directory '${relative_path_to_makefile_dir}' inside source directory '${src}', searched inside source directory '${src}'")
+                      else()
+                          set(BUILD_ROOT_____________HAS_A true)
+                          set(BUILD_ROOT_____________HAS_DIR ${BUILD_ROOT_BUILD_DIRECTORY}/SRC/${build_dir})
+                      endif()
+                  else()
+                      set(BUILD_ROOT_____________HAS_C true)
+                      set(BUILD_ROOT_____________HAS_DIR ${BUILD_ROOT_BUILD_DIRECTORY}/SRC/${build_dir})
+                  endif()
+              else()
+                  set(BUILD_ROOT_____________HAS_M true)
+                  set(BUILD_ROOT_____________HAS_DIR ${BUILD_ROOT_BUILD_DIRECTORY}/SRC/${build_dir})
+              endif()
+          else()
+              set(BUILD_ROOT_____________HAS_A true)
+              set(BUILD_ROOT_____________HAS_DIR ${BUILD_ROOT_BUILD_DIRECTORY}/SRC/${build_dir}/${relative_path_to_makefile_dir})
+          endif()
+      else()
+          set(BUILD_ROOT_____________HAS_C true)
+          set(BUILD_ROOT_____________HAS_DIR ${BUILD_ROOT_BUILD_DIRECTORY}/SRC/${build_dir}/${relative_path_to_makefile_dir})
+      endif()
+  else()
+      set(BUILD_ROOT_____________HAS_M true)
+      set(BUILD_ROOT_____________HAS_DIR ${BUILD_ROOT_BUILD_DIRECTORY}/SRC/${build_dir}/${relative_path_to_makefile_dir})
+  endif()
+
+  if (BUILD_ROOT_____________HAS_A)
+      build_root_message("-------- BUILDING MAKEFILE PROJECT: '${build_dir}' -- GENERATING")
+      build_root_exec(
+        cd ${BUILD_ROOT_____________HAS_DIR} ; ./autogen.sh
+      )
+      if (NOT EXISTS ${BUILD_ROOT_____________HAS_DIR}/configure)
+          build_root_fatal("'autogen.sh' failed to generate a 'configure' file inside the directory '${BUILD_ROOT_____________HAS_DIR}'")
+      else()
+          set(BUILD_ROOT_____________HAS_C true)
+      endif()
+      build_root_message("-------- BUILDING MAKEFILE PROJECT: '${build_dir}' -- GENERATED")
+  endif()
+  if (BUILD_ROOT_____________HAS_C)
+      build_root_message("-------- BUILDING MAKEFILE PROJECT: '${build_dir}' -- CONFIGURING")
+      build_root_exec(
+        cd ${BUILD_ROOT_____________HAS_DIR} ; ./configure ${extra_makefile_config_list_str_actual}
+      )
+      if (NOT EXISTS ${BUILD_ROOT_____________HAS_DIR}/Makefile)
+          build_root_fatal("'configure' failed to generate a 'Makefile' file inside the directory '${BUILD_ROOT_____________HAS_DIR}'")
+      else()
+          set(BUILD_ROOT_____________HAS_M true)
+      endif()
+      build_root_message("-------- BUILDING MAKEFILE PROJECT: '${build_dir}' -- CONFIGURED")
+  endif()
+  if (BUILD_ROOT_____________HAS_M)
+      build_root_message("-------- BUILDING MAKEFILE PROJECT: '${build_dir}' -- BUILDING")
+      build_root_exec(
+        cd ${BUILD_ROOT_____________HAS_DIR} ; make
+      )
+      build_root_message("-------- BUILDING MAKEFILE PROJECT: '${build_dir}' -- BUILT")
+  endif()
+  build_root_message("-------- BUILDING MAKEFILE PROJECT: '${build_dir}' -- INSTALLING")
+  build_root_exec(
+    cd ${BUILD_ROOT_____________HAS_DIR} ; make install
+  )
+  build_root_message("-------- BUILDING MAKEFILE PROJECT: '${build_dir}' -- INSTALLED")
+  build_root_message("-------- BUILT MAKEFILE PROJECT: '${build_dir}'")
 endmacro()
 
 message("CMAKE_SYSTEM_NAME = ${CMAKE_SYSTEM_NAME}")
@@ -254,12 +367,29 @@ message("ANDROID_STL = ${ANDROID_STL}")
 
 build_root_init(${CMAKE_CURRENT_SOURCE_DIR}/cmake/packages ${CMAKE_CURRENT_BINARY_DIR}/BUILD_ROOT)
 
+if (WINDOWS)
+    build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/wineditline . libedit
+    "" # no extra c flags
+    "" # no extra cxx flags
+    "
+      -D BUILD_SHARED_LIBS=ON
+    "
+    )
+else()
+    build_root_add_makefile_package(${CMAKE_CURRENT_SOURCE_DIR}/libedit-20230828-3.1 . libedit
+    "" # no extra c flags
+    "" # no extra cxx flags
+    "" # no extra configure arguments
+    )
+endif()
+
 build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/lzma2301 . 7z
 "" # no extra c flags
 "" # no extra cxx flags
 "
   -D BUILD_SHARED_LIBS=ON
-")
+"
+)
 
 # if(NOT COMMAND testBuilder_build)
 #     add_subdirectory(testBuilder)
