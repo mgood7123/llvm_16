@@ -18,14 +18,14 @@ jobs:
     steps:
      - name: check
        run: |
-         wget https://gist.githubusercontent.com/mgood7123/47957c59a4b0cbda11875632ee0b8f15/raw/693b7645fa5a01f5d24693ac5fb6c9cde49b4ced/check.cpp -O check.cpp
+         wget https://gist.github.com/mgood7123/47957c59a4b0cbda11875632ee0b8f15/raw/becf03c0dae1f48d39ea02fb3d29b8a3c50de3e3/check.cpp -O check.cpp
          cat << EOF > json.cpp
          const char * json_data = R"(
              ${{toJSON(github.event.commits.*)}}
          )";
          EOF
          git clone https://github.com/danielaparker/jsoncons --depth=1
-         g++ -I jsoncons/include check.cpp json.cpp -o check
+         g++ --std=c++17 -I jsoncons/include check.cpp json.cpp -o check
          ./check 1 >> "$GITHUB_OUTPUT" # check for android [1] windows [2] linux [3] macos [4]
   
   build:
