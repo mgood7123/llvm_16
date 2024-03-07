@@ -29,7 +29,7 @@ find_path(LibEdit_INCLUDE_DIRS NAMES histedit.h
   NO_CMAKE_SYSTEM_PATH
   NO_CMAKE_FIND_ROOT_PATH
 )
-find_library(LibEdit_LIBRARIES NAMES edit_static.a edit.a
+find_library(LibEdit_LIBRARIES NAMES libedit_static.a libedit.a
   PATHS ${CMAKE_CURRENT_BINARY_DIR}/BUILD_ROOT/ROOTFS/lib
   NO_DEFAULT_PATH
   NO_PACKAGE_ROOT_PATH
