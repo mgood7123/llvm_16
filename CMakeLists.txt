@@ -130,6 +130,7 @@ macro (build_root_exec_cmake)
         "-DCMAKE_SYSROOT=${CMAKE_SYSROOT}"
         "-DCMAKE_MODULE_PATH=${CMAKE_MODULE_PATH}"
         "-DCMAKE_SYSTEM_PREFIX_PATH=${CMAKE_SYSTEM_PREFIX_PATH}"
+        "-DLLVM_BUILD_ROOT__ROOTFS=${LLVM_BUILD_ROOT__ROOTFS}"
         "-DANDROID_ABI=${ANDROID_ABI}"
         "-DANDROID_ARM_MODE=${ANDROID_ARM_MODE}"
         "-DANDROID_ARM_NEON=${ANDROID_ARM_NEON}"
@@ -161,7 +162,9 @@ macro(build_root_init cmake_packages_dir build_root_dir)
   if (NOT EXISTS ${cmake_packages_dir})
     build_root_fatal("error: cmake package directory '${cmake_packages_directory}' does not exist")
   endif()
-
+  unset(LLVM_BUILD_ROOT__ROOTFS)
+  unset(LLVM_BUILD_ROOT__ROOTFS CACHE)
+  set(LLVM_BUILD_ROOT__ROOTFS "${build_root_dir}/ROOTFS" CACHE BOOL "" FORCE)
   list(INSERT CMAKE_MODULE_PATH 0 "${CMAKE_CURRENT_SOURCE_DIR}/cmake/packages")
   list(INSERT CMAKE_SYSTEM_PREFIX_PATH 0 "${build_root_dir}/ROOTFS")
 
@@ -427,11 +430,11 @@ build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/ZPack/externals/lz4 bui
 )
 
 build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/lzma2301 . 7z
-"" # no extra c flags
-"" # no extra cxx flags
-"
-  -D BUILD_SHARED_LIBS=OFF
-"
+    "" # no extra c flags
+    "" # no extra cxx flags
+    "
+      -D BUILD_SHARED_LIBS=OFF
+    "
 )
 
 build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/zstd build/cmake zstd
