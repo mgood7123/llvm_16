@@ -418,7 +418,7 @@ build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/zlib . zlib
     "
 )
 
-build_root_add_makefile_package(${CMAKE_CURRENT_SOURCE_DIR}/ZPack/externals/lz4 . lz4
+build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/ZPack/externals/lz4 build/cmake lz4
     "" # no extra c flags
     "" # no extra cxx flags
     "
