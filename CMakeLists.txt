@@ -429,6 +429,14 @@ build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/ZPack/externals/lz4 bui
     "
 )
 
+build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/xz . xz
+    "" # no extra c flags
+    "" # no extra cxx flags
+    "
+      -D BUILD_SHARED_LIBS=OFF
+    "
+)
+
 build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/lzma2301 . 7z
     "" # no extra c flags
     "" # no extra cxx flags
@@ -496,7 +504,7 @@ build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/libarchive . libarchive
 find_package(LibEdit REQUIRED)
 find_package(ZLIB REQUIRED)
 find_package(LZ4 REQUIRED)
-# find_package(LZMA REQUIRED) # replaced by 7z
+find_package(LZMA REQUIRED)
 find_package(7z REQUIRED)
 find_package(zstd REQUIRED)
 find_package(xxHash REQUIRED)
@@ -509,7 +517,7 @@ find_package(Archive REQUIRED)
 message("LIBEDIT LIBS: ${LibEdit_LIBRARIES}")
 message("ZLIB LIBS: ${ZLIB_LIBRARIES}")
 message("LZ4 LIBS: ${LZ4_LIBRARIES}")
-# message("LZMA LIBS: ${LZMA_LIBRARIES}")
+message("LZMA LIBS: ${LZMA_LIBRARIES}")
 message("7Z LIBS: ${7Z_LIBRARIES}")
 message("ZSTD LIB: ${zstd_LIBRARY}")
 message("XXHASH LIBS: ${xxHash_LIBRARIES}")
@@ -521,7 +529,7 @@ message("Archive LIBS: ${ARCHIVE_LIBRARIES}")
 message("LIBEDIT INCLUDE_DIRECTORIES: ${LibEdit_INCLUDE_DIRS}")
 message("ZLIB INCLUDE_DIRECTORIES: ${ZLIB_INCLUDE_DIRS}")
 message("LZ4 INCLUDE_DIRECTORIES: ${LZ4_INCLUDE_DIRS}")
-# message("LZMA INCLUDE_DIRECTORIES: ${LZMA_INCLUDE_DIRS}")
+message("LZMA INCLUDE_DIRECTORIES: ${LZMA_INCLUDE_DIRS}")
 message("7Z INCLUDE_DIRECTORIES: ${7Z_INCLUDE_DIRS}")
 message("ZSTD INCLUDE_DIRECTORIES: ${zstd_INCLUDE_DIRS}")
 message("XXHASH INCLUDE_DIRECTORIES: ${xxHash_INCLUDE_DIRS}")
@@ -531,7 +539,7 @@ message("Expat INCLUDE_DIRECTORIES: ${EXPAT_INCLUDE_DIRS}")
 message("Archive INCLUDE_DIRECTORIES: ${ARCHIVE_INCLUDE_DIRS}")
 message("ZLIB_TARGET = ${ZLIB_TARGET}")
 message("LZ4_TARGET = ${LZ4_TARGET}")
-# message("LZMA_TARGET = ${LZMA_TARGET}")
+message("LZMA_TARGET = ${LZMA_TARGET}")
 message("7Z_TARGET = ${7Z_TARGET}")
 message("zstd_TARGET = ${zstd_TARGET}")
 message("xxHash_TARGET = ${xxHash_TARGET}")
