@@ -395,28 +395,153 @@ message("ANDROID_STL = ${ANDROID_STL}")
 build_root_init(${CMAKE_CURRENT_SOURCE_DIR}/cmake/packages ${CMAKE_CURRENT_BINARY_DIR}/BUILD_ROOT)
 
 if (WIN32)
-    build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/wineditline . libedit
+    build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/wineditline . LibEdit
+        "" # no extra c flags
+        "" # no extra cxx flags
+        "
+          -D BUILD_SHARED_LIBS=OFF
+        "
+    )
+else()
+    build_root_add_makefile_package(${CMAKE_CURRENT_SOURCE_DIR}/libedit-20230828-3.1 . LibEdit
+        "" # no extra c flags
+        "" # no extra cxx flags
+        "" # no extra configure arguments
+    )
+endif()
+
+build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/zlib . zlib
     "" # no extra c flags
     "" # no extra cxx flags
     "
       -D BUILD_SHARED_LIBS=ON
     "
-    )
-else()
-    build_root_add_makefile_package(${CMAKE_CURRENT_SOURCE_DIR}/libedit-20230828-3.1 . libedit
+)
+
+build_root_add_makefile_package(${CMAKE_CURRENT_SOURCE_DIR}/ZPack/externals/lz4 . lz4
     "" # no extra c flags
     "" # no extra cxx flags
-    "" # no extra configure arguments
-    )
-endif()
+    "
+      -D BUILD_SHARED_LIBS=ON
+    "
+)
 
 build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/lzma2301 . 7z
 "" # no extra c flags
 "" # no extra cxx flags
 "
-  -D BUILD_SHARED_LIBS=ON
+  -D BUILD_SHARED_LIBS=OFF
 "
 )
+
+build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/zstd build/cmake zstd
+    "" # no extra c flags
+    "" # no extra cxx flags
+    "
+      -D BUILD_SHARED_LIBS=ON
+    "
+)
+
+build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/xxHash cmake_unofficial xxHash
+    "" # no extra c flags
+    "" # no extra cxx flags
+    "
+      -D BUILD_SHARED_LIBS=ON
+    "
+)
+
+build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/bzip2 . bzip2
+    "" # no extra c flags
+    "" # no extra cxx flags
+    "
+      -D BUILD_SHARED_LIBS=ON
+    "
+)
+
+build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/libxml2 . libxml2
+    "" # no extra c flags
+    "" # no extra cxx flags
+    "
+      -D BUILD_SHARED_LIBS=ON
+    "
+)
+
+build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/openssl-cmake . openssl
+    "" # no extra c flags
+    "" # no extra cxx flags
+    "
+      -D BUILD_SHARED_LIBS=ON
+    "
+)
+
+build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/libexpat expat expat
+    "" # no extra c flags
+    "" # no extra cxx flags
+    "
+      -D BUILD_SHARED_LIBS=ON
+    "
+)
+
+build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/libarchive . libarchive
+    "" # no extra c flags
+    "" # no extra cxx flags
+    "
+      -D BUILD_SHARED_LIBS=ON
+    "
+)
+
+find_package(LibEdit REQUIRED)
+find_package(ZLIB REQUIRED)
+find_package(LZ4 REQUIRED)
+# find_package(LZMA REQUIRED) # replaced by 7z
+find_package(7z REQUIRED)
+find_package(zstd REQUIRED)
+find_package(xxHash REQUIRED)
+find_package(BZIP2 REQUIRED)
+find_package(LibXml2 REQUIRED)
+find_package(OpenSSL REQUIRED)
+find_package(EXPAT REQUIRED)
+find_package(Archive REQUIRED)
+
+message("LIBEDIT LIBS: ${LibEdit_LIBRARIES}")
+message("ZLIB LIBS: ${ZLIB_LIBRARIES}")
+message("LZ4 LIBS: ${LZ4_LIBRARIES}")
+# message("LZMA LIBS: ${LZMA_LIBRARIES}")
+message("7Z LIBS: ${7Z_LIBRARIES}")
+message("ZSTD LIB: ${zstd_LIBRARY}")
+message("XXHASH LIBS: ${xxHash_LIBRARIES}")
+message("BZip2 LIBS: ${BZIP2_LIBRARIES}")
+message("Xml2 LIBS: ${LIBXML2_LIBRARIES}")
+message("OpenSSL LIBS: ${OPENSSL_LIBRARIES}")
+message("Expat LIBS: ${EXPAT_LIBRARIES}")
+message("Archive LIBS: ${ARCHIVE_LIBRARIES}")
+message("LIBEDIT INCLUDE_DIRECTORIES: ${LibEdit_INCLUDE_DIRS}")
+message("ZLIB INCLUDE_DIRECTORIES: ${ZLIB_INCLUDE_DIRS}")
+message("LZ4 INCLUDE_DIRECTORIES: ${LZ4_INCLUDE_DIRS}")
+# message("LZMA INCLUDE_DIRECTORIES: ${LZMA_INCLUDE_DIRS}")
+message("7Z INCLUDE_DIRECTORIES: ${7Z_INCLUDE_DIRS}")
+message("ZSTD INCLUDE_DIRECTORIES: ${zstd_INCLUDE_DIRS}")
+message("XXHASH INCLUDE_DIRECTORIES: ${xxHash_INCLUDE_DIRS}")
+message("Xml2 INCLUDE_DIRECTORIES: ${LIBXML2_INCLUDE_DIRS}")
+message("OpenSSL INCLUDE_DIRECTORIES: ${OPENSSL_INCLUDE_DIR}")
+message("Expat INCLUDE_DIRECTORIES: ${EXPAT_INCLUDE_DIRS}")
+message("Archive INCLUDE_DIRECTORIES: ${ARCHIVE_INCLUDE_DIRS}")
+message("ZLIB_TARGET = ${ZLIB_TARGET}")
+message("LZ4_TARGET = ${LZ4_TARGET}")
+# message("LZMA_TARGET = ${LZMA_TARGET}")
+message("7Z_TARGET = ${7Z_TARGET}")
+message("zstd_TARGET = ${zstd_TARGET}")
+message("xxHash_TARGET = ${xxHash_TARGET}")
+message("BZIP2_TARGET = ${BZIP2_TARGET}")
+message("LIBXML2_TARGET = ${LIBXML2_TARGET}")
+message("OPENSSL_CRYPTO_TARGET = ${OPENSSL_CRYPTO_TARGET}")
+message("OPENSSL_SSL_TARGET = ${OPENSSL_SSL_TARGET}")
+message("EXPAT_TARGET = ${EXPAT_TARGET}")
+message("ARCHIVE_TARGET = ${ARCHIVE_TARGET}")
+exit()
+# set(ZPACK_USE_SYSTEM_LZ4 ON CACHE BOOL "" FORCE)
+# set(ZPACK_USE_SYSTEM_ZSTD ON CACHE BOOL "" FORCE)
+# set(ZPACK_USE_SYSTEM_XXHASH ON CACHE BOOL "" FORCE)
 
 # if(NOT COMMAND testBuilder_build)
 #     add_subdirectory(testBuilder)
@@ -673,59 +798,6 @@ build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/lzma2301 . 7z
 # "
 #   -D BUILD_SHARED_LIBS=ON
 # ")
-
-find_package(LibEdit REQUIRED)
-# find_package(ZLIB REQUIRED)
-# find_package(LZ4 REQUIRED)
-# find_package(LZMA REQUIRED)
-find_package(7z REQUIRED)
-# find_package(zstd REQUIRED)
-# find_package(xxHash REQUIRED)
-# find_package(BZIP2 REQUIRED)
-# find_package(LibXml2 REQUIRED)
-# find_package(OpenSSL REQUIRED)
-# find_package(EXPAT REQUIRED)
-# find_package(Archive REQUIRED)
-
-message("LIBEDIT LIBS: ${LibEdit_LIBRARIES}")
-# message("ZLIB LIBS: ${ZLIB_LIBRARIES}")
-# message("LZ4 LIBS: ${LZ4_LIBRARIES}")
-# message("LZMA LIBS: ${LZMA_LIBRARIES}")
-message("7Z LIBS: ${7Z_LIBRARIES}")
-# message("ZSTD LIB: ${zstd_LIBRARY}")
-# message("XXHASH LIBS: ${xxHash_LIBRARIES}")
-# message("BZip2 LIBS: ${BZIP2_LIBRARIES}")
-# message("Xml2 LIBS: ${LIBXML2_LIBRARIES}")
-# message("OpenSSL LIBS: ${OPENSSL_LIBRARIES}")
-# message("Expat LIBS: ${EXPAT_LIBRARIES}")
-# message("Archive LIBS: ${ARCHIVE_LIBRARIES}")
-message("LIBEDIT INCLUDE_DIRECTORIES: ${LibEdit_INCLUDE_DIRS}")
-# message("ZLIB INCLUDE_DIRECTORIES: ${ZLIB_INCLUDE_DIRS}")
-# message("LZ4 INCLUDE_DIRECTORIES: ${LZ4_INCLUDE_DIRS}")
-# message("LZMA INCLUDE_DIRECTORIES: ${LZMA_INCLUDE_DIRS}")
-message("7Z INCLUDE_DIRECTORIES: ${7Z_INCLUDE_DIRS}")
-# message("ZSTD INCLUDE_DIRECTORIES: ${zstd_INCLUDE_DIRS}")
-# message("XXHASH INCLUDE_DIRECTORIES: ${xxHash_INCLUDE_DIRS}")
-# message("Xml2 INCLUDE_DIRECTORIES: ${LIBXML2_INCLUDE_DIRS}")
-# message("OpenSSL INCLUDE_DIRECTORIES: ${OPENSSL_INCLUDE_DIR}")
-# message("Expat INCLUDE_DIRECTORIES: ${EXPAT_INCLUDE_DIRS}")
-# message("Archive INCLUDE_DIRECTORIES: ${ARCHIVE_INCLUDE_DIRS}")
-# message("ZLIB_TARGET = ${ZLIB_TARGET}")
-# message("LZ4_TARGET = ${LZ4_TARGET}")
-# message("LZMA_TARGET = ${LZMA_TARGET}")
-message("7Z_TARGET = ${7Z_TARGET}")
-# message("zstd_TARGET = ${zstd_TARGET}")
-# message("xxHash_TARGET = ${xxHash_TARGET}")
-# message("BZIP2_TARGET = ${BZIP2_TARGET}")
-# message("LIBXML2_TARGET = ${LIBXML2_TARGET}")
-# message("OPENSSL_CRYPTO_TARGET = ${OPENSSL_CRYPTO_TARGET}")
-# message("OPENSSL_SSL_TARGET = ${OPENSSL_SSL_TARGET}")
-# message("EXPAT_TARGET = ${EXPAT_TARGET}")
-# message("ARCHIVE_TARGET = ${ARCHIVE_TARGET}")
-# exit()
-# set(ZPACK_USE_SYSTEM_LZ4 ON CACHE BOOL "" FORCE)
-# set(ZPACK_USE_SYSTEM_ZSTD ON CACHE BOOL "" FORCE)
-# set(ZPACK_USE_SYSTEM_XXHASH ON CACHE BOOL "" FORCE)
 
 # if (LIBRARY_LLVM_18_STATIC_NEEDS_GENERATION)
 
