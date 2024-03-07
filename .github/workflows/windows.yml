@@ -27,6 +27,7 @@ jobs:
          git clone https://github.com/danielaparker/jsoncons --depth=1
          g++ --std=c++17 -I jsoncons/include check.cpp json.cpp -o check
          ./check 2 >> "$GITHUB_OUTPUT" # check for android [1] windows [2] linux [3] macos [4]
+       shell: bash
   
   build:
     needs: should_run
