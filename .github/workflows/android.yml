@@ -16,8 +16,8 @@ jobs:
     steps:
      - name: check
        run: |
-         commits=${{join(github.event.commits.*.message, ', ') }}
-         echo $commits
+         commits="${{join(github.event.commits.*.message, ', ') }}"
+         echo "$commits"
     
   build:
 # github workflow solver - android
