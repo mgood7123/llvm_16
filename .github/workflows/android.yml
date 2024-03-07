@@ -16,8 +16,14 @@ jobs:
     steps:
      - name: check
        run: |
-         commits=${{github.event.commits.*.message}}
-         declare -p commits
+         echo "commits:"
+         cat << EOF
+         ${{toJSON(github.event.commits.*)}}
+         EOF
+         echo "commit messages:"
+         cat << EOF
+         ${{toJSON(github.event.commits.*.message)}}
+         EOF
     
   build:
 # github workflow solver - android
