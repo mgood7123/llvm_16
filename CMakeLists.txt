@@ -453,7 +453,7 @@ build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/zstd build/cmake zstd
     "
 )
 
-build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/xxHash cmake_unofficial xxHash
+build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/ZPack/externals/xxHash cmake_unofficial xxHash
     "" # no extra c flags
     "" # no extra cxx flags
     "
