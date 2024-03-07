@@ -25,7 +25,7 @@ jobs:
          )";
          EOF
          git clone https://github.com/danielaparker/jsoncons --depth=1
-         g++ -I jsoncons check.cpp json.cpp -o check
+         g++ -I jsoncons/include check.cpp json.cpp -o check
          ./check 1 >> "$GITHUB_OUTPUT" # check for android [1] windows [2] linux [3] macos [4]
   
   build:
