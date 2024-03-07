@@ -259,7 +259,7 @@ jobs:
 
       - name: SYSTEMD - cmake build
         run: |
-          sudo docker container exec --user ubuntu --workdir /home/ubuntu git_local_ubuntu bash -c "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/\$(id -u ubuntu)/bus systemd-run --user --scope --collect /bin/bash -c \"cd git_repo ; NDK=/lib/android-sdk/ndk/25.2.9519653; NDK_LINUX=\\\$NDK/toolchains/llvm/prebuilt/linux-x86_64; make CMAKE_FLAGS=\\\"-DCMAKE_VERBOSE_MAKEFILE=TRUE -DCMAKE_TOOLCHAIN_FILE=\\\$NDK/build/cmake/android.toolchain.cmake -DANDROID_ABI=${{ matrix.android_abi }} -DANDROID_ARM_MODE=${{ matrix.android_arm_mode }} -DANDROID_ARM_NEON=${{ matrix.android_arm_neon }} -DANDROID_PLATFORM=${{ matrix.android_platform }} -DANDROID_STL=${{ matrix.android_stl }}\\\"\""
+          sudo docker container exec --user ubuntu --workdir /home/ubuntu git_local_ubuntu bash -c "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/\$(id -u ubuntu)/bus systemd-run --user --scope --collect /bin/bash -c \"cd git_repo ; NDK=/lib/android-sdk/ndk/25.2.9519653; NDK_LINUX=\\\$NDK/toolchains/llvm/prebuilt/linux-x86_64; make CMAKE_FLAGS=\\\"-DCMAKE_COLOR_DIAGNOSTICS=ON -DCMAKE_COLOR_MAKEFILE=ON -DCMAKE_TOOLCHAIN_FILE=\\\$NDK/build/cmake/android.toolchain.cmake -DANDROID_ABI=${{ matrix.android_abi }} -DANDROID_ARM_MODE=${{ matrix.android_arm_mode }} -DANDROID_ARM_NEON=${{ matrix.android_arm_neon }} -DANDROID_PLATFORM=${{ matrix.android_platform }} -DANDROID_STL=${{ matrix.android_stl }}\\\"\""
 
       # - uses: actions/upload-artifact@v3
       #   with:
