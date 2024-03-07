@@ -30,9 +30,6 @@ jobs:
   
   build:
     needs: should_run
-    concurrency:
-      group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-      cancel-in-progress: true
     strategy:
       matrix:
         include:
@@ -97,6 +94,10 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     name: ${{ matrix.name }} @ ${{ matrix.arch }}
+
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}-android-${{ matrix.android_platform }}-${{ matrix.arch }}
+      cancel-in-progress: true
 
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
