@@ -87,7 +87,7 @@ if(PDC_BUILD_SHARED)
     if(${PROJECT_NAME} STREQUAL "sdl2")
         if(PDC_WIDE OR PDC_UTF8)
             target_link_libraries(${PDCURSE_PROJ} ${EXTRA_LIBS}
-                ${SDL2_LIBRARIES} ${SDL2_TTF_LIBRARY} ${FT2_LIBRARY} ${ZLIB_LIBRARY}
+                ${SDL2_LIBRARIES} ${SDL2_TTF_LIBRARY} ${FT2_LIBRARY} ${ZLIB_LIBRARIES}
                 ${SDL2_DEP_LIBRARIES})
         else()
             target_link_libraries(${PDCURSE_PROJ} ${EXTRA_LIBS}

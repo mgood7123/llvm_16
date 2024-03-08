@@ -397,13 +397,6 @@ message("ANDROID_STL = ${ANDROID_STL}")
 
 build_root_init(${CMAKE_CURRENT_SOURCE_DIR}/cmake/packages ${CMAKE_CURRENT_BINARY_DIR}/BUILD_ROOT)
 
-build_root_exec_working_directory(${CMAKE_CURRENT_SOURCE_DIR}/libarchive
-autoreconf
-)
-build_root_exec_working_directory(${CMAKE_CURRENT_SOURCE_DIR}/libarchive
-ls -l build/cmake
-)
-exit()
 if (WIN32)
     build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/wineditline . LibEdit
         "" # no extra c flags
@@ -514,6 +507,7 @@ build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/libarchive . libarchive
     "" # no extra cxx flags
     "
       -D BUILD_SHARED_LIBS=OFF
+      -D ENABLE_LZO=ON
     "
 )
 
