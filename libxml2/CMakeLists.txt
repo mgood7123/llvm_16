@@ -423,7 +423,7 @@ if(LIBXML2_WITH_LZMA)
 	check_c_source_compiles(
 		"#include <lzma.h>\nint main(void){int ignored __attribute__((unused)); ignored = lzma_auto_decoder(0, 0. 0); return 0;}"
 	HAVE_LZMA_AUTO_DECODER)
-	cmake_pop_cmake_state()
+	cmake_pop_check_state()
 	if (NOT HAVE_LZMA_AUTO_DECODER)
 		message(FATAL_ERROR "libxml2 xzlib.c function xz_head needs lzma_auto_decoder but it either does not compile or was not found")
 	endif()
