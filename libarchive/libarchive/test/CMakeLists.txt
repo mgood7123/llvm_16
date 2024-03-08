@@ -291,6 +291,8 @@ IF(ENABLE_TEST)
     test_zip_filename_encoding.c
   )
 
+  message(STATUS "linking C executable 'libarchive_test' against these additional libraryes: ${ADDITIONAL_LIBS}")
+
   #
   # Register target
   #
