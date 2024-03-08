@@ -474,6 +474,7 @@ build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/libxml2 . libxml2
     "" # no extra cxx flags
     "
       -D BUILD_SHARED_LIBS=ON
+      -D LIBXML2_WITH_PYTHON=OFF
     "
 )
 
