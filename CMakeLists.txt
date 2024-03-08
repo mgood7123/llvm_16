@@ -494,6 +494,14 @@ build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/libexpat expat expat
     "
 )
 
+build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/lzo2-2.10 . lzo2
+    "" # no extra c flags
+    "" # no extra cxx flags
+    "
+      -D BUILD_SHARED_LIBS=ON
+    "
+)
+
 build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/libarchive . libarchive
     "" # no extra c flags
     "" # no extra cxx flags
