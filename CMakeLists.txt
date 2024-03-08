@@ -211,6 +211,7 @@ macro(build_root_add_cmake_package src relative_path_to_cmake_dir build_dir buil
 
   unset(extra_cmake_config_list)
   unset(extra_cmake_config_list CACHE)
+  message(STATUS "(should be empty) extra_cmake_config_list = ${extra_cmake_config_list}")
   string(REGEX MATCHALL "([^\"' \r\n\t;\\]+|[\\].|\"([^\"\\]+|[\\].)*\")+( +([^\"' \r\n\t;\\]+|[\\].|\"([^\"\\]+|[\\].)*\")+)*" extra_cmake_config_list "${extra_cmake_config}")
   unset(extra_cmake_config_list_str)
   unset(extra_cmake_config_list_str CACHE)
