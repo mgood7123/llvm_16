@@ -184,10 +184,6 @@ jobs:
         run: |
           sudo docker container exec --user ubuntu --workdir /home/ubuntu git_local_ubuntu bash -c "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/\$(id -u ubuntu)/bus systemd-run --user --scope --collect /bin/bash -c \"sudo apt install -y automake\""
 
-      - name: SYSTEMD - install python dev
-        run: |
-          sudo docker container exec --user ubuntu --workdir /home/ubuntu git_local_ubuntu bash -c "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/\$(id -u ubuntu)/bus systemd-run --user --scope --collect /bin/bash -c \"sudo apt install -y python3 python-dev-is-python3\""
-
       - name: copy GITHUB_WORKSPACE directory to docker
         run: |
           echo "copying $GITHUB_WORKSPACE to docker"
