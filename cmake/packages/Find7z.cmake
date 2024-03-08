@@ -11,7 +11,7 @@
 find_package(PkgConfig QUIET)
 pkg_check_modules(PC_7Z QUIET 7Z)
 
-set(CMAKE_FIND_DEBUG_MODE TRUE)
+set(CMAKE_FIND_DEBUG_MODE FALSE) # TRUE)
 
 find_path(7Z_INCLUDE_DIRS NAMES 7zVersion.h
   PATHS ${LLVM_BUILD_ROOT__ROOTFS}/include

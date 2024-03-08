@@ -34,7 +34,7 @@ This module will set the following variables in your project:
   version number as a string (ex: "5.0.3")
 #]=======================================================================]
 
-set(CMAKE_FIND_DEBUG_MODE TRUE)
+set(CMAKE_FIND_DEBUG_MODE FALSE) # TRUE)
 
 find_path(LZMA_INCLUDE_DIRS lzma.h
   PATHS ${LLVM_BUILD_ROOT__ROOTFS}/include

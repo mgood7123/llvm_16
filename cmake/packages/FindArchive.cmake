@@ -8,7 +8,7 @@
 find_package(PkgConfig QUIET)
 pkg_check_modules(PC_ARCHIVE QUIET Archive)
 
-set(CMAKE_FIND_DEBUG_MODE TRUE)
+set(CMAKE_FIND_DEBUG_MODE FALSE) # TRUE)
 
 find_path(ARCHIVE_INCLUDE_DIRS NAMES archive.h
   PATHS ${LLVM_BUILD_ROOT__ROOTFS}/include

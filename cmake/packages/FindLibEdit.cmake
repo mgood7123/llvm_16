@@ -17,7 +17,7 @@ find_package(PkgConfig QUIET)
 pkg_check_modules(PC_LIBEDIT QUIET libedit)
 
 
-set(CMAKE_FIND_DEBUG_MODE TRUE)
+set(CMAKE_FIND_DEBUG_MODE FALSE) # TRUE)
 
 find_path(LibEdit_INCLUDE_DIRS NAMES histedit.h
   PATHS ${LLVM_BUILD_ROOT__ROOTFS}/include

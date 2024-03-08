@@ -11,7 +11,7 @@
 find_package(PkgConfig QUIET)
 pkg_check_modules(PC_zstd QUIET zstd)
 
-set(CMAKE_FIND_DEBUG_MODE TRUE)
+set(CMAKE_FIND_DEBUG_MODE FALSE) # TRUE)
 
 find_path(zstd_INCLUDE_DIRS NAMES zstd.h
   PATHS ${LLVM_BUILD_ROOT__ROOTFS}/include

@@ -11,7 +11,7 @@
 find_package(PkgConfig QUIET)
 pkg_check_modules(PC_xxHash QUIET xxHash)
 
-set(CMAKE_FIND_DEBUG_MODE TRUE)
+set(CMAKE_FIND_DEBUG_MODE FALSE) # TRUE)
 
 find_path(xxHash_INCLUDE_DIRS NAMES xxhash.h
   PATHS ${LLVM_BUILD_ROOT__ROOTFS}/include

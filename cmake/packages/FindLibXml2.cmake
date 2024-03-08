@@ -57,7 +57,7 @@ The following cache variables may also be set:
 find_package(PkgConfig QUIET)
 PKG_CHECK_MODULES(PC_LIBXML QUIET libxml-2.0)
 
-set(CMAKE_FIND_DEBUG_MODE TRUE)
+set(CMAKE_FIND_DEBUG_MODE FALSE) # TRUE)
 
 find_path(LIBXML2_INCLUDE_DIR NAMES libxml/xpath.h
   PATHS ${LLVM_BUILD_ROOT__ROOTFS}/include/libxml2

@@ -11,7 +11,7 @@
 find_package(PkgConfig QUIET)
 pkg_check_modules(PC_LZ4 QUIET LZ4)
 
-set(CMAKE_FIND_DEBUG_MODE TRUE)
+set(CMAKE_FIND_DEBUG_MODE FALSE) # TRUE)
 
 find_path(LZ4_INCLUDE_DIRS NAMES lz4.h
   PATHS ${LLVM_BUILD_ROOT__ROOTFS}/include

@@ -8,7 +8,7 @@
 find_package(PkgConfig QUIET)
 pkg_check_modules(PC_LZO2 QUIET LZO2)
 
-set(CMAKE_FIND_DEBUG_MODE TRUE)
+set(CMAKE_FIND_DEBUG_MODE FALSE) # TRUE)
 
 find_path(LZO2_INCLUDE_DIRS NAMES lzo/lzoconf.h
   PATHS ${LLVM_BUILD_ROOT__ROOTFS}/include
