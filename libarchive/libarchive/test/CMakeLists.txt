@@ -296,7 +296,9 @@ IF(ENABLE_TEST)
   #
   ADD_EXECUTABLE(libarchive_test ${libarchive_test_SOURCES})
   TARGET_LINK_LIBRARIES(libarchive_test archive_static ${ADDITIONAL_LIBS} m)
-  SET_PROPERTY(TARGET libarchive_test PROPERTY COMPILE_DEFINITIONS LIBARCHIVE_STATIC LIST_H LZMA_API_STATIC)
+  TARGET_COMPILE_DEFINITIONS(libarchive_test PRIVATE LIBARCHIVE_STATIC)
+  TARGET_COMPILE_DEFINITIONS(libarchive_test PRIVATE LIST_H)
+  TARGET_COMPILE_DEFINITIONS(libarchive_test PRIVATE LZMA_API_STATIC)
 
   #
   # Generate list.h by grepping DEFINE_TEST() lines out of the C sources.
@@ -324,7 +326,8 @@ IF(ENABLE_TEST)
 
   # Experimental new test handling
   ADD_CUSTOM_TARGET(run_libarchive_test
-	COMMAND	libarchive_test -r ${CMAKE_CURRENT_SOURCE_DIR} -vv)
+	  COMMAND	libarchive_test -r ${CMAKE_CURRENT_SOURCE_DIR} -vv
+  )
   ADD_DEPENDENCIES(run_all_tests run_libarchive_test)
 ENDIF(ENABLE_TEST)
 
