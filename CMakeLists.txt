@@ -238,10 +238,10 @@ macro(build_root_add_cmake_package src relative_path_to_cmake_dir build_dir buil
   build_root_exec_cmake(
     # configure
     ${CMAKE_COMMAND}
+    ${extra_cmake_config_list_str_actual}
     -G "${CMAKE_GENERATOR}"
     -S "${BUILD_ROOT_BUILD_DIRECTORY}/SRC/${build_dir}/${relative_path_to_cmake_dir}"
     -B "${BUILD_ROOT_BUILD_DIRECTORY}/BUILD/${build_dir}"
-    ${extra_cmake_config_list_str_actual}
   )
   build_root_message("-------- BUILDING CMAKE PROJECT: '${build_dir}' -- CONFIGURED")
   build_root_message("-------- BUILDING CMAKE PROJECT: '${build_dir}' -- BUILDING")
