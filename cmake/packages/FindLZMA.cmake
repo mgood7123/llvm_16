@@ -34,11 +34,6 @@ This module will set the following variables in your project:
   version number as a string (ex: "5.0.3")
 #]=======================================================================]
 
-unset(LZMA_CMAKE_REQUIRED_QUIET_SAVE)
-unset(LZMA_CMAKE_REQUIRED_QUIET_SAVE CACHE)
-set(LZMA_CMAKE_REQUIRED_QUIET_SAVE ${CMAKE_REQUIRED_QUIET})
-set(CMAKE_REQUIRED_QUIET FALSE)
-
 set(CMAKE_FIND_DEBUG_MODE TRUE)
 
 find_path(LZMA_INCLUDE_DIRS lzma.h
@@ -179,7 +174,3 @@ if (LZMA_FOUND AND NOT TARGET LLVM_STATIC_LZMA)
                         INTERFACE_INCLUDE_DIRECTORIES ${LZMA_INCLUDE_DIRS})
   set(LZMA_TARGET LLVM_STATIC_LZMA)
 endif()
-
-set(CMAKE_REQUIRED_QUIET ${LZMA_CMAKE_REQUIRED_QUIET_SAVE})
-unset(LZMA_CMAKE_REQUIRED_QUIET_SAVE)
-unset(LZMA_CMAKE_REQUIRED_QUIET_SAVE CACHE)
