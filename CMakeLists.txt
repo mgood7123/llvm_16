@@ -217,6 +217,8 @@ macro(build_root_add_cmake_package src relative_path_to_cmake_dir build_dir buil
   message(STATUS "(could be empty) extra_cmake_config_list = ${extra_cmake_config_list}")
   unset(extra_cmake_config_list_str)
   unset(extra_cmake_config_list_str CACHE)
+  unset(extra_cmake_config_list_str_actual)
+  unset(extra_cmake_config_list_str_actual CACHE)
   foreach(ARG IN ITEMS ${extra_cmake_config_list})
       if (extra_cmake_config_list_str)
         string(APPEND extra_cmake_config_list_str " ")
