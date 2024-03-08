@@ -291,15 +291,12 @@ IF(ENABLE_TEST)
     test_zip_filename_encoding.c
   )
 
-  message(STATUS "linking C executable 'libarchive_test' against these additional libraryes: ${ADDITIONAL_LIBS}")
-
   #
   # Register target
   #
   ADD_EXECUTABLE(libarchive_test ${libarchive_test_SOURCES})
   TARGET_LINK_LIBRARIES(libarchive_test archive_static ${ADDITIONAL_LIBS})
-  SET_PROPERTY(TARGET libarchive_test PROPERTY COMPILE_DEFINITIONS
-    LIBARCHIVE_STATIC LIST_H)
+  SET_PROPERTY(TARGET libarchive_test PROPERTY COMPILE_DEFINITIONS LIBARCHIVE_STATIC LIST_H LZMA_API_STATIC)
 
   #
   # Generate list.h by grepping DEFINE_TEST() lines out of the C sources.
