@@ -399,12 +399,6 @@ if(LIBXML2_WITH_ICU)
 	endif()
 endif()
 
-# Enable CMAKE_PUSH_CHECK_STATE() and CMAKE_POP_CHECK_STATE() macros
-# saving and restoring the state of the variables.
-include(CMakePushCheckState)
-
-include(CheckCSourceCompiles)
-
 if(LIBXML2_WITH_LZMA)
 	target_link_libraries(LibXml2 PRIVATE ${LZMA_LIBRARIES})
 	target_include_directories(LibXml2 PRIVATE ${LZMA_INCLUDE_DIRS})
@@ -415,24 +409,6 @@ if(LIBXML2_WITH_LZMA)
 		list(APPEND XML_PC_REQUIRES liblzma)
 	else()
 		list(APPEND XML_PC_LIBS "${LZMA_LDFLAGS}")
-	endif()
-	cmake_push_check_state()
-	SET(CMAKE_REQUIRED_INCLUDES ${LZMA_INCLUDE_DIRS})
-	SET(CMAKE_REQUIRED_LIBRARIES ${LZMA_LIBRARIES})
-	# libxml2 xzlib.c function xz_head needs lzma_auto_decoder, we must make sure it is available
-	check_c_source_compiles(
-		"#include <lzma.h>\nint main(void){int ignored __attribute__((unused)); ignored = lzma_auto_decoder(0, 0. 0); return 0;}"
-	HAVE_LZMA_AUTO_DECODER)
-	cmake_pop_check_state()
-	if (NOT HAVE_LZMA_AUTO_DECODER)
-		message(STATUS "LZMA: found :           ${LZMA_FOUND}")
-		message(STATUS "LZMA: include_dirs :    ${LZMA_INCLUDE_DIRS}")
-		message(STATUS "LZMA: lib :             ${LZMA_LIBRARIES}")
-		message(STATUS "LZMA: version :         ${LZMA_VERSION_STRING}")
-		message(STATUS "LZMA: has auto decode : ${LZMA_HAS_AUTO_DECODER}")
-		message(STATUS "LZMA: has easy decode : ${LZMA_HAS_EASY_ENCODER}")
-		message(STATUS "LZMA: has lzma preset : ${LZMA_HAS_LZMA_PRESET}")
-		message(FATAL_ERROR "libxml2 xzlib.c function xz_head needs lzma_auto_decoder but it either does not compile or was not found")
 	endif()
 endif()
 
