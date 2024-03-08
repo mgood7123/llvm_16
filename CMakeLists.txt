@@ -209,10 +209,12 @@ macro(build_root_add_cmake_package src relative_path_to_cmake_dir build_dir buil
     set(HAS_CMAKE_COLOR ON)
   endif()
 
+  message(STATUS "(could be empty) extra_cmake_config = ${extra_cmake_config}")
   unset(extra_cmake_config_list)
   unset(extra_cmake_config_list CACHE)
   message(STATUS "(should be empty) extra_cmake_config_list = ${extra_cmake_config_list}")
   string(REGEX MATCHALL "([^\"' \r\n\t;\\]+|[\\].|\"([^\"\\]+|[\\].)*\")+( +([^\"' \r\n\t;\\]+|[\\].|\"([^\"\\]+|[\\].)*\")+)*" extra_cmake_config_list "${extra_cmake_config}")
+  message(STATUS "(could be empty) extra_cmake_config_list = ${extra_cmake_config_list}")
   unset(extra_cmake_config_list_str)
   unset(extra_cmake_config_list_str CACHE)
   foreach(ARG IN ITEMS ${extra_cmake_config_list})
