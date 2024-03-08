@@ -391,7 +391,7 @@ message("ANDROID_STL = ${ANDROID_STL}")
 #   "" # no extra c flags
 #   "" # no extra cxx flags
 #   "
-#     -D BUILD_SHARED_LIBS=ON
+#     -D BUILD_SHARED_LIBS=OFF
 #   ")
 # endif()
 
@@ -417,7 +417,7 @@ build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/zlib . zlib
     "" # no extra c flags
     "" # no extra cxx flags
     "
-      -D BUILD_SHARED_LIBS=ON
+      -D BUILD_SHARED_LIBS=OFF
     "
 )
 
@@ -425,7 +425,7 @@ build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/ZPack/externals/lz4 bui
     "" # no extra c flags
     "" # no extra cxx flags
     "
-      -D BUILD_SHARED_LIBS=ON
+      -D BUILD_SHARED_LIBS=OFF
     "
 )
 
@@ -449,7 +449,7 @@ build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/zstd build/cmake zstd
     "" # no extra c flags
     "" # no extra cxx flags
     "
-      -D BUILD_SHARED_LIBS=ON
+      -D BUILD_SHARED_LIBS=OFF
     "
 )
 
@@ -457,7 +457,7 @@ build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/ZPack/externals/xxHash 
     "" # no extra c flags
     "" # no extra cxx flags
     "
-      -D BUILD_SHARED_LIBS=ON
+      -D BUILD_SHARED_LIBS=OFF
     "
 )
 
@@ -465,7 +465,7 @@ build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/bzip2 . bzip2
     "" # no extra c flags
     "" # no extra cxx flags
     "
-      -D BUILD_SHARED_LIBS=ON
+      -D BUILD_SHARED_LIBS=OFF
     "
 )
 
@@ -473,7 +473,7 @@ build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/libxml2 . libxml2
     "" # no extra c flags
     "" # no extra cxx flags
     "
-      -D BUILD_SHARED_LIBS=ON
+      -D BUILD_SHARED_LIBS=OFF
       -D LIBXML2_WITH_PYTHON=OFF
     "
 )
@@ -482,7 +482,7 @@ build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/openssl-cmake . openssl
     "" # no extra c flags
     "" # no extra cxx flags
     "
-      -D BUILD_SHARED_LIBS=ON
+      -D BUILD_SHARED_LIBS=OFF
     "
 )
 
@@ -490,7 +490,7 @@ build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/libexpat expat expat
     "" # no extra c flags
     "" # no extra cxx flags
     "
-      -D BUILD_SHARED_LIBS=ON
+      -D BUILD_SHARED_LIBS=OFF
     "
 )
 
@@ -498,7 +498,7 @@ build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/lzo2-2.10 . lzo2
     "" # no extra c flags
     "" # no extra cxx flags
     "
-      -D BUILD_SHARED_LIBS=ON
+      -D BUILD_SHARED_LIBS=OFF
     "
 )
 
@@ -506,7 +506,7 @@ build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/libarchive . libarchive
     "" # no extra c flags
     "" # no extra cxx flags
     "
-      -D BUILD_SHARED_LIBS=ON
+      -D BUILD_SHARED_LIBS=OFF
     "
 )
 
@@ -808,7 +808,7 @@ exit()
 #   "" # no extra c flags
 #   "" # no extra cxx flags
 #   "
-#     -D BUILD_SHARED_LIBS=ON
+#     -D BUILD_SHARED_LIBS=OFF
 #   ")
 # endif()
 
@@ -816,7 +816,7 @@ exit()
 # "" # no extra c flags
 # "" # no extra cxx flags
 # "
-#   -D BUILD_SHARED_LIBS=ON
+#   -D BUILD_SHARED_LIBS=OFF
 # ")
 
 # if (LIBRARY_LLVM_18_STATIC_NEEDS_GENERATION)
