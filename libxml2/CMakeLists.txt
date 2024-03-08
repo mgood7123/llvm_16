@@ -399,6 +399,12 @@ if(LIBXML2_WITH_ICU)
 	endif()
 endif()
 
+# Enable CMAKE_PUSH_CHECK_STATE() and CMAKE_POP_CHECK_STATE() macros
+# saving and restoring the state of the variables.
+include(CMakePushCheckState)
+
+include(CheckCSourceCompiles)
+
 if(LIBXML2_WITH_LZMA)
 	target_link_libraries(LibXml2 PRIVATE ${LZMA_LIBRARIES})
 	target_include_directories(LibXml2 PRIVATE ${LZMA_INCLUDE_DIRS})
@@ -410,6 +416,12 @@ if(LIBXML2_WITH_LZMA)
 	else()
 		list(APPEND XML_PC_LIBS "${LZMA_LDFLAGS}")
 	endif()
+	cmake_push_check_state()
+	# libxml2 xzlib.c function xz_head needs lzma_auto_decoder, we must make sure it is available
+	check_c_source_compiled(
+		"#include <lzma.h>\nint main(void){lzma_ret ignored __attribute__((unused)); ignored = lzma_auto_decoder(0, 0. 0); return 0;}"
+	HAVE_LZMA_AUTO_DECODER)
+	cmake_pop_cmake_state()
 endif()
 
 if(LIBXML2_WITH_THREADS)
