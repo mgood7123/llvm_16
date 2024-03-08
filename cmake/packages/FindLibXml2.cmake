@@ -116,17 +116,6 @@ endif()
 set(LIBXML2_INCLUDE_DIRS ${LIBXML2_INCLUDE_DIR})
 set(LIBXML2_LIBRARIES ${LIBXML2_LIBRARY})
 
-# Did we find the same installation as pkg-config?
-# If so, use additional information from it.
-unset(LIBXML2_DEFINITIONS)
-foreach(libxml2_pc_lib_dir IN LISTS PC_LIBXML_LIBDIR PC_LIBXML_LIBRARY_DIRS)
-  if (LIBXML2_LIBRARY MATCHES "^${libxml2_pc_lib_dir}")
-    list(APPEND LIBXML2_INCLUDE_DIRS ${PC_LIBXML_INCLUDE_DIRS})
-    set(LIBXML2_DEFINITIONS ${PC_LIBXML_CFLAGS_OTHER})
-    break()
-  endif()
-endforeach()
-
 include(FindPackageHandleStandardArgs)
 FIND_PACKAGE_HANDLE_STANDARD_ARGS(LibXml2
                                   REQUIRED_VARS LIBXML2_LIBRARY LIBXML2_INCLUDE_DIR LIBXML2_INCLUDE_DIRS LIBXML2_LIBRARIES
@@ -143,7 +132,6 @@ if(LibXml2_FOUND AND NOT TARGET LLVM_STATIC_LibXml2::LibXml2)
   add_library(LLVM_STATIC_LibXml2::LibXml2 UNKNOWN IMPORTED)
   set_target_properties(LLVM_STATIC_LibXml2::LibXml2 PROPERTIES IMPORTED_LOCATION ${LIBXML2_LIBRARY})
   set_target_properties(LLVM_STATIC_LibXml2::LibXml2 PROPERTIES INTERFACE_INCLUDE_DIRECTORIES ${LIBXML2_INCLUDE_DIRS})
-  set_target_properties(LLVM_STATIC_LibXml2::LibXml2 PROPERTIES INTERFACE_COMPILE_OPTIONS ${LIBXML2_DEFINITIONS})
   set(LIBXML2_TARGET LLVM_STATIC_LibXml2::LibXml2)
 endif()
 
