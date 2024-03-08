@@ -420,7 +420,7 @@ if(LIBXML2_WITH_LZMA)
 	SET(CMAKE_REQUIRED_INCLUDES ${LZMA_INCLUDE_DIRS})
 	SET(CMAKE_REQUIRED_LIBRARIES ${LZMA_LIBRARIES})
 	# libxml2 xzlib.c function xz_head needs lzma_auto_decoder, we must make sure it is available
-	check_c_source_compiled(
+	check_c_source_compiles(
 		"#include <lzma.h>\nint main(void){int ignored __attribute__((unused)); ignored = lzma_auto_decoder(0, 0. 0); return 0;}"
 	HAVE_LZMA_AUTO_DECODER)
 	cmake_pop_cmake_state()
