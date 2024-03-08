@@ -541,7 +541,7 @@ IF(LZMA_FOUND)
 		message(STATUS "LZMA: include_dirs : ${LZMA_INCLUDE_DIRS}")
 		message(STATUS "LZMA: lib :          ${LZMA_LIBRARIES}")
 		message(STATUS "LZMA: version :      ${LZMA_VERSION_STRING}")
-		message(FATAL_ERROR "libxml2 xzlib.c function xz_head needs lzma_auto_decoder but it either does not compile or was not found")
+		message(FATAL_ERROR "libarchive - libxml2 xzlib.c function xz_head needs lzma_auto_decoder but it either does not compile or was not found")
 	endif()
 ELSE(LZMA_FOUND)
 # LZMA not found and will not be used.
