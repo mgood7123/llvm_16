@@ -114,7 +114,7 @@ if(LIBXML2_INCLUDE_DIR AND EXISTS "${LIBXML2_INCLUDE_DIR}/libxml/xmlversion.h")
 endif()
 
 set(LIBXML2_INCLUDE_DIRS ${LIBXML2_INCLUDE_DIR})
-set(LIBXML2_LIBRARIES ${LIBXML2_LIBRARY};m) # libxml2 requires libm
+set(LIBXML2_LIBRARIES ${LIBXML2_LIBRARY})
 
 # Did we find the same installation as pkg-config?
 # If so, use additional information from it.
