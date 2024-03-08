@@ -227,6 +227,8 @@ macro(build_root_add_cmake_package src relative_path_to_cmake_dir build_dir buil
       string(APPEND extra_cmake_config_list_str "'${ARG}'")
       string(APPEND extra_cmake_config_list_str_actual "${ARG}")
   endforeach()
+  message(STATUS "(could be empty) extra_cmake_config_list_str = ${extra_cmake_config_list_str}")
+  message(STATUS "(could be empty) extra_cmake_config_list_str_actual = ${extra_cmake_config_list_str_actual}")
 
   build_root_message("-------- BUILDING CMAKE PROJECT: '${build_dir}'")
   
