@@ -114,7 +114,7 @@ if(LIBXML2_INCLUDE_DIR AND EXISTS "${LIBXML2_INCLUDE_DIR}/libxml/xmlversion.h")
 endif()
 
 set(LIBXML2_INCLUDE_DIRS ${LIBXML2_INCLUDE_DIR})
-set(LIBXML2_LIBRARIES ${LIBXML2_LIBRARY})
+set(LIBXML2_LIBRARIES ${LIBXML2_LIBRARY};m) # libxml2 requires libm
 
 # Did we find the same installation as pkg-config?
 # If so, use additional information from it.
@@ -129,10 +129,10 @@ endforeach()
 
 include(FindPackageHandleStandardArgs)
 FIND_PACKAGE_HANDLE_STANDARD_ARGS(LibXml2
-                                  REQUIRED_VARS LIBXML2_LIBRARY LIBXML2_INCLUDE_DIR
+                                  REQUIRED_VARS LIBXML2_LIBRARY LIBXML2_INCLUDE_DIR LIBXML2_INCLUDE_DIRS LIBXML2_LIBRARIES
                                   VERSION_VAR LIBXML2_VERSION_STRING)
 
-mark_as_advanced(LIBXML2_INCLUDE_DIR LIBXML2_LIBRARY LIBXML2_XMLLINT_EXECUTABLE)
+mark_as_advanced(LIBXML2_INCLUDE_DIR LIBXML2_INCLUDE_DIRS LIBXML2_LIBRARY LIBXML2_LIBRARIES LIBXML2_XMLLINT_EXECUTABLE)
 
 message(STATUS "LibXml2: found :        ${LIBXML2_FOUND}")
 message(STATUS "LibXml2: include_dirs : ${LIBXML2_INCLUDE_DIRS}")
