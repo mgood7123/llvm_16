@@ -104,6 +104,10 @@ jobs:
         run: |
           pacboy -S --noconfirm --needed groff
 
+      - name: install git
+        run: |
+          pacboy -S --noconfirm --needed git
+
       - name: cmake build - Debug - Generate
         run: |
           export MSYS=winsymlinks:native
