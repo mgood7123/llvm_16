@@ -397,9 +397,6 @@ message("ANDROID_STL = ${ANDROID_STL}")
 
 build_root_init(${CMAKE_CURRENT_SOURCE_DIR}/cmake/packages ${CMAKE_CURRENT_BINARY_DIR}/BUILD_ROOT)
 
-build_root_exec_working_directory(${CMAKE_CURRENT_SOURCE_DIR} git clone git://git.savannah.gnu.org/libiconv.git libiconv --recursive --depth=1)
-build_root_exec_working_directory(${CMAKE_CURRENT_SOURCE_DIR}/libiconv ./autopull.sh)
-
 # iconv does not depend on any libs
 build_root_add_makefile_package(${CMAKE_CURRENT_SOURCE_DIR}/libiconv . iconv
     "" # no extra c flags

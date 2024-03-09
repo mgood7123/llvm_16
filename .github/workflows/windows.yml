@@ -112,6 +112,16 @@ jobs:
         run: |
           pacboy -S --noconfirm --needed gettext
 
+      - name: clone libiconv
+        run: |
+          export MSYS=winsymlinks:native
+          git clone git://git.savannah.gnu.org/libiconv.git libiconv --recursive --depth=1
+
+      - name: libiconv autopull.sh
+        run: |
+          export MSYS=winsymlinks:native
+          cd libiconv ; ./autopull.sh
+
       - name: cmake build - Debug - Generate
         run: |
           export MSYS=winsymlinks:native

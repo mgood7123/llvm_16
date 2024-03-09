@@ -259,7 +259,18 @@ jobs:
         run: |
           echo "copying $GITHUB_WORKSPACE to docker"
           sudo docker cp $GITHUB_WORKSPACE git_local_ubuntu:/home/ubuntu/git_repo
-          sudo docker container exec --user ubuntu --workdir /home/ubuntu git_local_ubuntu bash -c "sudo chown -R ubuntu:ubuntu git_repo"
+
+      - name: SYSTEMD - chown docker GITHUB_WORKSPACE directory
+        run: |
+          sudo docker container exec --user ubuntu --workdir /home/ubuntu git_local_ubuntu bash -c "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/\$(id -u ubuntu)/bus systemd-run --user --scope --collect /bin/bash -c \"sudo chown -R ubuntu:ubuntu git_repo\"
+
+      - name: SYSTEMD - clone libiconv
+        run: |
+          sudo docker container exec --user ubuntu --workdir /home/ubuntu git_local_ubuntu bash -c "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/\$(id -u ubuntu)/bus systemd-run --user --scope --collect /bin/bash -c \"git clone git://git.savannah.gnu.org/libiconv.git libiconv --recursive --depth=1\""
+
+      - name: SYSTEMD - libiconv autopull.sh
+        run: |
+          sudo docker container exec --user ubuntu --workdir /home/ubuntu git_local_ubuntu bash -c "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/\$(id -u ubuntu)/bus systemd-run --user --scope --collect /bin/bash -c \"cd libiconv ; ./autopull.sh \""
 
       - name: SYSTEMD - make help
         run: |
