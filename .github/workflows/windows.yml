@@ -80,9 +80,21 @@ jobs:
         run: |
           pacboy -Sy
 
-      - name: install packages
+      - name: install clang 17
         run: |
-          pacboy -S --noconfirm --needed clang:p make:p cmake:p autotools:p
+          pacboy -S --noconfirm --needed clang:p
+
+      - name: install cmake
+        run: |
+          pacboy -S --noconfirm --needed make:p cmake:p
+
+      - name: install autotools
+        run: |
+          pacboy -S --noconfirm --needed autotools:p
+
+      - name: install patch
+        run: |
+          pacboy -S --noconfirm --needed patch:p
 
       - name: cmake build - Debug - Generate
         run: |
