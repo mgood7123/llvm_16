@@ -262,7 +262,7 @@ jobs:
 
       - name: SYSTEMD - chown docker GITHUB_WORKSPACE directory
         run: |
-          sudo docker container exec --user ubuntu --workdir /home/ubuntu git_local_ubuntu bash -c "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/\$(id -u ubuntu)/bus systemd-run --user --scope --collect /bin/bash -c \"sudo chown -R ubuntu:ubuntu git_repo\"""
+          sudo docker container exec --user ubuntu --workdir /home/ubuntu git_local_ubuntu bash -c "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/\$(id -u ubuntu)/bus systemd-run --user --scope --collect /bin/bash -c \"sudo chown -R ubuntu:ubuntu git_repo\""
 
       - name: SYSTEMD - clone libiconv
         run: |
