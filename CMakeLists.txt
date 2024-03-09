@@ -115,11 +115,11 @@ macro (build_root_exec_cmake)
         "-DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}"
         "-DCMAKE_C_STANDARD=${CMAKE_C_STANDARD}"
         "-DCMAKE_C_STANDARD_REQUIRED=${CMAKE_C_STANDARD_REQUIRED}"
-        "-DCMAKE_C_FLAGS=${CMAKE_C_FLAGS} ${build_path_c_flags}"
+        "-DCMAKE_C_FLAGS=${CMAKE_C_FLAGS} ${new_line_seperated_extra_c_flags}"
         "-DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}"
         "-DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD}"
         "-DCMAKE_CXX_STANDARD_REQUIRED=${CMAKE_CXX_STANDARD_REQUIRED}"
-        "-DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS} ${build_path_cxx_flags}"
+        "-DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS} ${new_line_seperated_extra_cxx_flags}"
         "-DCMAKE_MODULE_LINKER_FLAGS=${CMAKE_MODULE_LINKER_FLAGS}"
         "-DCMAKE_SHARED_LINKER_FLAGS=${CMAKE_SHARED_LINKER_FLAGS}"
         "-DCMAKE_EXE_LINKER_FLAGS=${CMAKE_EXE_LINKER_FLAGS}"
@@ -182,7 +182,7 @@ macro(build_root_init cmake_packages_dir build_root_dir)
   build_root_set_var(BUILD_ROOT_BUILD_DIRECTORY ${build_root_dir})
 endmacro()
 
-macro(build_root_add_cmake_package src relative_path_to_cmake_dir build_dir build_path_c_flags build_path_cxx_flags extra_cmake_config)
+macro(build_root_add_cmake_package src relative_path_to_cmake_dir build_dir new_line_seperated_extra_c_flags new_line_seperated_extra_cxx_flags new_line_seperated_extra_cmake_config)
   build_root_message("BUILD_ROOT_CMAKE_PACKAGE_DIRECTORY is '${BUILD_ROOT_CMAKE_PACKAGE_DIRECTORY}'")
   build_root_message("BUILD_ROOT_BUILD_DIRECTORY is '${BUILD_ROOT_BUILD_DIRECTORY}'")
   build_root_set_var(${build_dir}_ROOT ${build_dir})
@@ -209,21 +209,21 @@ macro(build_root_add_cmake_package src relative_path_to_cmake_dir build_dir buil
     set(HAS_CMAKE_COLOR ON)
   endif()
 
-  message(STATUS "(could be empty) extra_cmake_config = ${extra_cmake_config}")
-  unset(extra_cmake_config_list)
-  unset(extra_cmake_config_list CACHE)
-  message(STATUS "(should be empty) extra_cmake_config_list = ${extra_cmake_config_list}")
-  string(REGEX MATCHALL "([^\"' \r\n\t;\\]+|[\\].|\"([^\"\\]+|[\\].)*\")+( +([^\"' \r\n\t;\\]+|[\\].|\"([^\"\\]+|[\\].)*\")+)*" extra_cmake_config_list "${extra_cmake_config}")
-  message(STATUS "(could be empty) extra_cmake_config_list = ${extra_cmake_config_list}")
-  unset(extra_cmake_config_list_str)
-  unset(extra_cmake_config_list_str CACHE)
-  foreach(ARG IN ITEMS ${extra_cmake_config_list})
-      if (extra_cmake_config_list_str)
-        string(APPEND extra_cmake_config_list_str " ")
+  message(STATUS "(could be empty) new_line_seperated_extra_cmake_config = ${new_line_seperated_extra_cmake_config}")
+  unset(new_line_seperated_extra_cmake_config_list)
+  unset(new_line_seperated_extra_cmake_config_list CACHE)
+  message(STATUS "(should be empty) new_line_seperated_extra_cmake_config_list = ${new_line_seperated_extra_cmake_config_list}")
+  string(REGEX MATCHALL "([^\"' \r\n\t;\\]+|[\\].|\"([^\"\\]+|[\\].)*\")+( +([^\"' \r\n\t;\\]+|[\\].|\"([^\"\\]+|[\\].)*\")+)*" new_line_seperated_extra_cmake_config_list "${new_line_seperated_extra_cmake_config}")
+  message(STATUS "(could be empty) new_line_seperated_extra_cmake_config_list = ${new_line_seperated_extra_cmake_config_list}")
+  unset(new_line_seperated_extra_cmake_config_list_str)
+  unset(new_line_seperated_extra_cmake_config_list_str CACHE)
+  foreach(ARG IN ITEMS ${new_line_seperated_extra_cmake_config_list})
+      if (new_line_seperated_extra_cmake_config_list_str)
+        string(APPEND new_line_seperated_extra_cmake_config_list_str " ")
       endif()
-      string(APPEND extra_cmake_config_list_str "'${ARG}'")
+      string(APPEND new_line_seperated_extra_cmake_config_list_str "'${ARG}'")
   endforeach()
-  message(STATUS "(could be empty) extra_cmake_config_list_str = ${extra_cmake_config_list_str}")
+  message(STATUS "(could be empty) new_line_seperated_extra_cmake_config_list_str = ${new_line_seperated_extra_cmake_config_list_str}")
 
   build_root_message("-------- BUILDING CMAKE PROJECT: '${build_dir}'")
   
@@ -231,7 +231,7 @@ macro(build_root_add_cmake_package src relative_path_to_cmake_dir build_dir buil
   build_root_exec_cmake(
     # configure
     ${CMAKE_COMMAND}
-    ${extra_cmake_config_list_str}
+    ${new_line_seperated_extra_cmake_config_list_str}
     -G "${CMAKE_GENERATOR}"
     -S "${BUILD_ROOT_BUILD_DIRECTORY}/SRC/${build_dir}/${relative_path_to_cmake_dir}"
     -B "${BUILD_ROOT_BUILD_DIRECTORY}/BUILD/${build_dir}"
@@ -255,7 +255,7 @@ macro(build_root_add_cmake_package src relative_path_to_cmake_dir build_dir buil
   build_root_message("-------- BUILT CMAKE PROJECT: '${build_dir}'")
 endmacro()
 
-macro(build_root_add_makefile_package src relative_path_to_makefile_dir build_dir build_path_c_flags build_path_cxx_flags extra_makefile_config)
+macro(build_root_add_makefile_package src relative_path_to_makefile_dir build_dir new_line_seperated_extra_c_flags new_line_seperated_extra_cxx_flags new_line_seperated_extra_makefile_config)
   build_root_message("BUILD_ROOT_BUILD_DIRECTORY is '${BUILD_ROOT_BUILD_DIRECTORY}'")
   build_root_set_var(${build_dir}_ROOT ${build_dir})
   if (NOT EXISTS ${src})
@@ -271,21 +271,21 @@ macro(build_root_add_makefile_package src relative_path_to_makefile_dir build_di
     build_root_exec(cp -r ${src} ${BUILD_ROOT_BUILD_DIRECTORY}/BUILD/${build_dir})
   endif()
   
-  message(STATUS "(could be empty) extra_makefile_config = ${extra_makefile_config}")
-  unset(extra_makefile_config_list)
-  unset(extra_makefile_config_list CACHE)
-  message(STATUS "(should be empty) extra_makefile_config_list = ${extra_makefile_config_list}")
-  string(REGEX MATCHALL "([^\"' \r\n\t;\\]+|[\\].|\"([^\"\\]+|[\\].)*\")+( +([^\"' \r\n\t;\\]+|[\\].|\"([^\"\\]+|[\\].)*\")+)*" extra_makefile_config_list "${extra_makefile_config}")
-  message(STATUS "(could be empty) extra_makefile_config_list = ${extra_makefile_config_list}")
-  unset(extra_makefile_config_list_str)
-  unset(extra_makefile_config_list_str CACHE)
-  foreach(ARG IN ITEMS ${extra_makefile_config_list})
-      if (extra_makefile_config_list_str)
-        string(APPEND extra_makefile_config_list_str " ")
+  message(STATUS "(could be empty) new_line_seperated_extra_makefile_config = ${new_line_seperated_extra_makefile_config}")
+  unset(new_line_seperated_extra_makefile_config_list)
+  unset(new_line_seperated_extra_makefile_config_list CACHE)
+  message(STATUS "(should be empty) new_line_seperated_extra_makefile_config_list = ${new_line_seperated_extra_makefile_config_list}")
+  string(REGEX MATCHALL "([^\"' \r\n\t;\\]+|[\\].|\"([^\"\\]+|[\\].)*\")+( +([^\"' \r\n\t;\\]+|[\\].|\"([^\"\\]+|[\\].)*\")+)*" new_line_seperated_extra_makefile_config_list "${new_line_seperated_extra_makefile_config}")
+  message(STATUS "(could be empty) new_line_seperated_extra_makefile_config_list = ${new_line_seperated_extra_makefile_config_list}")
+  unset(new_line_seperated_extra_makefile_config_list_str)
+  unset(new_line_seperated_extra_makefile_config_list_str CACHE)
+  foreach(ARG IN ITEMS ${new_line_seperated_extra_makefile_config_list})
+      if (new_line_seperated_extra_makefile_config_list_str)
+        string(APPEND new_line_seperated_extra_makefile_config_list_str " ")
       endif()
-      string(APPEND extra_makefile_config_list_str "'${ARG}'")
+      string(APPEND new_line_seperated_extra_makefile_config_list_str "'${ARG}'")
   endforeach()
-  message(STATUS "(could be empty) extra_makefile_config_list_str = ${extra_makefile_config_list_str}")
+  message(STATUS "(could be empty) new_line_seperated_extra_makefile_config_list_str = ${new_line_seperated_extra_makefile_config_list_str}")
 
   build_root_message("-------- BUILDING MAKEFILE PROJECT: '${build_dir}'")
 
@@ -350,7 +350,7 @@ macro(build_root_add_makefile_package src relative_path_to_makefile_dir build_di
       build_root_exec_working_directory(${BUILD_ROOT_____________HAS_DIR}
         ./configure
         --prefix=${BUILD_ROOT_BUILD_DIRECTORY}/ROOTFS
-        ${extra_makefile_config_list_str}
+        ${new_line_seperated_extra_makefile_config_list_str}
       )
       if (NOT EXISTS ${BUILD_ROOT_____________HAS_DIR}/Makefile)
           build_root_fatal("'configure' failed to generate a 'Makefile' file inside the directory '${BUILD_ROOT_____________HAS_DIR}'")
