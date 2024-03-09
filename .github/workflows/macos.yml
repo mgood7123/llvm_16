@@ -50,6 +50,14 @@ jobs:
           ref: ${{needs.should_run.outputs.output1}}
           submodules: recursive
 
+      - name: clone libiconv
+        run: |
+          git clone git://git.savannah.gnu.org/libiconv.git libiconv --recursive --depth=1
+
+      - name: libiconv autopull.sh
+        run: |
+          cd libiconv ; ./autopull.sh
+
       - name: cmake build - Debug - Generate
         run: |
           mkdir BUILD_DEBUG
