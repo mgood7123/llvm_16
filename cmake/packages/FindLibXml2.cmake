@@ -52,6 +52,11 @@ The following cache variables may also be set:
   path to the LibXml2 library
 #]=======================================================================]
 
+# libxml2 depends on lzma
+find_package(LZMA)
+# libxml2 depends on zlib
+find_package(ZLIB)
+
 # use pkg-config to get the directories and then use these values
 # in the find_path() and find_library() calls
 find_package(PkgConfig QUIET)
@@ -132,6 +137,13 @@ if(LibXml2_FOUND AND NOT TARGET LLVM_STATIC_LibXml2::LibXml2)
   add_library(LLVM_STATIC_LibXml2::LibXml2 UNKNOWN IMPORTED)
   set_target_properties(LLVM_STATIC_LibXml2::LibXml2 PROPERTIES IMPORTED_LOCATION ${LIBXML2_LIBRARY})
   set_target_properties(LLVM_STATIC_LibXml2::LibXml2 PROPERTIES INTERFACE_INCLUDE_DIRECTORIES ${LIBXML2_INCLUDE_DIRS})
+  set_target_properties(LLVM_STATIC_LibXml2::LibXml2 PROPERTIES INTERFACE_LINK_LIBRARIES m)
+  if (LZMA_FOUND)
+      set_target_properties(LLVM_STATIC_LibXml2::LibXml2 APPEND PROPERTIES INTERFACE_LINK_LIBRARIES ${LZMA_TARGET})
+  endif()
+  if (ZLIB_FOUND)
+      set_target_properties(LLVM_STATIC_LibXml2::LibXml2 APPEND PROPERTIES INTERFACE_LINK_LIBRARIES ${ZLIB_TARGET})
+  endif()
   set(LIBXML2_TARGET LLVM_STATIC_LibXml2::LibXml2)
 endif()
 

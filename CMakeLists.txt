@@ -413,6 +413,7 @@ else()
     )
 endif()
 
+# zlib does not depend on any libs
 build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/zlib . zlib
     "" # no extra c flags
     "" # no extra cxx flags
@@ -421,6 +422,7 @@ build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/zlib . zlib
     "
 )
 
+# lz4 does not depend on any libs
 build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/ZPack/externals/lz4 build/cmake lz4
     "" # no extra c flags
     "" # no extra cxx flags
@@ -429,6 +431,7 @@ build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/ZPack/externals/lz4 bui
     "
 )
 
+# xz does not depend on any libs
 build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/xz . xz
     "" # no extra c flags
     "" # no extra cxx flags
@@ -437,6 +440,7 @@ build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/xz . xz
     "
 )
 
+# 7z does not depend on any libs
 build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/lzma2301 . 7z
     "" # no extra c flags
     "" # no extra cxx flags
@@ -445,6 +449,8 @@ build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/lzma2301 . 7z
     "
 )
 
+# zstd does not depend on any libs
+# zstd programs depend on zlib, lzma, lz4
 build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/zstd build/cmake zstd
     "" # no extra c flags
     "" # no extra cxx flags
@@ -453,6 +459,7 @@ build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/zstd build/cmake zstd
     "
 )
 
+# xxHash does not depend on any libs
 build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/ZPack/externals/xxHash cmake_unofficial xxHash
     "" # no extra c flags
     "" # no extra cxx flags
@@ -461,6 +468,7 @@ build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/ZPack/externals/xxHash 
     "
 )
 
+# bzip2 does not depend on any libs
 build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/bzip2 . bzip2
     "" # no extra c flags
     "" # no extra cxx flags
@@ -469,6 +477,7 @@ build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/bzip2 . bzip2
     "
 )
 
+# libxml2 depends on xz (lzma) and zlib
 build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/libxml2 . libxml2
     "" # no extra c flags
     "" # no extra cxx flags
@@ -478,6 +487,7 @@ build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/libxml2 . libxml2
     "
 )
 
+# openssl does not depend on any libs
 build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/openssl-cmake . openssl
     "" # no extra c flags
     "" # no extra cxx flags
@@ -486,6 +496,7 @@ build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/openssl-cmake . openssl
     "
 )
 
+# expat does not depend on any libs
 build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/libexpat expat expat
     "" # no extra c flags
     "" # no extra cxx flags
@@ -494,6 +505,7 @@ build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/libexpat expat expat
     "
 )
 
+# lzo2 does not depend on any libs
 build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/lzo-2.10 . lzo2
     "" # no extra c flags
     "" # no extra cxx flags
@@ -502,6 +514,7 @@ build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/lzo-2.10 . lzo2
     "
 )
 
+# libarchive depends on zlib, bzip2, xz (lzma), lzo2, lz4, openssl, libzml2, and expat
 build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/libarchive . libarchive
     "" # no extra c flags
     "" # no extra cxx flags
