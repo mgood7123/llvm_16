@@ -504,8 +504,14 @@ build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/bzip2 . bzip2
     "
 )
 
-# libxml2 depends on xz (lzma) and zlib
-build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/libxml2 . libxml2
+build_root_add_makefile_package(${CMAKE_CURRENT_SOURCE_DIR}/libiconv . iconv
+    "" # no extra c flags
+    "" # no extra cxx flags
+    "" # no extra configure arguments
+)
+
+# libxml2 depends on xz (lzma) and zlib and iconv
+build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/libxml2 . xml2
     "" # no extra c flags
     "" # no extra cxx flags
     "
@@ -542,7 +548,7 @@ build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/lzo-2.10 . lzo2
 )
 
 # libarchive depends on zlib, bzip2, xz (lzma), lzo2, lz4, openssl, libzml2, and expat
-build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/libarchive . libarchive
+build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/libarchive . archive
     "" # no extra c flags
     "" # no extra cxx flags
     "
@@ -559,6 +565,7 @@ find_package(7z REQUIRED)
 find_package(zstd REQUIRED)
 find_package(xxHash REQUIRED)
 find_package(BZIP2 REQUIRED)
+find_package(ICONV REQUIRED)
 find_package(LibXml2 REQUIRED)
 find_package(OpenSSL REQUIRED)
 find_package(EXPAT REQUIRED)
@@ -573,6 +580,7 @@ message("7Z LIBS: ${7Z_LIBRARIES}")
 message("ZSTD LIB: ${zstd_LIBRARY}")
 message("XXHASH LIBS: ${xxHash_LIBRARIES}")
 message("BZip2 LIBS: ${BZIP2_LIBRARIES}")
+message("ICONV LIBS: ${ICONV_LIBRARIES}")
 message("Xml2 LIBS: ${LIBXML2_LIBRARIES}")
 message("OpenSSL LIBS: ${OPENSSL_LIBRARIES}")
 message("Expat LIBS: ${EXPAT_LIBRARIES}")
@@ -585,6 +593,7 @@ message("LZMA INCLUDE_DIRECTORIES: ${LZMA_INCLUDE_DIRS}")
 message("7Z INCLUDE_DIRECTORIES: ${7Z_INCLUDE_DIRS}")
 message("ZSTD INCLUDE_DIRECTORIES: ${zstd_INCLUDE_DIRS}")
 message("XXHASH INCLUDE_DIRECTORIES: ${xxHash_INCLUDE_DIRS}")
+message("ICONV INCLUDE_DIRECTORIES: ${ICONV_INCLUDE_DIRS}")
 message("Xml2 INCLUDE_DIRECTORIES: ${LIBXML2_INCLUDE_DIRS}")
 message("OpenSSL INCLUDE_DIRECTORIES: ${OPENSSL_INCLUDE_DIR}")
 message("Expat INCLUDE_DIRECTORIES: ${EXPAT_INCLUDE_DIRS}")
@@ -597,6 +606,7 @@ message("7Z_TARGET = ${7Z_TARGET}")
 message("zstd_TARGET = ${zstd_TARGET}")
 message("xxHash_TARGET = ${xxHash_TARGET}")
 message("BZIP2_TARGET = ${BZIP2_TARGET}")
+message("ICONV_TARGET = ${ICONV_TARGET}")
 message("LIBXML2_TARGET = ${LIBXML2_TARGET}")
 message("OPENSSL_CRYPTO_TARGET = ${OPENSSL_CRYPTO_TARGET}")
 message("OPENSSL_SSL_TARGET = ${OPENSSL_SSL_TARGET}")

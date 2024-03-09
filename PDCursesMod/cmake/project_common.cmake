@@ -69,10 +69,9 @@ if (APPLE)
     find_library(AUDIOTOOLBOX AudioToolbox)
     list(APPEND EXTRA_LIBS ${AUDIOTOOLBOX})
 
-    include(CheckLibraryExists)
-    check_library_exists(iconv iconv_open "" HAVE_LIBICONV)
-    if(HAVE_LIBICONV)
-      list(APPEND EXTRA_LIBS iconv)
+    find_package(ICONV)
+    if(ICONV_FOUND)
+      list(APPEND EXTRA_LIBS ${ICONV_TARGET})
     endif()
 endif()
 
