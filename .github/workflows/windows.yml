@@ -62,7 +62,7 @@ jobs:
         run: |
           export MSYS=winsymlinks:native
           touch a
-          ln -s b a
+          ln -s a b
           cp -v -r zstd/tests/cli-tests/bin .
           rm -f a
           rm -f b
