@@ -453,6 +453,7 @@ if(CMAKE_C_FLAGS MATCHES "-fsanitize=")
           -D BUILD_SHARED_LIBS=OFF
           -D ENABLE_SANDBOX=OFF
           -D USE_ATTR_IFUNC=OFF
+          -D ALLOW_ATTR_IFUNC=OFF
         "
     )
 else()
