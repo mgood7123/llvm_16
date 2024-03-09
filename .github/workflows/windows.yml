@@ -91,7 +91,7 @@ jobs:
         run: |
           pacboy -S --noconfirm --needed autotools:p
 
-      - run: verify aclocal
+      - name: verify aclocal
         run: |
           ls -l /a
           ls -l /a/_temp
