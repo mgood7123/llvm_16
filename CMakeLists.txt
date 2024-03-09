@@ -397,6 +397,16 @@ message("ANDROID_STL = ${ANDROID_STL}")
 
 build_root_init(${CMAKE_CURRENT_SOURCE_DIR}/cmake/packages ${CMAKE_CURRENT_BINARY_DIR}/BUILD_ROOT)
 
+# build zlib first, it contains symlinks and we must be able to copy them in a windows build, fail fast if we cannot copy
+# zlib does not depend on any libs
+build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/zlib . zlib
+    "" # no extra c flags
+    "" # no extra cxx flags
+    "
+      -D BUILD_SHARED_LIBS=OFF
+    "
+)
+
 if (WIN32)
     build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/wineditline . LibEdit
         "" # no extra c flags
@@ -412,15 +422,6 @@ else()
         "" # no extra configure arguments
     )
 endif()
-
-# zlib does not depend on any libs
-build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/zlib . zlib
-    "" # no extra c flags
-    "" # no extra cxx flags
-    "
-      -D BUILD_SHARED_LIBS=OFF
-    "
-)
 
 # lz4 does not depend on any libs
 build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/ZPack/externals/lz4 build/cmake lz4
