@@ -83,6 +83,7 @@ jobs:
 
       - name: cmake build
         run: |
+          export MSYS=winsymlinks:nativestrict
           mingw32-make CC=clang CXX=clang++ CMAKE_FLAGS="-DCMAKE_MAKE_PROGRAM=mingw32-make -DCMAKE_COLOR_DIAGNOSTICS=ON -DCMAKE_COLOR_MAKEFILE=ON"
 
       # - uses: actions/upload-artifact@v3
