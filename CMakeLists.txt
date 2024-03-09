@@ -332,7 +332,7 @@ macro(build_root_add_makefile_package src relative_path_to_makefile_dir build_di
   if (BUILD_ROOT_____________HAS_A)
       build_root_message("-------- BUILDING MAKEFILE PROJECT: '${build_dir}' -- GENERATING (AUTOGEN)")
       build_root_exec_working_directory(${BUILD_ROOT_____________HAS_DIR}
-        bash ./autogen.sh
+        ./autogen.sh
       )
       if (NOT EXISTS ${BUILD_ROOT_____________HAS_DIR}/configure)
           build_root_fatal("'autogen.sh' failed to generate a 'configure' file inside the directory '${BUILD_ROOT_____________HAS_DIR}'")
@@ -396,6 +396,9 @@ message("ANDROID_STL = ${ANDROID_STL}")
 # endif()
 
 build_root_init(${CMAKE_CURRENT_SOURCE_DIR}/cmake/packages ${CMAKE_CURRENT_BINARY_DIR}/BUILD_ROOT)
+
+build_root_exec_working_directory(${CMAKE_CURRENT_SOURCE_DIR}/libiconv chmod +x ./autogen.sh)
+build_root_exec_working_directory(${CMAKE_CURRENT_SOURCE_DIR}/libiconv chmod +x ./gnulib/gnulib-tool)
 
 # iconv does not depend on any libs
 build_root_add_makefile_package(${CMAKE_CURRENT_SOURCE_DIR}/libiconv . iconv
