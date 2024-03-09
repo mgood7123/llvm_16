@@ -108,6 +108,10 @@ jobs:
         run: |
           pacboy -S --noconfirm --needed git
 
+      - name: install gettext
+        run: |
+          pacboy -S --noconfirm --needed gettext
+
       - name: cmake build - Debug - Generate
         run: |
           export MSYS=winsymlinks:native
