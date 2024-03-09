@@ -96,6 +96,10 @@ jobs:
         run: |
           pacboy -S --noconfirm --needed patch:p
 
+      - name: install patch
+        run: |
+          pacboy -S --noconfirm --needed gperf:p
+
       - name: cmake build - Debug - Generate
         run: |
           export MSYS=winsymlinks:native
