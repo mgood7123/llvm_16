@@ -1019,145 +1019,19 @@ main(int argc, char **argv)
 ENDMACRO(CHECK_CRYPTO_WIN CRYPTO_LIST)
 
 #
-# Find iconv
-# POSIX defines the second arg as const char **
-# and requires it to be in libc.  But we can accept
-# a non-const argument here and can support iconv()
-# being in libiconv.
+# Find ICONV
 #
-MACRO(CHECK_ICONV LIB TRY_ICONV_CONST)
-  IF(NOT HAVE_ICONV)
-    CMAKE_PUSH_CHECK_STATE()	# Save the state of the variables
-    IF (CMAKE_C_COMPILER_ID MATCHES "^GNU$" OR
-        CMAKE_C_COMPILER_ID MATCHES "^Clang$")
-      #
-      # During checking iconv proto type, we should use -Werror to avoid the
-      # success of iconv detection with a warning which success is a miss
-      # detection. So this needs for all build mode(even it's a release mode).
-      #
-      SET(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} -Werror")
-    ENDIF (CMAKE_C_COMPILER_ID MATCHES "^GNU$" OR
-           CMAKE_C_COMPILER_ID MATCHES "^Clang$")
-    IF (CMAKE_C_COMPILER_ID MATCHES "^XL$")
-      SET(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} -qhalt=w -qflag=w:w")
-    ENDIF (CMAKE_C_COMPILER_ID MATCHES "^XL$")
-    IF (MSVC)
-      # NOTE: /WX option is the same as gcc's -Werror option.
-      SET(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} /WX")
-    ENDIF (MSVC)
-    #
-    CHECK_C_SOURCE_COMPILES(
-      "#include <stdlib.h>
-       #include <iconv.h>
-       int main() {
-          ${TRY_ICONV_CONST} char *ccp;
-          iconv_t cd = iconv_open(\"\", \"\");
-          iconv(cd, &ccp, (size_t *)0, (char **)0, (size_t *)0);
-          iconv_close(cd);
-          return 0;
-       }"
-     HAVE_ICONV_${LIB}_${TRY_ICONV_CONST})
-    IF(HAVE_ICONV_${LIB}_${TRY_ICONV_CONST})
-      SET(HAVE_ICONV true)
-      SET(ICONV_CONST ${TRY_ICONV_CONST})
-    ENDIF(HAVE_ICONV_${LIB}_${TRY_ICONV_CONST})
-    CMAKE_POP_CHECK_STATE()	# Restore the state of the variables
-  ENDIF(NOT HAVE_ICONV)
-ENDMACRO(CHECK_ICONV TRY_ICONV_CONST)
-
 IF(ENABLE_ICONV)
-  CMAKE_PUSH_CHECK_STATE()	# Save the state of the variables
-  FIND_PATH(ICONV_INCLUDE_DIR iconv.h)
-  IF(ICONV_INCLUDE_DIR)
-    #SET(INCLUDES ${INCLUDES} "iconv.h")
-    SET(HAVE_ICONV_H 1)
-    INCLUDE_DIRECTORIES(${ICONV_INCLUDE_DIR})
-    SET(CMAKE_REQUIRED_INCLUDES ${ICONV_INCLUDE_DIR})
-    CHECK_ICONV("libc" "const")
-    CHECK_ICONV("libc" "")
-
-    # If iconv isn't in libc and we have a libiconv, try that.
-    FIND_LIBRARY(LIBICONV_PATH NAMES iconv libiconv)
-    IF(NOT HAVE_ICONV AND LIBICONV_PATH)
-      LIST(APPEND CMAKE_REQUIRED_LIBRARIES ${LIBICONV_PATH})
-      # Test if a macro is needed for the library.
-      TRY_MACRO_FOR_LIBRARY(
-        "${ICONV_INCLUDE_DIR}" "${LIBICONV_PATH}"
-        COMPILES
-        "#include <iconv.h>\nint main() {return iconv_close((iconv_t)0);}"
-        "WITHOUT_LIBICONV_STATIC;LIBICONV_STATIC")
-      IF(NOT WITHOUT_LIBICONV_STATIC AND LIBICONV_STATIC)
-        ADD_DEFINITIONS(-DLIBICONV_STATIC)
-      ENDIF(NOT WITHOUT_LIBICONV_STATIC AND LIBICONV_STATIC)
-      #
-      # Set up CMAKE_REQUIRED_* for CHECK_ICONV
-      #
-      SET(CMAKE_REQUIRED_INCLUDES ${ICONV_INCLUDE_DIR})
-      SET(CMAKE_REQUIRED_LIBRARIES ${LIBICONV_PATH})
-      IF(LIBICONV_STATIC)
-        # LIBICONV_STATIC is necessary for the success of CHECK_ICONV
-        # on Windows.
-        SET(CMAKE_REQUIRED_DEFINITIONS "-DLIBICONV_STATIC")
-      ELSE(LIBICONV_STATIC)
-        SET(CMAKE_REQUIRED_DEFINITIONS)
-      ENDIF(LIBICONV_STATIC)
-      CHECK_ICONV("libiconv" "const")
-      CHECK_ICONV("libiconv" "")
-      IF (HAVE_ICONV)
-        LIST(APPEND ADDITIONAL_LIBS ${LIBICONV_PATH})
-      ENDIF(HAVE_ICONV)
-    ENDIF(NOT HAVE_ICONV AND LIBICONV_PATH)
-  ENDIF(ICONV_INCLUDE_DIR)
-  #
-  # Find locale_charset() for libiconv.
-  #
-  IF(LIBICONV_PATH)
-    SET(CMAKE_REQUIRED_DEFINITIONS)
-    SET(CMAKE_REQUIRED_INCLUDES ${ICONV_INCLUDE_DIR})
-    SET(CMAKE_REQUIRED_LIBRARIES)
-    CHECK_INCLUDE_FILES("localcharset.h" HAVE_LOCALCHARSET_H)
-    FIND_LIBRARY(LIBCHARSET_PATH NAMES charset libcharset)
-    IF(LIBCHARSET_PATH)
-      SET(CMAKE_REQUIRED_LIBRARIES ${LIBCHARSET_PATH})
-      IF(WIN32 AND NOT CYGWIN)
-        # Test if a macro is needed for the library.
-        TRY_MACRO_FOR_LIBRARY(
-          "${ICONV_INCLUDE_DIR}" "${LIBCHARSET_PATH}"
-          COMPILES
-          "#include <localcharset.h>\nint main() {return locale_charset()?1:0;}"
-          "WITHOUT_LIBCHARSET_STATIC;LIBCHARSET_STATIC")
-        IF(NOT WITHOUT_LIBCHARSET_STATIC AND LIBCHARSET_STATIC)
-          ADD_DEFINITIONS(-DLIBCHARSET_STATIC)
-        ENDIF(NOT WITHOUT_LIBCHARSET_STATIC AND LIBCHARSET_STATIC)
-        IF(WITHOUT_LIBCHARSET_STATIC OR LIBCHARSET_STATIC)
-          SET(HAVE_LOCALE_CHARSET ON CACHE INTERNAL
-              "Have function locale_charset")
-        ENDIF(WITHOUT_LIBCHARSET_STATIC OR LIBCHARSET_STATIC)
-      ELSE(WIN32 AND NOT CYGWIN)
-        CHECK_FUNCTION_EXISTS_GLIBC(locale_charset HAVE_LOCALE_CHARSET)
-      ENDIF(WIN32 AND NOT CYGWIN)
-      IF(HAVE_LOCALE_CHARSET)
-        LIST(APPEND ADDITIONAL_LIBS ${LIBCHARSET_PATH})
-      ENDIF(HAVE_LOCALE_CHARSET)
-    ENDIF(LIBCHARSET_PATH)
-  ENDIF(LIBICONV_PATH)
-  CMAKE_POP_CHECK_STATE()	# Restore the state of the variables
-ELSE(ENABLE_ICONV)
-  # Make sure ICONV variables are not in CACHE after ENABLE_ICONV disabled
-  # (once enabled).
-  UNSET(HAVE_LOCALE_CHARSET CACHE)
-  UNSET(HAVE_ICONV CACHE)
-  UNSET(HAVE_ICONV_libc_ CACHE)
-  UNSET(HAVE_ICONV_libc_const CACHE)
-  UNSET(HAVE_ICONV_libiconv_ CACHE)
-  UNSET(HAVE_ICONV_libiconv_const CACHE)
-  UNSET(ICONV_INCLUDE_DIR CACHE)
-  UNSET(LIBICONV_PATH CACHE)
-  UNSET(LIBICONV_DLL CACHE)
-  UNSET(LIBICONV_STATIC CACHE)
-  UNSET(LIBCHARSET_DLL CACHE)
-  UNSET(LIBCHARSET_STATIC CACHE)
-ENDIF(ENABLE_ICONV)
+  FIND_PACKAGE(ICONV)
+ELSE()
+  SET(ICONV_FOUND FALSE)
+ENDIF()
+IF(ICONV_FOUND)
+  INCLUDE_DIRECTORIES(${ICONV_INCLUDE_DIR})
+  LIST(APPEND ADDITIONAL_LIBS ${ICONV_LIBRARIES})
+ENDIF(ICONV_FOUND)
+MARK_AS_ADVANCED(CLEAR ICONV_INCLUDE_DIR)
+MARK_AS_ADVANCED(CLEAR ICONV_LIBRARIES)
 
 #
 # Find Libxml2
@@ -1196,10 +1070,12 @@ IF(LIBXML2_FOUND)
 ELSE(LIBXML2_FOUND)
 
   # LibXml2 was not found
+
   IF (LZMA_FOUND)
     # LZMA was found, add it to the link chain
     LIST(APPEND ADDITIONAL_LIBS ${LZMA_LIBRARIES})
   ENDIF(LZMA_FOUND)
+
   IF (ZLIB_FOUND)
     # ZLIB was found, add it to the link chain
     LIST(APPEND ADDITIONAL_LIBS ${ZLIB_LIBRARIES})
