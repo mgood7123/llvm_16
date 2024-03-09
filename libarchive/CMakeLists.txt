@@ -446,7 +446,6 @@ IF(ZLIB_FOUND)
   SET(HAVE_LIBZ 1)
   SET(HAVE_ZLIB_H 1)
   INCLUDE_DIRECTORIES(${ZLIB_INCLUDE_DIRS})
-  LIST(APPEND ADDITIONAL_LIBS ${ZLIB_LIBRARIES})
   IF(WIN32 AND NOT CYGWIN)
     #
     # Test if ZLIB_WINAPI macro is needed to use.
@@ -1171,10 +1170,13 @@ ENDIF()
 IF(LIBXML2_FOUND)
   CMAKE_PUSH_CHECK_STATE()	# Save the state of the variables
   INCLUDE_DIRECTORIES(${LIBXML2_INCLUDE_DIR})
-  # xml2 depends on lzma
+  # xml2 depends on lzma and libz
   # since they are static libraries we need to invert the link order
+  # lzma does not depend on any libs
+  # zlib does not depend on any libs
   LIST(APPEND ADDITIONAL_LIBS ${LIBXML2_LIBRARIES})
   LIST(APPEND ADDITIONAL_LIBS ${LZMA_LIBRARIES})
+  LIST(APPEND ADDITIONAL_LIBS ${ZLIB_LIBRARIES})
   SET(HAVE_LIBXML2 1)
   # libxml2's include files use iconv.h
   SET(CMAKE_REQUIRED_INCLUDES ${ICONV_INCLUDE_DIR} ${LIBXML2_INCLUDE_DIR})
@@ -1197,6 +1199,10 @@ ELSE(LIBXML2_FOUND)
   IF (LZMA_FOUND)
     # LZMA was found, add it to the link chain
     LIST(APPEND ADDITIONAL_LIBS ${LZMA_LIBRARIES})
+  ENDIF(LZMA_FOUND)
+  IF (ZLIB_FOUND)
+    # ZLIB was found, add it to the link chain
+    LIST(APPEND ADDITIONAL_LIBS ${ZLIB_LIBRARIES})
   ENDIF(LZMA_FOUND)
 
   #
