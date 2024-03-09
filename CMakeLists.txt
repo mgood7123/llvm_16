@@ -330,7 +330,10 @@ macro(build_root_add_makefile_package src relative_path_to_makefile_dir build_di
   endif()
 
   if (BUILD_ROOT_____________HAS_A)
-      build_root_message("-------- BUILDING MAKEFILE PROJECT: '${build_dir}' -- GENERATING")
+      build_root_message("-------- BUILDING MAKEFILE PROJECT: '${build_dir}' -- GENERATING (AUTOGEN)")
+      build_root_exec_working_directory(${BUILD_ROOT_____________HAS_DIR}
+        ls -l ./autogen.sh
+      )
       build_root_exec_working_directory(${BUILD_ROOT_____________HAS_DIR}
         ./autogen.sh
       )
@@ -339,7 +342,7 @@ macro(build_root_add_makefile_package src relative_path_to_makefile_dir build_di
       else()
           set(BUILD_ROOT_____________HAS_C true)
       endif()
-      build_root_message("-------- BUILDING MAKEFILE PROJECT: '${build_dir}' -- GENERATED")
+      build_root_message("-------- BUILDING MAKEFILE PROJECT: '${build_dir}' -- GENERATED (AUTOGEN)")
   endif()
   if (BUILD_ROOT_____________HAS_C)
       build_root_message("-------- BUILDING MAKEFILE PROJECT: '${build_dir}' -- CONFIGURING (--help)")
@@ -397,7 +400,13 @@ message("ANDROID_STL = ${ANDROID_STL}")
 
 build_root_init(${CMAKE_CURRENT_SOURCE_DIR}/cmake/packages ${CMAKE_CURRENT_BINARY_DIR}/BUILD_ROOT)
 
-# build zlib first, it contains symlinks and we must be able to copy them in a windows build, fail fast if we cannot copy
+# iconv does not depend on any libs
+build_root_add_makefile_package(${CMAKE_CURRENT_SOURCE_DIR}/libiconv . iconv
+    "" # no extra c flags
+    "" # no extra cxx flags
+    "" # no extra configure arguments
+)
+
 # zlib does not depend on any libs
 build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/zlib . zlib
     "" # no extra c flags
@@ -502,12 +511,6 @@ build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/bzip2 . bzip2
     "
       -D BUILD_SHARED_LIBS=OFF
     "
-)
-
-build_root_add_makefile_package(${CMAKE_CURRENT_SOURCE_DIR}/libiconv . iconv
-    "" # no extra c flags
-    "" # no extra cxx flags
-    "" # no extra configure arguments
 )
 
 # libxml2 depends on xz (lzma) and zlib and iconv
