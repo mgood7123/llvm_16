@@ -432,13 +432,37 @@ build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/ZPack/externals/lz4 bui
 )
 
 # xz does not depend on any libs
-build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/xz . xz
-    "" # no extra c flags
-    "" # no extra cxx flags
-    "
-      -D BUILD_SHARED_LIBS=OFF
-    "
-)
+
+if(CMAKE_C_FLAGS MATCHES "-fsanitize=")
+    # Of our three sandbox methods, only Landlock is incompatible
+    # with -fsanitize. FreeBSD 13.2 with Capsicum was tested with
+    # -fsanitize=address,undefined and had no issues. OpenBSD (as
+    # of version 7.4) has minimal support for process instrumentation.
+    # OpenBSD does not distribute the additional libraries needed
+    # (libasan, libubsan, etc.) with GCC or Clang needed for runtime
+    # sanitization support and instead only support
+    # -fsanitize-minimal-runtime for minimal undefined behavior
+    # sanitization. This minimal support is compatible with our use
+    # of the Pledge sandbox. So only Landlock will result in a
+    # build that cannot compress or decompress a single file to
+    # standard out.
+    build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/xz . xz
+        "" # no extra c flags
+        "" # no extra cxx flags
+        "
+          -D BUILD_SHARED_LIBS=OFF
+          -D ENABLE_SANDBOX=OFF
+        "
+    )
+else()
+    build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/xz . xz
+        "" # no extra c flags
+        "" # no extra cxx flags
+        "
+          -D BUILD_SHARED_LIBS=OFF
+        "
+    )
+endif()
 
 # 7z does not depend on any libs
 build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/lzma2301 . 7z
