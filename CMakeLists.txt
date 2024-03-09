@@ -404,6 +404,8 @@ build_root_add_makefile_package(${CMAKE_CURRENT_SOURCE_DIR}/libiconv . iconv
     "--enable-static=yes --enable-shared=no" # extra configure arguments
 )
 
+build_root_exec_working_directory(${CMAKE_CURRENT_BINARY_DIR} find BUILD_ROOT/ROOTFS)
+
 # zlib does not depend on any libs
 build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/zlib . zlib
     "" # no extra c flags
