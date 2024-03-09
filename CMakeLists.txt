@@ -401,7 +401,7 @@ build_root_init(${CMAKE_CURRENT_SOURCE_DIR}/cmake/packages ${CMAKE_CURRENT_BINAR
 build_root_add_makefile_package(${CMAKE_CURRENT_SOURCE_DIR}/libiconv . iconv
     "" # no extra c flags
     "" # no extra cxx flags
-    "" # no extra configure arguments
+    "--enable-static=yes --enable-shared=no" # extra configure arguments
 )
 
 # zlib does not depend on any libs
@@ -425,7 +425,7 @@ else()
     build_root_add_makefile_package(${CMAKE_CURRENT_SOURCE_DIR}/libedit-20230828-3.1 . LibEdit
         "" # no extra c flags
         "" # no extra cxx flags
-        "" # no extra configure arguments
+        "--enable-static=yes --enable-shared=no" # extra configure arguments
     )
 endif()
 
