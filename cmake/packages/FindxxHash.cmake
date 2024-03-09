@@ -23,7 +23,7 @@ find_path(xxHash_INCLUDE_DIRS NAMES xxhash.h
   NO_CMAKE_SYSTEM_PATH
   NO_CMAKE_FIND_ROOT_PATH
 )
-find_library(xxHash_LIBRARIES NAMES xxhash
+find_library(xxHash_LIBRARIES NAMES libxxhash.a
   PATHS ${LLVM_BUILD_ROOT__ROOTFS}/lib
   NO_DEFAULT_PATH
   NO_PACKAGE_ROOT_PATH

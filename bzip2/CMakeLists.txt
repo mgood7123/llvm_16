@@ -275,7 +275,6 @@ if(ENABLE_SHARED_LIB)
     endif()
 endif()
 
-if(ENABLE_STATIC_LIB)
     # The libbz2 static library.
     add_library(bz2_static STATIC)
     target_sources(bz2_static
@@ -290,7 +289,6 @@ if(ENABLE_STATIC_LIB)
     target_compile_definitions(bz2_static PUBLIC BZ2_STATICLIB)
     install(TARGETS bz2_static DESTINATION ${CMAKE_INSTALL_LIBDIR})
     install(FILES bzlib.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-endif()
 
 if(ENABLE_APP)
     # The bzip2 executable.

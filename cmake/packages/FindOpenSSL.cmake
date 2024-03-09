@@ -341,20 +341,20 @@ if(WIN32 AND NOT CYGWIN)
         # When OpenSSL is built with default options, the static library name is suffixed with "_static".
         # Looking the "libcrypto_static.lib" with a higher priority than "libcrypto.lib" which is the
         # import library of "libcrypto.dll".
-        libcrypto${_OPENSSL_STATIC_SUFFIX}${_OPENSSL_MSVC_ARCH_SUFFIX}${_OPENSSL_MSVC_RT_MODE}d
-        libcrypto${_OPENSSL_STATIC_SUFFIX}${_OPENSSL_MSVC_RT_MODE}d
-        libcrypto${_OPENSSL_STATIC_SUFFIX}d
-        libeay32${_OPENSSL_STATIC_SUFFIX}${_OPENSSL_MSVC_RT_MODE}d
-        libeay32${_OPENSSL_STATIC_SUFFIX}d
-        crypto${_OPENSSL_STATIC_SUFFIX}d
+        libcrypto${_OPENSSL_STATIC_SUFFIX}${_OPENSSL_MSVC_ARCH_SUFFIX}${_OPENSSL_MSVC_RT_MODE}d.a
+        libcrypto${_OPENSSL_STATIC_SUFFIX}${_OPENSSL_MSVC_RT_MODE}d.a
+        libcrypto${_OPENSSL_STATIC_SUFFIX}d.a
+        libeay32${_OPENSSL_STATIC_SUFFIX}${_OPENSSL_MSVC_RT_MODE}d.a
+        libeay32${_OPENSSL_STATIC_SUFFIX}d.a
+        crypto${_OPENSSL_STATIC_SUFFIX}d.a
         # When OpenSSL is built with the "-static" option, only the static build is produced,
         # and it is not suffixed with "_static".
-        libcrypto${_OPENSSL_MSVC_ARCH_SUFFIX}${_OPENSSL_MSVC_RT_MODE}d
-        libcrypto${_OPENSSL_MSVC_RT_MODE}d
-        libcryptod
-        libeay32${_OPENSSL_MSVC_RT_MODE}d
-        libeay32d
-        cryptod
+        libcrypto${_OPENSSL_MSVC_ARCH_SUFFIX}${_OPENSSL_MSVC_RT_MODE}d.a
+        libcrypto${_OPENSSL_MSVC_RT_MODE}d.a
+        libcryptod.a
+        libeay32${_OPENSSL_MSVC_RT_MODE}d.a
+        libeay32d.a
+        cryptod.a
       PATHS ${LLVM_BUILD_ROOT__ROOTFS}/lib
       NO_DEFAULT_PATH
       NO_PACKAGE_ROOT_PATH
@@ -370,20 +370,20 @@ if(WIN32 AND NOT CYGWIN)
         # When OpenSSL is built with default options, the static library name is suffixed with "_static".
         # Looking the "libcrypto_static.lib" with a higher priority than "libcrypto.lib" which is the
         # import library of "libcrypto.dll".
-        libcrypto${_OPENSSL_STATIC_SUFFIX}${_OPENSSL_MSVC_ARCH_SUFFIX}${_OPENSSL_MSVC_RT_MODE}
-        libcrypto${_OPENSSL_STATIC_SUFFIX}${_OPENSSL_MSVC_RT_MODE}
-        libcrypto${_OPENSSL_STATIC_SUFFIX}
-        libeay32${_OPENSSL_STATIC_SUFFIX}${_OPENSSL_MSVC_RT_MODE}
-        libeay32${_OPENSSL_STATIC_SUFFIX}
-        crypto${_OPENSSL_STATIC_SUFFIX}
+        libcrypto${_OPENSSL_STATIC_SUFFIX}${_OPENSSL_MSVC_ARCH_SUFFIX}${_OPENSSL_MSVC_RT_MODE}.a
+        libcrypto${_OPENSSL_STATIC_SUFFIX}${_OPENSSL_MSVC_RT_MODE}.a
+        libcrypto${_OPENSSL_STATIC_SUFFIX}.a
+        libeay32${_OPENSSL_STATIC_SUFFIX}${_OPENSSL_MSVC_RT_MODE}.a
+        libeay32${_OPENSSL_STATIC_SUFFIX}.a
+        crypto${_OPENSSL_STATIC_SUFFIX}.a
         # When OpenSSL is built with the "-static" option, only the static build is produced,
         # and it is not suffixed with "_static".
-        libcrypto${_OPENSSL_MSVC_ARCH_SUFFIX}${_OPENSSL_MSVC_RT_MODE}
-        libcrypto${_OPENSSL_MSVC_RT_MODE}
-        libcrypto
-        libeay32${_OPENSSL_MSVC_RT_MODE}
-        libeay32
-        crypto
+        libcrypto${_OPENSSL_MSVC_ARCH_SUFFIX}${_OPENSSL_MSVC_RT_MODE}.a
+        libcrypto${_OPENSSL_MSVC_RT_MODE}.a
+        libcrypto.a
+        libeay32${_OPENSSL_MSVC_RT_MODE}.a
+        libeay32.a
+        crypto.a
       PATHS ${LLVM_BUILD_ROOT__ROOTFS}/lib
       NO_DEFAULT_PATH
       NO_PACKAGE_ROOT_PATH
@@ -399,20 +399,20 @@ if(WIN32 AND NOT CYGWIN)
         # When OpenSSL is built with default options, the static library name is suffixed with "_static".
         # Looking the "libssl_static.lib" with a higher priority than "libssl.lib" which is the
         # import library of "libssl.dll".
-        libssl${_OPENSSL_STATIC_SUFFIX}${_OPENSSL_MSVC_ARCH_SUFFIX}${_OPENSSL_MSVC_RT_MODE}d
-        libssl${_OPENSSL_STATIC_SUFFIX}${_OPENSSL_MSVC_RT_MODE}d
-        libssl${_OPENSSL_STATIC_SUFFIX}d
-        ssleay32${_OPENSSL_STATIC_SUFFIX}${_OPENSSL_MSVC_RT_MODE}d
-        ssleay32${_OPENSSL_STATIC_SUFFIX}d
-        ssl${_OPENSSL_STATIC_SUFFIX}d
+        libssl${_OPENSSL_STATIC_SUFFIX}${_OPENSSL_MSVC_ARCH_SUFFIX}${_OPENSSL_MSVC_RT_MODE}d.a
+        libssl${_OPENSSL_STATIC_SUFFIX}${_OPENSSL_MSVC_RT_MODE}d.a
+        libssl${_OPENSSL_STATIC_SUFFIX}d.a
+        ssleay32${_OPENSSL_STATIC_SUFFIX}${_OPENSSL_MSVC_RT_MODE}d.a
+        ssleay32${_OPENSSL_STATIC_SUFFIX}d.a
+        ssl${_OPENSSL_STATIC_SUFFIX}d.a
         # When OpenSSL is built with the "-static" option, only the static build is produced,
         # and it is not suffixed with "_static".
-        libssl${_OPENSSL_MSVC_ARCH_SUFFIX}${_OPENSSL_MSVC_RT_MODE}d
-        libssl${_OPENSSL_MSVC_RT_MODE}d
-        libssld
-        ssleay32${_OPENSSL_MSVC_RT_MODE}d
-        ssleay32d
-        ssld
+        libssl${_OPENSSL_MSVC_ARCH_SUFFIX}${_OPENSSL_MSVC_RT_MODE}d.a
+        libssl${_OPENSSL_MSVC_RT_MODE}d.a
+        libssld.a
+        ssleay32${_OPENSSL_MSVC_RT_MODE}d.a
+        ssleay32d.a
+        ssld.a
       PATHS ${LLVM_BUILD_ROOT__ROOTFS}/lib
       NO_DEFAULT_PATH
       NO_PACKAGE_ROOT_PATH
@@ -428,20 +428,20 @@ if(WIN32 AND NOT CYGWIN)
         # When OpenSSL is built with default options, the static library name is suffixed with "_static".
         # Looking the "libssl_static.lib" with a higher priority than "libssl.lib" which is the
         # import library of "libssl.dll".
-        libssl${_OPENSSL_STATIC_SUFFIX}${_OPENSSL_MSVC_ARCH_SUFFIX}${_OPENSSL_MSVC_RT_MODE}
-        libssl${_OPENSSL_STATIC_SUFFIX}${_OPENSSL_MSVC_RT_MODE}
-        libssl${_OPENSSL_STATIC_SUFFIX}
-        ssleay32${_OPENSSL_STATIC_SUFFIX}${_OPENSSL_MSVC_RT_MODE}
-        ssleay32${_OPENSSL_STATIC_SUFFIX}
-        ssl${_OPENSSL_STATIC_SUFFIX}
+        libssl${_OPENSSL_STATIC_SUFFIX}${_OPENSSL_MSVC_ARCH_SUFFIX}${_OPENSSL_MSVC_RT_MODE}.a
+        libssl${_OPENSSL_STATIC_SUFFIX}${_OPENSSL_MSVC_RT_MODE}.a
+        libssl${_OPENSSL_STATIC_SUFFIX}.a
+        ssleay32${_OPENSSL_STATIC_SUFFIX}${_OPENSSL_MSVC_RT_MODE}.a
+        ssleay32${_OPENSSL_STATIC_SUFFIX}.a
+        ssl${_OPENSSL_STATIC_SUFFIX}.a
         # When OpenSSL is built with the "-static" option, only the static build is produced,
         # and it is not suffixed with "_static".
-        libssl${_OPENSSL_MSVC_ARCH_SUFFIX}${_OPENSSL_MSVC_RT_MODE}
-        libssl${_OPENSSL_MSVC_RT_MODE}
-        libssl
-        ssleay32${_OPENSSL_MSVC_RT_MODE}
-        ssleay32
-        ssl
+        libssl${_OPENSSL_MSVC_ARCH_SUFFIX}${_OPENSSL_MSVC_RT_MODE}.a
+        libssl${_OPENSSL_MSVC_RT_MODE}.a
+        libssl.a
+        ssleay32${_OPENSSL_MSVC_RT_MODE}.a
+        ssleay32.a
+        ssl.a
       PATHS ${LLVM_BUILD_ROOT__ROOTFS}/lib
       NO_DEFAULT_PATH
       NO_PACKAGE_ROOT_PATH
@@ -467,8 +467,8 @@ if(WIN32 AND NOT CYGWIN)
     set(OPENSSL_CRYPTO_LIBRARY ${LIB_EAY_LIBRARY} )
   elseif(MINGW)
     # same player, for MinGW
-    set(LIB_EAY_NAMES crypto libeay32)
-    set(SSL_EAY_NAMES ssl ssleay32)
+    set(LIB_EAY_NAMES libcrypto.a libeay32.a)
+    set(SSL_EAY_NAMES libssl.a libssleay32.a)
     find_library(LIB_EAY
       NAMES
         ${LIB_EAY_NAMES}
@@ -504,8 +504,8 @@ if(WIN32 AND NOT CYGWIN)
     # Not sure what to pick for -say- intel, let's use the toplevel ones and hope someone report issues:
     find_library(LIB_EAY
       NAMES
-        libcrypto
-        libeay32
+        libcrypto.a
+        libeay32.a
       PATHS ${LLVM_BUILD_ROOT__ROOTFS}/lib
       NO_DEFAULT_PATH
       NO_PACKAGE_ROOT_PATH
@@ -518,8 +518,8 @@ if(WIN32 AND NOT CYGWIN)
 
     find_library(SSL_EAY
       NAMES
-        libssl
-        ssleay32
+        libssl.a
+        libssleay32.a
       PATHS ${LLVM_BUILD_ROOT__ROOTFS}/lib
       NO_DEFAULT_PATH
       NO_PACKAGE_ROOT_PATH
@@ -538,9 +538,9 @@ else()
 
   find_library(OPENSSL_SSL_LIBRARY
     NAMES
-      ssl${_OPENSSL_NAME_POSTFIX}
-      ssleay32
-      ssleay32MD
+      libssl${_OPENSSL_NAME_POSTFIX}.a
+      libssleay32.a
+      libssleay32MD.a
     PATHS ${LLVM_BUILD_ROOT__ROOTFS}/lib
     NO_DEFAULT_PATH
     NO_PACKAGE_ROOT_PATH
@@ -553,7 +553,7 @@ else()
 
   find_library(OPENSSL_CRYPTO_LIBRARY
     NAMES
-      crypto${_OPENSSL_NAME_POSTFIX}
+      libcrypto${_OPENSSL_NAME_POSTFIX}.a
     PATHS ${LLVM_BUILD_ROOT__ROOTFS}/lib
     NO_DEFAULT_PATH
     NO_PACKAGE_ROOT_PATH

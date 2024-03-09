@@ -23,7 +23,7 @@ find_path(ZLIB_INCLUDE_DIRS NAMES zlib.h
   NO_CMAKE_SYSTEM_PATH
   NO_CMAKE_FIND_ROOT_PATH
 )
-find_library(ZLIB_LIBRARIES NAMES z zlib zdll zlib1 zlibstatic zlibwapi zlibvc zlibstat
+find_library(ZLIB_LIBRARIES NAMES libz.a
   PATHS ${LLVM_BUILD_ROOT__ROOTFS}/lib
   NO_DEFAULT_PATH
   NO_PACKAGE_ROOT_PATH

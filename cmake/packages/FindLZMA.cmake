@@ -47,7 +47,7 @@ find_path(LZMA_INCLUDE_DIRS lzma.h
   NO_CMAKE_FIND_ROOT_PATH
 )
 
-find_library(LZMA_LIBRARIES NAMES lzma liblzma
+find_library(LZMA_LIBRARIES NAMES liblzma.a
   PATHS ${LLVM_BUILD_ROOT__ROOTFS}/lib
   NO_DEFAULT_PATH
   NO_PACKAGE_ROOT_PATH

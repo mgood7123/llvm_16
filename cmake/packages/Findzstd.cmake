@@ -23,7 +23,7 @@ find_path(zstd_INCLUDE_DIRS NAMES zstd.h
   NO_CMAKE_SYSTEM_PATH
   NO_CMAKE_FIND_ROOT_PATH
 )
-find_library(zstd_LIBRARY NAMES zstd
+find_library(zstd_LIBRARY NAMES libzstd.a
   PATHS ${LLVM_BUILD_ROOT__ROOTFS}/lib
   NO_DEFAULT_PATH
   NO_PACKAGE_ROOT_PATH
