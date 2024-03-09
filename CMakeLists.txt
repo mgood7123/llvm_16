@@ -271,21 +271,21 @@ macro(build_root_add_makefile_package src relative_path_to_makefile_dir build_di
     build_root_exec(cp -r ${src} ${BUILD_ROOT_BUILD_DIRECTORY}/BUILD/${build_dir})
   endif()
   
+  message(STATUS "(could be empty) extra_makefile_config = ${extra_makefile_config}")
   unset(extra_makefile_config_list)
   unset(extra_makefile_config_list CACHE)
+  message(STATUS "(should be empty) extra_makefile_config_list = ${extra_makefile_config_list}")
   string(REGEX MATCHALL "([^\"' \r\n\t;\\]+|[\\].|\"([^\"\\]+|[\\].)*\")+( +([^\"' \r\n\t;\\]+|[\\].|\"([^\"\\]+|[\\].)*\")+)*" extra_makefile_config_list "${extra_makefile_config}")
+  message(STATUS "(could be empty) extra_makefile_config_list = ${extra_makefile_config_list}")
   unset(extra_makefile_config_list_str)
   unset(extra_makefile_config_list_str CACHE)
   foreach(ARG IN ITEMS ${extra_makefile_config_list})
       if (extra_makefile_config_list_str)
         string(APPEND extra_makefile_config_list_str " ")
       endif()
-      if (extra_makefile_config_list_str_actual)
-        string(APPEND extra_makefile_config_list_str_actual " ")
-      endif()
       string(APPEND extra_makefile_config_list_str "'${ARG}'")
-      string(APPEND extra_makefile_config_list_str_actual "${ARG}")
   endforeach()
+  message(STATUS "(could be empty) extra_makefile_config_list_str = ${extra_makefile_config_list_str}")
 
   build_root_message("-------- BUILDING MAKEFILE PROJECT: '${build_dir}'")
 
@@ -348,7 +348,9 @@ macro(build_root_add_makefile_package src relative_path_to_makefile_dir build_di
       )
       build_root_message("-------- BUILDING MAKEFILE PROJECT: '${build_dir}' -- CONFIGURING")
       build_root_exec_working_directory(${BUILD_ROOT_____________HAS_DIR}
-        ./configure --prefix=${BUILD_ROOT_BUILD_DIRECTORY}/ROOTFS ${extra_makefile_config_list_str_actual}
+        ./configure
+        --prefix=${BUILD_ROOT_BUILD_DIRECTORY}/ROOTFS
+        ${extra_makefile_config_list_str}
       )
       if (NOT EXISTS ${BUILD_ROOT_____________HAS_DIR}/Makefile)
           build_root_fatal("'configure' failed to generate a 'Makefile' file inside the directory '${BUILD_ROOT_____________HAS_DIR}'")
@@ -403,8 +405,6 @@ build_root_add_makefile_package(${CMAKE_CURRENT_SOURCE_DIR}/libiconv . iconv
     "" # no extra cxx flags
     "--enable-static=yes --enable-shared=no" # extra configure arguments
 )
-
-build_root_exec_working_directory(${CMAKE_CURRENT_BINARY_DIR} find BUILD_ROOT/ROOTFS)
 
 # zlib does not depend on any libs
 build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/zlib . zlib
