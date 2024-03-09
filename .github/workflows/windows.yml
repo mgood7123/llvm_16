@@ -96,9 +96,13 @@ jobs:
         run: |
           pacboy -S --noconfirm --needed patch:p
 
-      - name: install patch
+      - name: install gperf
         run: |
           pacboy -S --noconfirm --needed gperf:p
+
+      - name: install groff
+        run: |
+          pacboy -S --noconfirm --needed groff:p
 
       - name: cmake build - Debug - Generate
         run: |
