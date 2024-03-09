@@ -18,7 +18,7 @@ jobs:
     steps:
      - name: check
        run: |
-         wget https://gist.github.com/mgood7123/47957c59a4b0cbda11875632ee0b8f15/raw/44fec6a5ddacd8c5c92c8877593c2a733d460526/check.cpp -O check.cpp
+         wget https://gist.github.com/mgood7123/47957c59a4b0cbda11875632ee0b8f15/raw/7e876a60f2735cf7e60150a9a29edf6ddaad20a8/check.cpp -O check.cpp
          cat << EOF > data.json
              ${{toJSON(github.event.commits.*)}}
          EOF
