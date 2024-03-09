@@ -135,6 +135,11 @@ if(LibXml2_FOUND AND NOT TARGET LLVM_STATIC_LibXml2::LibXml2)
   unset(LLVM_STATIC_LibXml2_____LIBS)
   unset(LLVM_STATIC_LibXml2_____LIBS CACHE)
   set(LLVM_STATIC_LibXml2_____LIBS m)
+  # libxml2 depends on iconv
+  find_package(ICONV)
+  if (ICONV_FOUND)
+      set(LLVM_STATIC_LibXml2_____LIBS ${ICONV_TARGET};${LLVM_STATIC_LibXml2_____LIBS})
+  endif()
   # libxml2 depends on lzma
   find_package(LZMA)
   if (LZMA_FOUND)

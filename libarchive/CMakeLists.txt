@@ -1028,7 +1028,6 @@ ELSE()
 ENDIF()
 IF(ICONV_FOUND)
   INCLUDE_DIRECTORIES(${ICONV_INCLUDE_DIR})
-  LIST(APPEND ADDITIONAL_LIBS ${ICONV_LIBRARIES})
 ENDIF(ICONV_FOUND)
 MARK_AS_ADVANCED(CLEAR ICONV_INCLUDE_DIR)
 MARK_AS_ADVANCED(CLEAR ICONV_LIBRARIES)
@@ -1044,11 +1043,13 @@ ENDIF()
 IF(LIBXML2_FOUND)
   CMAKE_PUSH_CHECK_STATE()	# Save the state of the variables
   INCLUDE_DIRECTORIES(${LIBXML2_INCLUDE_DIR})
-  # xml2 depends on lzma and libz
+  # xml2 depends on lzma and zlib and iconv
   # since they are static libraries we need to invert the link order
+  # iconv does not depend on any libs
   # lzma does not depend on any libs
   # zlib does not depend on any libs
   LIST(APPEND ADDITIONAL_LIBS ${LIBXML2_LIBRARIES})
+  LIST(APPEND ADDITIONAL_LIBS ${ICONV_LIBRARIES})
   LIST(APPEND ADDITIONAL_LIBS ${LZMA_LIBRARIES})
   LIST(APPEND ADDITIONAL_LIBS ${ZLIB_LIBRARIES})
   SET(HAVE_LIBXML2 1)
@@ -1070,6 +1071,11 @@ IF(LIBXML2_FOUND)
 ELSE(LIBXML2_FOUND)
 
   # LibXml2 was not found
+
+  IF (ICONV_FOUND)
+    # iconv was found, add it to the link chain
+    LIST(APPEND ADDITIONAL_LIBS ${ICONV_LIBRARIES})
+  ENDIF(ICONV_FOUND)
 
   IF (LZMA_FOUND)
     # LZMA was found, add it to the link chain
