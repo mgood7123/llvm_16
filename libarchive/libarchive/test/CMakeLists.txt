@@ -299,6 +299,8 @@ IF(ENABLE_TEST)
   TARGET_COMPILE_DEFINITIONS(libarchive_test PRIVATE LIBARCHIVE_STATIC)
   TARGET_COMPILE_DEFINITIONS(libarchive_test PRIVATE LIST_H)
   TARGET_COMPILE_DEFINITIONS(libarchive_test PRIVATE LZMA_API_STATIC)
+  message(STATUS "linking C executable 'libarchive_test' against these additional libraries: ${ADDITIONAL_LIBS};m")
+
 
   #
   # Generate list.h by grepping DEFINE_TEST() lines out of the C sources.
