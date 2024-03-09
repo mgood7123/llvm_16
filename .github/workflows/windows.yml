@@ -91,6 +91,16 @@ jobs:
         run: |
           pacboy -S --noconfirm --needed autotools:p
 
+      - run: verify aclocal
+        run: |
+          ls -l /a
+          ls -l /a/_temp
+          ls -l /a/_temp/msys64
+          ls -l /a/_temp/msys64/usr
+          ls -l /a/_temp/msys64/usr/share
+          ls -l /a/_temp/msys64/usr/share/aclocal
+          ls -l /a/_temp/msys64/usr/share/aclocal/progtest.m4
+
       - name: install patch
         run: |
           pacboy -S --noconfirm --needed patch
