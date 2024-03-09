@@ -58,15 +58,18 @@ jobs:
           msystem: ${{matrix.sys}}
           update: true
 
+      - name: test symlink support
+        run: |
+          export MSYS=winsymlinks:native
+          touch a
+          ln -s b a
+          cp -v -r zstd/tests/cli-tests/bin .
+          rm -f a
+          rm -f b
+          rm -rf bin
+
       - name: update packages
         run: |
-          echo "github.event.head_commit.message = '${{github.event.head_commit.message}}'"
-          echo "endsWith(github.event.head_commit.message, '- android') = ${{ endsWith(github.event.head_commit.message, '- android') }}"
-          echo "endsWith(github.event.head_commit.message, '- windows') = ${{ endsWith(github.event.head_commit.message, '- windows') }}"
-          echo "endsWith(github.event.head_commit.message, '- linux') = ${{ endsWith(github.event.head_commit.message, '- linux') }}"
-          echo "endsWith(github.event.head_commit.message, '- macos') = ${{ endsWith(github.event.head_commit.message, '- macos') }}"
-          echo "(! endsWith(github.event.head_commit.message, '- android') && endsWith(github.event.head_commit.message, '- windows') && ! endsWith(github.event.head_commit.message, '- linux') && ! endsWith(github.event.head_commit.message, '- macos')) = ${{ (! endsWith(github.event.head_commit.message, '- android') && endsWith(github.event.head_commit.message, '- windows') && ! endsWith(github.event.head_commit.message, '- linux') && ! endsWith(github.event.head_commit.message, '- macos')) }}"
-          echo "(! endsWith(github.event.head_commit.message, '- android') && endsWith(github.event.head_commit.message, '- windows') && ! endsWith(github.event.head_commit.message, '- linux') && ! endsWith(github.event.head_commit.message, '- macos')) || true = ${{ (! endsWith(github.event.head_commit.message, '- android') && endsWith(github.event.head_commit.message, '- windows') && ! endsWith(github.event.head_commit.message, '- linux') && ! endsWith(github.event.head_commit.message, '- macos')) || true }}"
           pacman -Sy
 
       - name: install pacboy
