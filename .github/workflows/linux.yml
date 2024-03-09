@@ -207,11 +207,11 @@ jobs:
 
       - name: SYSTEMD - clone libiconv
         run: |
-          sudo docker container exec --user ubuntu --workdir /home/ubuntu git_local_ubuntu bash -c "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/\$(id -u ubuntu)/bus systemd-run --user --scope --collect /bin/bash -c \"git clone git://git.savannah.gnu.org/libiconv.git libiconv --recursive --depth=1\""
+          sudo docker container exec --user ubuntu --workdir /home/ubuntu git_local_ubuntu bash -c "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/\$(id -u ubuntu)/bus systemd-run --user --scope --collect /bin/bash -c \"cd git_repo ; git clone git://git.savannah.gnu.org/libiconv.git libiconv --recursive --depth=1\""
 
       - name: SYSTEMD - libiconv autopull.sh
         run: |
-          sudo docker container exec --user ubuntu --workdir /home/ubuntu git_local_ubuntu bash -c "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/\$(id -u ubuntu)/bus systemd-run --user --scope --collect /bin/bash -c \"cd libiconv ; ./autopull.sh \""
+          sudo docker container exec --user ubuntu --workdir /home/ubuntu git_local_ubuntu bash -c "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/\$(id -u ubuntu)/bus systemd-run --user --scope --collect /bin/bash -c \"cd git_repo ; cd libiconv ; ./autopull.sh \""
 
       - name: SYSTEMD - cmake build - Debug - Generate
         run: |
