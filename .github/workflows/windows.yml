@@ -91,16 +91,6 @@ jobs:
         run: |
           pacboy -S --noconfirm --needed autotools:p
 
-      - name: verify aclocal
-        run: |
-          ls -l D:/a
-          ls -l D:/a/_temp
-          ls -l D:/a/_temp/msys64
-          ls -l D:/a/_temp/msys64/usr
-          ls -l D:/a/_temp/msys64/usr/share
-          ls -l D:/a/_temp/msys64/usr/share/aclocal
-          ls -l D:/a/_temp/msys64/usr/share/aclocal/progtest.m4
-
       - name: install patch
         run: |
           pacboy -S --noconfirm --needed patch
@@ -134,6 +124,7 @@ jobs:
       - name: cmake build - Debug - Generate
         run: |
           export MSYS=winsymlinks:native
+          export ACLOCAL_PATH=D:/a/_temp/msys64/usr/share/aclocal
           mkdir BUILD_DEBUG
           mkdir ROOTFS_DEBUG
           cmake -G "Unix Makefiles" -DCMAKE_INSTALL_PREFIX=ROOTFS_DEBUG -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_FLAGS="-g3 -O0" -DCMAKE_CXX_FLAGS="-g3 -O0" -DCMAKE_MAKE_PROGRAM=mingw32-make -DCMAKE_COLOR_DIAGNOSTICS=ON -DCMAKE_COLOR_MAKEFILE=ON -S . -B BUILD_DEBUG
