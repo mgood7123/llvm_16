@@ -49,6 +49,10 @@ jobs:
           ref: ${{needs.should_run.outputs.output1}}
           submodules: recursive
 
+      - name: install autotools
+        run: |
+          brew install automake
+
       - name: clone libiconv
         run: |
           git clone git://git.savannah.gnu.org/libiconv.git libiconv --recursive --depth=1
