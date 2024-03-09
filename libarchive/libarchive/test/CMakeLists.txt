@@ -296,9 +296,7 @@ IF(ENABLE_TEST)
   #
   ADD_EXECUTABLE(libarchive_test ${libarchive_test_SOURCES})
   TARGET_LINK_LIBRARIES(libarchive_test archive_static ${ADDITIONAL_LIBS} m)
-  TARGET_COMPILE_DEFINITIONS(libarchive_test PRIVATE LIBARCHIVE_STATIC)
-  TARGET_COMPILE_DEFINITIONS(libarchive_test PRIVATE LIST_H)
-  TARGET_COMPILE_DEFINITIONS(libarchive_test PRIVATE LZMA_API_STATIC)
+  TARGET_COMPILE_DEFINITIONS(libarchive_test PRIVATE LIBARCHIVE_STATIC LIST_H LZMA_API_STATIC)
   message(STATUS "linking C executable 'libarchive_test' against these additional libraries: ${ADDITIONAL_LIBS};m")
 
 
