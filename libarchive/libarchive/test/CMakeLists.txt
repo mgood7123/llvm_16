@@ -287,17 +287,17 @@ IF(ENABLE_TEST)
     test_write_format_zip_zip64.c
     test_write_open_memory.c
     test_write_read_format_zip.c
-    test_xattr_platform.c
     test_zip_filename_encoding.c
   )
 
   #
   # Register target
   #
-  ADD_EXECUTABLE(libarchive_test ${libarchive_test_SOURCES})
-  TARGET_LINK_LIBRARIES(libarchive_test archive_static ${ADDITIONAL_LIBS} m)
+  message(STATUS "linking C executable 'libarchive_test' against these additional libraries: libarchive_test_a;${ADDITIONAL_LIBS};m")
+  ADD_LIBRARY(libarchive_test_a STATIC ${libarchive_test_SOURCES})
+  ADD_EXECUTABLE(libarchive_test test_xattr_platform.c)
+  TARGET_LINK_LIBRARIES(libarchive_test libarchive_test_a archive_static ${ADDITIONAL_LIBS} m)
   TARGET_COMPILE_DEFINITIONS(libarchive_test PRIVATE LIBARCHIVE_STATIC LIST_H LZMA_API_STATIC)
-  message(STATUS "linking C executable 'libarchive_test' against these additional libraries: ${ADDITIONAL_LIBS};m")
 
 
   #
