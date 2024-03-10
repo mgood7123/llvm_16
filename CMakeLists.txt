@@ -2,6 +2,10 @@ cmake_minimum_required(VERSION 3.12)
 
 project(llvm_18 C CXX)
 
+IF (NOT EXISTS /bin/clang++)
+    message(FATAL_ERROR "/bin/clang++ not found");
+endf()
+
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 17)
