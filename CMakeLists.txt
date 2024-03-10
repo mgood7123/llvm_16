@@ -352,6 +352,7 @@ macro(build_root_add_makefile_package src relative_path_to_makefile_dir build_di
     set(BUILD_ROOT_____________android_toolchain_suffix linux-android)
     set(BUILD_ROOT_____________android_compiler_suffix linux-android${ANDROID_PLATFORM})
     set(BUILD_ROOT_____________cross_rc "")
+    build_root_exec(ls -l /lib/android-sdk/ndk/25.2.9519653/toolchains/llvm/prebuilt/linux-x86_64/bin)
     if(CMAKE_ANDROID_ARCH_ABI MATCHES x86_64)
       set(BUILD_ROOT_____________android_machine x86_64)
       set(BUILD_ROOT_____________cross_host "--host=x86_64-linux-android")
