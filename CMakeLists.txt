@@ -246,7 +246,7 @@ macro(build_root_init cmake_packages_dir build_root_dir)
     set(BUILD_ROOT_____________deps_ar "${CMAKE_ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar")
     set(BUILD_ROOT_____________deps_strip "${CMAKE_ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip")
     set(BUILD_ROOT_____________deps_strings "${CMAKE_ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strings")
-    set(BUILD_ROOT_____________FLAGS "export LD=${BUILD_ROOT_____________deps_ld} \; export RANLIB=${BUILD_ROOT_____________deps_ranlib} \; export AR=${BUILD_ROOT_____________deps_ar} \; export NM=${BUILD_ROOT_____________deps_nm} \; export AS=${BUILD_ROOT_____________deps_as} \; export OBJDUMP=${BUILD_ROOT_____________deps_objdump} \; export STRIP=${BUILD_ROOT_____________deps_strip} \; export INSTALL_STRIP_PROGRAM=${BUILD_ROOT_____________deps_strip} \; export STRINGS=${BUILD_ROOT_____________deps_strings}")
+    set(BUILD_ROOT_____________FLAGS_CORE "export LD=${BUILD_ROOT_____________deps_ld} \; export RANLIB=${BUILD_ROOT_____________deps_ranlib} \; export AR=${BUILD_ROOT_____________deps_ar} \; export NM=${BUILD_ROOT_____________deps_nm} \; export AS=${BUILD_ROOT_____________deps_as} \; export OBJDUMP=${BUILD_ROOT_____________deps_objdump} \; export STRIP=${BUILD_ROOT_____________deps_strip} \; export INSTALL_STRIP_PROGRAM=${BUILD_ROOT_____________deps_strip} \; export STRINGS=${BUILD_ROOT_____________deps_strings}")
   else()
     if (CMAKE_CROSSCOMPILING)
       set(BUILD_ROOT_____________cross_host "--host=${ARCH_TRIPLET}")
@@ -261,6 +261,7 @@ macro(build_root_init cmake_packages_dir build_root_dir)
     endif()
     set(BUILD_ROOT_____________deps_cc "${CMAKE_C_COMPILER}")
     set(BUILD_ROOT_____________deps_cxx "${CMAKE_CXX_COMPILER}")
+    set(BUILD_ROOT_____________FLAGS_CORE "")
   endif()
   set(BUILD_ROOT_____________COMMON_LINK_FLAGS "-L${LLVM_BUILD_ROOT__ROOTFS}/lib")
   set(BUILD_ROOT_____________COMMON_INCLUDE_FLAGS "-I${LLVM_BUILD_ROOT__ROOTFS}/include")
@@ -373,8 +374,9 @@ macro(build_root_add_makefile_package src relative_path_to_makefile_dir build_di
   endforeach()
   message(STATUS "(could be empty) new_line_seperated_extra_makefile_config_list_str = ${new_line_seperated_extra_makefile_config_list_str}")
 
-  ## -I${LLVM_BUILD_ROOT__ROOTFS}/include
-  set(BUILD_ROOT_____________FLAGS "${BUILD_ROOT_____________FLAGS} \; export PKG_CONFIG_PATH=\"${LLVM_BUILD_ROOT__ROOTFS}/lib/pkgconfig:${LLVM_BUILD_ROOT__ROOTFS}/share/pkgconfig:\$PKG_CONFIG_PATH\" \; export CC=\"${BUILD_ROOT_____________deps_cc}\" \; export LDFLAGS=\"${BUILD_ROOT_____________COMMON_LINK_FLAGS}\" \; export CFLAGS=\"${BUILD_ROOT_____________COMMON_FLAGS} ${new_line_seperated_extra_c_flags} ${CMAKE_C_FLAGS}\" \; export CXX=\"${BUILD_ROOT_____________deps_cxx}\" \; export CXXFLAGS=\"${BUILD_ROOT_____________COMMON_FLAGS} ${new_line_seperated_extra_cxx_flags} ${CMAKE_CXX_FLAGS}\"")
+  unset(BUILD_ROOT_____________FLAGS)
+  unset(BUILD_ROOT_____________FLAGS CACHE)
+  set(BUILD_ROOT_____________FLAGS "${BUILD_ROOT_____________FLAGS_CORE} \; export PKG_CONFIG_PATH=\"${LLVM_BUILD_ROOT__ROOTFS}/lib/pkgconfig:${LLVM_BUILD_ROOT__ROOTFS}/share/pkgconfig:\$PKG_CONFIG_PATH\" \; export CC=\"${BUILD_ROOT_____________deps_cc}\" \; export LDFLAGS=\"${BUILD_ROOT_____________COMMON_LINK_FLAGS}\" \; export CFLAGS=\"${BUILD_ROOT_____________COMMON_FLAGS} ${new_line_seperated_extra_c_flags} ${CMAKE_C_FLAGS}\" \; export CXX=\"${BUILD_ROOT_____________deps_cxx}\" \; export CXXFLAGS=\"${BUILD_ROOT_____________COMMON_FLAGS} ${new_line_seperated_extra_cxx_flags} ${CMAKE_CXX_FLAGS}\"")
 
   build_root_message("-------- BUILDING MAKEFILE PROJECT: '${build_dir}'")
 
