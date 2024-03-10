@@ -265,7 +265,6 @@ macro(build_root_init cmake_packages_dir build_root_dir)
   set(BUILD_ROOT_____________COMMON_LINK_FLAGS "-L${LLVM_BUILD_ROOT__ROOTFS}/lib")
   set(BUILD_ROOT_____________COMMON_INCLUDE_FLAGS "-I${LLVM_BUILD_ROOT__ROOTFS}/include")
   set(BUILD_ROOT_____________COMMON_FLAGS "${BUILD_ROOT_____________COMMON_INCLUDE_FLAGS} ${BUILD_ROOT_____________COMMON_LINK_FLAGS}")
-  set(BUILD_ROOT_____________FLAGS "${BUILD_ROOT_____________FLAGS} \; export PKG_CONFIG_PATH=\"${LLVM_BUILD_ROOT__ROOTFS}/lib/pkgconfig:\$PKG_CONFIG_PATH\" \; export CC=\"${BUILD_ROOT_____________deps_cc}\" \; export LDFLAGS=\"${BUILD_ROOT_____________COMMON_LINK_FLAGS}\" \; export CFLAGS=\"${BUILD_ROOT_____________COMMON_FLAGS} ${CMAKE_C_FLAGS}\" \; export CXX=\"${BUILD_ROOT_____________deps_cxx}\" \; export CXXFLAGS=\"${BUILD_ROOT_____________COMMON_FLAGS} ${CMAKE_CXX_FLAGS}\"")
 endmacro()
 
 macro(build_root_add_cmake_package src relative_path_to_cmake_dir build_dir new_line_seperated_extra_c_flags new_line_seperated_extra_cxx_flags new_line_seperated_extra_cmake_config)
@@ -373,6 +372,9 @@ macro(build_root_add_makefile_package src relative_path_to_makefile_dir build_di
       string(APPEND new_line_seperated_extra_makefile_config_list_str "${ARG}")
   endforeach()
   message(STATUS "(could be empty) new_line_seperated_extra_makefile_config_list_str = ${new_line_seperated_extra_makefile_config_list_str}")
+
+  ## -I${LLVM_BUILD_ROOT__ROOTFS}/include
+  set(BUILD_ROOT_____________FLAGS "${BUILD_ROOT_____________FLAGS} \; export PKG_CONFIG_PATH=\"${LLVM_BUILD_ROOT__ROOTFS}/lib/pkgconfig:${LLVM_BUILD_ROOT__ROOTFS}/share/pkgconfig:\$PKG_CONFIG_PATH\" \; export CC=\"${BUILD_ROOT_____________deps_cc}\" \; export LDFLAGS=\"${BUILD_ROOT_____________COMMON_LINK_FLAGS}\" \; export CFLAGS=\"${BUILD_ROOT_____________COMMON_FLAGS} ${new_line_seperated_extra_c_flags} ${CMAKE_C_FLAGS}\" \; export CXX=\"${BUILD_ROOT_____________deps_cxx}\" \; export CXXFLAGS=\"${BUILD_ROOT_____________COMMON_FLAGS} ${new_line_seperated_extra_cxx_flags} ${CMAKE_CXX_FLAGS}\"")
 
   build_root_message("-------- BUILDING MAKEFILE PROJECT: '${build_dir}'")
 
@@ -560,8 +562,8 @@ else()
         endif()
         # android does not have ncurses so we must build it
         build_root_add_makefile_package(${CMAKE_CURRENT_SOURCE_DIR}/ncurses . ncurses
-            "" # no extra c flags
-            "" # no extra cxx flags
+            "-I${LLVM_BUILD_ROOT__ROOTFS}/include/ncurses" # extra c flags
+            "-I${LLVM_BUILD_ROOT__ROOTFS}/include/ncurses" # extra cxx flags
             "
                 --disable-stripping
             " # extra configure arguments
