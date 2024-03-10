@@ -348,10 +348,56 @@ macro(build_root_add_makefile_package src relative_path_to_makefile_dir build_di
       set(BUILD_ROOT_____________HAS_DIR ${BUILD_ROOT_BUILD_DIRECTORY}/SRC/${build_dir}/${relative_path_to_makefile_dir})
   endif()
 
+  if(ANDROID)
+    set(BUILD_ROOT_____________android_toolchain_suffix linux-android)
+    set(BUILD_ROOT_____________android_compiler_suffix linux-android${ANDROID_PLATFORM})
+    if(CMAKE_ANDROID_ARCH_ABI MATCHES x86_64)
+      set(BUILD_ROOT_____________android_machine x86_64)
+      set(BUILD_ROOT_____________cross_host "--host=x86_64-linux-android")
+      set(BUILD_ROOT_____________android_compiler_prefix x86_64)
+      set(BUILD_ROOT_____________android_compiler_suffix linux-android${ANDROID_PLATFORM})
+      set(BUILD_ROOT_____________android_toolchain_prefix x86_64)
+      set(BUILD_ROOT_____________android_toolchain_suffix linux-android)
+    elseif(CMAKE_ANDROID_ARCH_ABI MATCHES x86)
+      set(BUILD_ROOT_____________android_machine i686)
+      set(BUILD_ROOT_____________cross_host "--host=i686-linux-android")
+      set(BUILD_ROOT_____________android_compiler_prefix i686)
+      set(BUILD_ROOT_____________android_compiler_suffix linux-android${ANDROID_PLATFORM})
+      set(BUILD_ROOT_____________android_toolchain_prefix i686)
+      set(BUILD_ROOT_____________android_toolchain_suffix linux-android)
+    elseif(CMAKE_ANDROID_ARCH_ABI MATCHES armeabi-v7a)
+      set(BUILD_ROOT_____________android_machine armv7)
+      set(BUILD_ROOT_____________cross_host "--host=armv7a-linux-androideabi")
+      set(BUILD_ROOT_____________android_compiler_prefix armv7a)
+      set(BUILD_ROOT_____________android_compiler_suffix linux-androideabi${ANDROID_PLATFORM})
+      set(BUILD_ROOT_____________android_toolchain_prefix arm)
+      set(BUILD_ROOT_____________android_toolchain_suffix linux-androideabi)
+    elseif(CMAKE_ANDROID_ARCH_ABI MATCHES arm64-v8a)
+      set(BUILD_ROOT_____________android_machine aarch64)
+      set(BUILD_ROOT_____________cross_host "--host=aarch64-linux-android")
+      set(BUILD_ROOT_____________android_compiler_prefix aarch64)
+      set(BUILD_ROOT_____________android_compiler_suffix linux-android${ANDROID_PLATFORM})
+      set(BUILD_ROOT_____________android_toolchain_prefix aarch64)
+      set(BUILD_ROOT_____________android_toolchain_suffix linux-android)
+    else()
+      message(FATAL_ERROR "unknown android arch: ${CMAKE_ANDROID_ARCH_ABI}")
+    endif()
+    set(deps_cc "${CMAKE_ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/bin/${BUILD_ROOT_____________android_compiler_prefix}-${BUILD_ROOT_____________android_compiler_suffix}-clang")
+    set(deps_cxx "${CMAKE_ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/bin/${BUILD_ROOT_____________android_compiler_prefix}-${BUILD_ROOT_____________android_compiler_suffix}-clang++")
+    set(deps_ld "${CMAKE_ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/bin/${BUILD_ROOT_____________android_compiler_prefix}-${BUILD_ROOT_____________android_toolchain_suffix}-ld")
+    set(deps_ranlib "${CMAKE_ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/bin/${BUILD_ROOT_____________android_toolchain_prefix}-${BUILD_ROOT_____________android_toolchain_suffix}-ranlib")
+    set(deps_ar "${CMAKE_ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/bin/${BUILD_ROOT_____________android_toolchain_prefix}-${BUILD_ROOT_____________android_toolchain_suffix}-ar")
+    set(BUILD_ROOT_____________FLAGS "export CC=\"${deps_cc}\" \; export CFLAGS=\"${CMAKE_C_FLAGS}\" \; export CXX=\"${deps_cxx}\" \; export CXXFLAGS=\"${CMAKE_CXX_FLAGS}\" \; export LD=${deps_ld} \; export RANLIB=${deps_ranlib} \; export AR=${deps_ar}")
+  else()
+    set(deps_cc "${CMAKE_C_COMPILER}")
+    set(deps_cxx "${CMAKE_CXX_COMPILER}")
+    set(BUILD_ROOT_____________FLAGS "export CC=\"${deps_cc}\" \; export CFLAGS=\"${CMAKE_C_FLAGS}\" \; export CXX=\"${deps_cxx}\" \; export CXXFLAGS=\"${CMAKE_CXX_FLAGS}\" \;")
+  endif()
+  
   if (BUILD_ROOT_____________HAS_A)
       build_root_message("-------- BUILDING MAKEFILE PROJECT: '${build_dir}' -- GENERATING (AUTOGEN)")
       build_root_exec_working_directory(${BUILD_ROOT_____________HAS_DIR}
-        ${BUILD_ROOT_____________BASH_PROGRAM} -c "export CC=\"${CMAKE_C_COMPILER}\" \; export CFLAGS=\"${CMAKE_C_FLAGS}\" \; export CXX=\"${CMAKE_CXX_COMPILER}\" \; export CXXFLAGS=\"${CMAKE_CXX_FLAGS}\" \; sh ./autogen.sh"
+        ${BUILD_ROOT_____________BASH_PROGRAM} -c "${BUILD_ROOT_____________FLAGS} \; sh ./autogen.sh"
       )
       if (NOT EXISTS ${BUILD_ROOT_____________HAS_DIR}/configure)
           build_root_fatal("'autogen.sh' failed to generate a 'configure' file inside the directory '${BUILD_ROOT_____________HAS_DIR}'")
@@ -363,11 +409,11 @@ macro(build_root_add_makefile_package src relative_path_to_makefile_dir build_di
   if (BUILD_ROOT_____________HAS_C)
       build_root_message("-------- BUILDING MAKEFILE PROJECT: '${build_dir}' -- CONFIGURING (--help)")
       build_root_exec_working_directory(${BUILD_ROOT_____________HAS_DIR}
-        bash -c "export CC=\"${CMAKE_C_COMPILER}\" \; export CFLAGS=\"${CMAKE_C_FLAGS}\" \; export CXX=\"${CMAKE_CXX_COMPILER}\" \; export CXXFLAGS=\"${CMAKE_CXX_FLAGS}\" \; sh ./configure --help"
+        bash -c "${BUILD_ROOT_____________FLAGS} \; sh ./configure --help"
       )
       build_root_message("-------- BUILDING MAKEFILE PROJECT: '${build_dir}' -- CONFIGURING")
       build_root_exec_working_directory(${BUILD_ROOT_____________HAS_DIR}
-        bash -c "export CC=\"${CMAKE_C_COMPILER}\" \; export CFLAGS=\"${CMAKE_C_FLAGS}\" \; export CXX=\"${CMAKE_CXX_COMPILER}\" \; export CXXFLAGS=\"${CMAKE_CXX_FLAGS}\" \; sh ./configure --prefix=${BUILD_ROOT_BUILD_DIRECTORY}/ROOTFS ${new_line_seperated_extra_makefile_config_list_str}"
+        bash -c "${BUILD_ROOT_____________FLAGS} \; sh ./configure --prefix=${BUILD_ROOT_BUILD_DIRECTORY}/ROOTFS ${new_line_seperated_extra_makefile_config_list_str}"
       )
       if (NOT EXISTS ${BUILD_ROOT_____________HAS_DIR}/Makefile)
           build_root_fatal("'configure' failed to generate a 'Makefile' file inside the directory '${BUILD_ROOT_____________HAS_DIR}'")
@@ -379,12 +425,12 @@ macro(build_root_add_makefile_package src relative_path_to_makefile_dir build_di
   if (BUILD_ROOT_____________HAS_M)
       build_root_message("-------- BUILDING MAKEFILE PROJECT: '${build_dir}' -- BUILDING")
       build_root_exec_working_directory(${BUILD_ROOT_____________HAS_DIR}
-        bash -c "export CC=\"${CMAKE_C_COMPILER}\" \; export CFLAGS=\"${CMAKE_C_FLAGS}\" \; export CXX=\"${CMAKE_CXX_COMPILER}\" \; export CXXFLAGS=\"${CMAKE_CXX_FLAGS}\" \; make"
+        bash -c "${BUILD_ROOT_____________FLAGS} \; make"
       )
       build_root_message("-------- BUILDING MAKEFILE PROJECT: '${build_dir}' -- BUILT")
       build_root_message("-------- BUILDING MAKEFILE PROJECT: '${build_dir}' -- INSTALLING")
       build_root_exec_working_directory(${BUILD_ROOT_____________HAS_DIR}
-        bash -c "export CC=\"${CMAKE_C_COMPILER}\" \; export CFLAGS=\"${CMAKE_C_FLAGS}\" \; export CXX=\"${CMAKE_CXX_COMPILER}\" \; export CXXFLAGS=\"${CMAKE_CXX_FLAGS}\" \; make install"
+        bash -c "${BUILD_ROOT_____________FLAGS} \; make install"
       )
       build_root_message("-------- BUILDING MAKEFILE PROJECT: '${build_dir}' -- INSTALLED")
   endif()
