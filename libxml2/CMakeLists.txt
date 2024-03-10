@@ -318,6 +318,10 @@ set(
 	xzlib.c
 )
 
+if(ANDROID)
+	list(APPEND LIBXML2_SRCS android/glob.c)
+endif()
+
 if(WIN32)
 	list(APPEND LIBXML2_SRCS win32/libxml2.rc)
 	file(
