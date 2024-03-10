@@ -319,6 +319,7 @@ set(
 )
 
 if(ANDROID)
+	list(APPEND LIBXML2_SRCS android/issetugid.c)
 	list(APPEND LIBXML2_SRCS android/glob.c)
 endif()
 
