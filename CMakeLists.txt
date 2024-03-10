@@ -540,6 +540,11 @@ if (WIN32)
     )
 else()
     if (ANDROID)
+        # https://android.googlesource.com/platform/bionic/+/master/docs/status.md
+        if (${ANDROID_PLATFORM} LESS 21)
+            # api 20 and below lacks twalk which ncurses uses but assumes is included with tsearch
+            build_root_exec_working_directory(${CMAKE_CURRENT_SOURCE_DIR} cp -v ncurses_patch_api20_configure ncurses/configure)
+        endif()
         # android does not have ncurses so we must build it
         build_root_add_makefile_package(${CMAKE_CURRENT_SOURCE_DIR}/ncurses . ncurses
             "" # no extra c flags
