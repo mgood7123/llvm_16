@@ -447,6 +447,10 @@ macro(build_root_add_makefile_package src relative_path_to_makefile_dir build_di
         ${BUILD_ROOT_____________BASH_PROGRAM} -c "${BUILD_ROOT_____________FLAGS} \; make"
       )
       build_root_message("-------- BUILDING MAKEFILE PROJECT: '${build_dir}' -- BUILT")
+      build_root_message("-------- BUILDING MAKEFILE PROJECT: '${build_dir}' -- INSTALLING (cat Makefile)")
+      build_root_exec_working_directory(${BUILD_ROOT_____________HAS_DIR}
+        ${BUILD_ROOT_____________BASH_PROGRAM} -c "${BUILD_ROOT_____________FLAGS} \; cat Makefile"
+      )
       build_root_message("-------- BUILDING MAKEFILE PROJECT: '${build_dir}' -- INSTALLING")
       build_root_exec_working_directory(${BUILD_ROOT_____________HAS_DIR}
         ${BUILD_ROOT_____________BASH_PROGRAM} -c "${BUILD_ROOT_____________FLAGS} \; make install"
