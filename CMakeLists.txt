@@ -332,7 +332,7 @@ macro(build_root_add_makefile_package src relative_path_to_makefile_dir build_di
   if (BUILD_ROOT_____________HAS_A)
       build_root_message("-------- BUILDING MAKEFILE PROJECT: '${build_dir}' -- GENERATING (AUTOGEN)")
       build_root_exec_working_directory(${BUILD_ROOT_____________HAS_DIR}
-        sh ./autogen.sh
+        bash -c "export CC=\"${CMAKE_C_COMPILER}\" ; export CFLAGS=\"${CMAKE_C_FLAGS}\" ; export CXX=\"${CMAKE_CXX_COMPILER}\" ; export CXXFLAGS=\"${CMAKE_CXX_FLAGS}\" ; sh ./autogen.sh"
       )
       if (NOT EXISTS ${BUILD_ROOT_____________HAS_DIR}/configure)
           build_root_fatal("'autogen.sh' failed to generate a 'configure' file inside the directory '${BUILD_ROOT_____________HAS_DIR}'")
@@ -344,13 +344,11 @@ macro(build_root_add_makefile_package src relative_path_to_makefile_dir build_di
   if (BUILD_ROOT_____________HAS_C)
       build_root_message("-------- BUILDING MAKEFILE PROJECT: '${build_dir}' -- CONFIGURING (--help)")
       build_root_exec_working_directory(${BUILD_ROOT_____________HAS_DIR}
-        sh ./configure --help
+        bash -c "export CC=\"${CMAKE_C_COMPILER}\" ; export CFLAGS=\"${CMAKE_C_FLAGS}\" ; export CXX=\"${CMAKE_CXX_COMPILER}\" ; export CXXFLAGS=\"${CMAKE_CXX_FLAGS}\" ; sh ./configure --help"
       )
       build_root_message("-------- BUILDING MAKEFILE PROJECT: '${build_dir}' -- CONFIGURING")
       build_root_exec_working_directory(${BUILD_ROOT_____________HAS_DIR}
-        sh ./configure
-        --prefix=${BUILD_ROOT_BUILD_DIRECTORY}/ROOTFS
-        ${new_line_seperated_extra_makefile_config_list_str}
+        bash -c "export CC=\"${CMAKE_C_COMPILER}\" ; export CFLAGS=\"${CMAKE_C_FLAGS}\" ; export CXX=\"${CMAKE_CXX_COMPILER}\" ; export CXXFLAGS=\"${CMAKE_CXX_FLAGS}\" ; sh ./configure --prefix=${BUILD_ROOT_BUILD_DIRECTORY}/ROOTFS ${new_line_seperated_extra_makefile_config_list_str}"
       )
       if (NOT EXISTS ${BUILD_ROOT_____________HAS_DIR}/Makefile)
           build_root_fatal("'configure' failed to generate a 'Makefile' file inside the directory '${BUILD_ROOT_____________HAS_DIR}'")
@@ -362,31 +360,52 @@ macro(build_root_add_makefile_package src relative_path_to_makefile_dir build_di
   if (BUILD_ROOT_____________HAS_M)
       build_root_message("-------- BUILDING MAKEFILE PROJECT: '${build_dir}' -- BUILDING")
       build_root_exec_working_directory(${BUILD_ROOT_____________HAS_DIR}
-        make
+        bash -c "export CC=\"${CMAKE_C_COMPILER}\" ; export CFLAGS=\"${CMAKE_C_FLAGS}\" ; export CXX=\"${CMAKE_CXX_COMPILER}\" ; export CXXFLAGS=\"${CMAKE_CXX_FLAGS}\" ; make"
       )
       build_root_message("-------- BUILDING MAKEFILE PROJECT: '${build_dir}' -- BUILT")
+      build_root_message("-------- BUILDING MAKEFILE PROJECT: '${build_dir}' -- INSTALLING")
+      build_root_exec_working_directory(${BUILD_ROOT_____________HAS_DIR}
+        bash -c "export CC=\"${CMAKE_C_COMPILER}\" ; export CFLAGS=\"${CMAKE_C_FLAGS}\" ; export CXX=\"${CMAKE_CXX_COMPILER}\" ; export CXXFLAGS=\"${CMAKE_CXX_FLAGS}\" ; make install"
+      )
+      build_root_message("-------- BUILDING MAKEFILE PROJECT: '${build_dir}' -- INSTALLED")
   endif()
-  build_root_message("-------- BUILDING MAKEFILE PROJECT: '${build_dir}' -- INSTALLING")
-  build_root_exec_working_directory(${BUILD_ROOT_____________HAS_DIR}
-    make install
-  )
-  build_root_message("-------- BUILDING MAKEFILE PROJECT: '${build_dir}' -- INSTALLED")
   build_root_message("-------- BUILT MAKEFILE PROJECT: '${build_dir}'")
 endmacro()
 
 message("CMAKE_SYSTEM_NAME = ${CMAKE_SYSTEM_NAME}")
-message("CMAKE_C_COMPILER = ${CMAKE_C_COMPILER}")
-message("CMAKE_CXX_COMPILER = ${CMAKE_CXX_COMPILER}")
-message("CMAKE_TOOLCHAIN_FILE = ${CMAKE_TOOLCHAIN_FILE}")
 message("CMAKE_ANDROID_NDK = ${CMAKE_ANDROID_NDK}")
 message("CMAKE_ANDROID_NDK_VERSION = ${CMAKE_ANDROID_NDK_VERSION}")
 message("CMAKE_ANDROID_NDK_TOOLCHAIN_HOST_TAG = ${CMAKE_ANDROID_NDK_TOOLCHAIN_HOST_TAG}")
 message("CMAKE_ANDROID_NDK_TOOLCHAIN_VERSION = ${CMAKE_ANDROID_NDK_TOOLCHAIN_VERSION}")
-message("ANDROID_ABI = ${ANDROID_ABI}")
-message("ANDROID_ARM_MODE = ${ANDROID_ARM_MODE}")
-message("ANDROID_ARM_NEON = ${ANDROID_ARM_NEON}")
-message("ANDROID_PLATFORM = ${ANDROID_PLATFORM}")
-message("ANDROID_STL = ${ANDROID_STL}")
+message("-DCMAKE_COLOR_DIAGNOSTICS=${CMAKE_COLOR_DIAGNOSTICS}")
+message("-DCMAKE_COLOR_MAKEFILE=${CMAKE_COLOR_MAKEFILE}")
+message("-DCMAKE_MAKE_PROGRAM=${CMAKE_MAKE_PROGRAM}")
+message("-DCMAKE_VERBOSE_MAKEFILE=${CMAKE_VERBOSE_MAKEFILE}")
+message("-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}")
+message("-DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}")
+message("-DCMAKE_C_STANDARD=${CMAKE_C_STANDARD}")
+message("-DCMAKE_C_STANDARD_REQUIRED=${CMAKE_C_STANDARD_REQUIRED}")
+message("-DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}")
+message("-DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}")
+message("-DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD}")
+message("-DCMAKE_CXX_STANDARD_REQUIRED=${CMAKE_CXX_STANDARD_REQUIRED}")
+message("-DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}")
+message("-DCMAKE_MODULE_LINKER_FLAGS=${CMAKE_MODULE_LINKER_FLAGS}")
+message("-DCMAKE_SHARED_LINKER_FLAGS=${CMAKE_SHARED_LINKER_FLAGS}")
+message("-DCMAKE_EXE_LINKER_FLAGS=${CMAKE_EXE_LINKER_FLAGS}")
+message("-DCMAKE_INSTALL_PREFIX=${BUILD_ROOT_BUILD_DIRECTORY}/ROOTFS")
+message("-DCMAKE_POLICY_DEFAULT_CMP0074=${CMAKE_POLICY_DEFAULT_CMP0074}")
+message("-DCMAKE_POLICY_DEFAULT_CMP0075=${CMAKE_POLICY_DEFAULT_CMP0075}")
+message("-DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}")
+message("-DCMAKE_SYSROOT=${CMAKE_SYSROOT}")
+message("-DCMAKE_MODULE_PATH=${CMAKE_MODULE_PATH}")
+message("-DCMAKE_SYSTEM_PREFIX_PATH=${CMAKE_SYSTEM_PREFIX_PATH}")
+message("-DLLVM_BUILD_ROOT__ROOTFS=${LLVM_BUILD_ROOT__ROOTFS}")
+message("-DANDROID_ABI=${ANDROID_ABI}")
+message("-DANDROID_ARM_MODE=${ANDROID_ARM_MODE}")
+message("-DANDROID_ARM_NEON=${ANDROID_ARM_NEON}")
+message("-DANDROID_PLATFORM=${ANDROID_PLATFORM}")
+message("-DANDROID_STL=${ANDROID_STL}")
 
 # if (NIX_SHELL_OS_WINDOWS)
 #   build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/wineditline . libedit
