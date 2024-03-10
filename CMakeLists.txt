@@ -414,6 +414,10 @@ macro(build_root_add_makefile_package src relative_path_to_makefile_dir build_di
   endif()
   
   if (BUILD_ROOT_____________HAS_A)
+      build_root_message("-------- BUILDING MAKEFILE PROJECT: '${build_dir}' -- GENERATING (AUTOGEN (--help))")
+      build_root_exec_working_directory(${BUILD_ROOT_____________HAS_DIR}
+        ${BUILD_ROOT_____________BASH_PROGRAM} -c "./autogen.sh --help \; true"
+      )
       build_root_message("-------- BUILDING MAKEFILE PROJECT: '${build_dir}' -- GENERATING (AUTOGEN)")
       build_root_exec_working_directory(${BUILD_ROOT_____________HAS_DIR}
         ${BUILD_ROOT_____________BASH_PROGRAM} ./autogen.sh
@@ -442,14 +446,18 @@ macro(build_root_add_makefile_package src relative_path_to_makefile_dir build_di
       build_root_message("-------- BUILDING MAKEFILE PROJECT: '${build_dir}' -- CONFIGURED")
   endif()
   if (BUILD_ROOT_____________HAS_M)
+      build_root_message("-------- BUILDING MAKEFILE PROJECT: '${build_dir}' -- BUILDING (--help)")
+      build_root_exec_working_directory(${BUILD_ROOT_____________HAS_DIR}
+        ${BUILD_ROOT_____________BASH_PROGRAM} -c "${BUILD_ROOT_____________FLAGS} \; make --help"
+      )
       build_root_message("-------- BUILDING MAKEFILE PROJECT: '${build_dir}' -- BUILDING")
       build_root_exec_working_directory(${BUILD_ROOT_____________HAS_DIR}
         ${BUILD_ROOT_____________BASH_PROGRAM} -c "${BUILD_ROOT_____________FLAGS} \; make"
       )
       build_root_message("-------- BUILDING MAKEFILE PROJECT: '${build_dir}' -- BUILT")
-      build_root_message("-------- BUILDING MAKEFILE PROJECT: '${build_dir}' -- INSTALLING (cat Makefile)")
+      build_root_message("-------- BUILDING MAKEFILE PROJECT: '${build_dir}' -- INSTALLING (--help)")
       build_root_exec_working_directory(${BUILD_ROOT_____________HAS_DIR}
-        ${BUILD_ROOT_____________BASH_PROGRAM} -c "${BUILD_ROOT_____________FLAGS} \; cat Makefile"
+        ${BUILD_ROOT_____________BASH_PROGRAM} -c "${BUILD_ROOT_____________FLAGS} \; make install --help"
       )
       build_root_message("-------- BUILDING MAKEFILE PROJECT: '${build_dir}' -- INSTALLING")
       build_root_exec_working_directory(${BUILD_ROOT_____________HAS_DIR}
@@ -554,8 +562,7 @@ else()
             "" # no extra c flags
             "" # no extra cxx flags
             "
-                --enable-static=yes
-                --enable-shared=no
+                --disable-stripping
             " # extra configure arguments
         )
     endif()
