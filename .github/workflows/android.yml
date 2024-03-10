@@ -273,7 +273,7 @@ jobs:
 
       - name: SYSTEMD - clone ncurses
         run: |
-          sudo docker container exec --user ubuntu --workdir /home/ubuntu git_local_ubuntu bash -c "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/\$(id -u ubuntu)/bus systemd-run --user --scope --collect /bin/bash -c \"cd git_repo ; git clone https://github.com/mirror/ncurses ncurses --recursive --depth=1 ; cp -v ncurses_patch_api20_config.in ncurses/configure.in\""
+          sudo docker container exec --user ubuntu --workdir /home/ubuntu git_local_ubuntu bash -c "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/\$(id -u ubuntu)/bus systemd-run --user --scope --collect /bin/bash -c \"cd git_repo ; git clone https://github.com/mirror/ncurses ncurses --recursive --depth=1 ; cp -v ncurses_patch_api20_config.in ncurses/configure.in ; cp -v ncurses_patch_api20_ncurses_defs ncurses/include/ncurses_defs ; cp -v ncurses_patch_api20_tests_configure.in ncurses/tests/configure.in\""
 
       - name: SYSTEMD - cmake build - Debug - Generate
         run: |
