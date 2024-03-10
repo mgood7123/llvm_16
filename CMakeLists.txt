@@ -299,7 +299,7 @@ macro(build_root_add_makefile_package src relative_path_to_makefile_dir build_di
       if (new_line_seperated_extra_makefile_config_list_str)
         string(APPEND new_line_seperated_extra_makefile_config_list_str " ")
       endif()
-      string(APPEND new_line_seperated_extra_makefile_config_list_str "'${ARG}'")
+      string(APPEND new_line_seperated_extra_makefile_config_list_str "${ARG}")
   endforeach()
   message(STATUS "(could be empty) new_line_seperated_extra_makefile_config_list_str = ${new_line_seperated_extra_makefile_config_list_str}")
 
