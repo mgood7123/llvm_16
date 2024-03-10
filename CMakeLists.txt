@@ -539,6 +539,17 @@ if (WIN32)
         "
     )
 else()
+    if (ANDROID)
+        # android does not have ncurses so we must build it
+        build_root_add_makefile_package(${CMAKE_CURRENT_SOURCE_DIR}/ncurses . ncurses
+            "" # no extra c flags
+            "" # no extra cxx flags
+            "
+                --enable-static=yes
+                --enable-shared=no
+            " # extra configure arguments
+        )
+    endif()
     build_root_add_makefile_package(${CMAKE_CURRENT_SOURCE_DIR}/libedit-20230828-3.1 . LibEdit
         "" # no extra c flags
         "" # no extra cxx flags
