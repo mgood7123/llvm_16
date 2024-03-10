@@ -604,8 +604,9 @@ else()
         )
     endif()
     build_root_add_makefile_package(${CMAKE_CURRENT_SOURCE_DIR}/libedit-20230828-3.1 . LibEdit
-        "-I${LLVM_BUILD_ROOT__ROOTFS}/include/ncurses" # extra c flags
-        "-I${LLVM_BUILD_ROOT__ROOTFS}/include/ncurses" # extra cxx flags
+        # wchar_t must store ISO 10646 characters
+        "-I${LLVM_BUILD_ROOT__ROOTFS}/include/ncurses -D__STDC_ISO_10646__" # extra c flags
+        "-I${LLVM_BUILD_ROOT__ROOTFS}/include/ncurses -D__STDC_ISO_10646__" # extra cxx flags
         "
             --enable-static=yes
             --enable-shared=no
