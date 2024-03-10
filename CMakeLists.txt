@@ -403,7 +403,7 @@ macro(build_root_add_makefile_package src relative_path_to_makefile_dir build_di
     endif()
     set(BUILD_ROOT_____________deps_cc "${CMAKE_C_COMPILER}")
     set(BUILD_ROOT_____________deps_cxx "${CMAKE_CXX_COMPILER}")
-    set(BUILD_ROOT_____________FLAGS "export CC=\"${BUILD_ROOT_____________deps_cc}\" \; export CFLAGS=\"${CMAKE_C_FLAGS}\" \; export CXX=\"${BUILD_ROOT_____________deps_cxx}\" \; export CXXFLAGS=\"${CMAKE_CXX_FLAGS}\" \;")
+    set(BUILD_ROOT_____________FLAGS "export CC=\"${BUILD_ROOT_____________deps_cc}\" \; export CFLAGS=\"${CMAKE_C_FLAGS}\" \; export CXX=\"${BUILD_ROOT_____________deps_cxx}\" \; export CXXFLAGS=\"${CMAKE_CXX_FLAGS}\"")
   endif()
   
   if (BUILD_ROOT_____________HAS_A)
