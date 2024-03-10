@@ -32,25 +32,18 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: ubuntu-latest
-            name: android 19
-            android_abi: armeabi-v7a
-            android_arm_neon: TRUE
-            android_arm_mode: thumb
-            android_platform: 19
-            android_stl: c++_static
-            arch: armv7a
-            clang_prefix: armv7a-linux-androideabi
-          - os: ubuntu-latest
-            name: android 19
-            android_abi: x86
-            # disabling neon is no longer supported even if we do not target it
-            android_arm_neon: TRUE
-            android_arm_mode: thumb
-            android_platform: 19
-            android_stl: c++_static
-            arch: 1686
-            clang_prefix: i686-linux-android
+    # android api 19 is kitkat 4.4
+    # android api 21 is lollipop 5.0
+    # additionally https://github.com/android/ndk/issues/1108
+# The pre-L libc functions I looked at seem to treat wchar_t as being one byte in size, whereas it's always 4 bytes in the NDK. e.g.:
+#
+#     printf("%ls\n", L"hello") ==> prints "h" in JB (prints "hello" in L)
+#     printf("%ls\n", (const wchar_t*)"hello") ==> prints "hello" in JB (prints nothing or crashes in L)
+#     mbstowcs(NULL, "\xce\x91" "\xce\x91" "\xce\x91", 256) ==> returns 7 in JB (returns 3 in L)
+#     wcstombs(NULL, L"123456789", 256) ==> returns 2 in JB (returns 9 in L)
+#
+# The last example shows another problem -- pre-L mbstowcs/wcstombs return the size of their input strings plus 1. (I guess they're counting the NUL terminator?)
+
           - os: ubuntu-latest
             name: android 21
             android_abi: armeabi-v7a
