@@ -313,6 +313,13 @@ macro(build_root_add_makefile_package src relative_path_to_makefile_dir build_di
   unset(BUILD_ROOT_____________HAS_A CACHE)
   unset(BUILD_ROOT_____________HAS_DIR)
   unset(BUILD_ROOT_____________HAS_DIR CACHE)
+  unset(BUILD_ROOT_____________BASH_PROGRAM)
+  unset(BUILD_ROOT_____________BASH_PROGRAM CACHE)
+  if (WIN32)
+    set(BUILD_ROOT_____________BASH_PROGRAM msys2)
+  else()
+    set(BUILD_ROOT_____________BASH_PROGRAM bash)
+  endif()
   if (NOT EXISTS ${BUILD_ROOT_BUILD_DIRECTORY}/SRC/${build_dir}/${relative_path_to_makefile_dir}/Makefile)
       if (NOT EXISTS ${BUILD_ROOT_BUILD_DIRECTORY}/SRC/${build_dir}/${relative_path_to_makefile_dir}/configure)
           if (NOT EXISTS ${BUILD_ROOT_BUILD_DIRECTORY}/SRC/${build_dir}/${relative_path_to_makefile_dir}/autogen.sh)
@@ -348,7 +355,7 @@ macro(build_root_add_makefile_package src relative_path_to_makefile_dir build_di
   if (BUILD_ROOT_____________HAS_A)
       build_root_message("-------- BUILDING MAKEFILE PROJECT: '${build_dir}' -- GENERATING (AUTOGEN)")
       build_root_exec_working_directory(${BUILD_ROOT_____________HAS_DIR}
-        bash -c "export CC=\"${CMAKE_C_COMPILER}\" \; export CFLAGS=\"${CMAKE_C_FLAGS}\" \; export CXX=\"${CMAKE_CXX_COMPILER}\" \; export CXXFLAGS=\"${CMAKE_CXX_FLAGS}\" \; sh ./autogen.sh"
+        ${BUILD_ROOT_____________BASH_PROGRAM} -c "export CC=\"${CMAKE_C_COMPILER}\" \; export CFLAGS=\"${CMAKE_C_FLAGS}\" \; export CXX=\"${CMAKE_CXX_COMPILER}\" \; export CXXFLAGS=\"${CMAKE_CXX_FLAGS}\" \; sh ./autogen.sh"
       )
       if (NOT EXISTS ${BUILD_ROOT_____________HAS_DIR}/configure)
           build_root_fatal("'autogen.sh' failed to generate a 'configure' file inside the directory '${BUILD_ROOT_____________HAS_DIR}'")
