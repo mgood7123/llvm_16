@@ -212,6 +212,7 @@ macro(build_root_init cmake_packages_dir build_root_dir)
       set(BUILD_ROOT_____________android_compiler_suffix linux-android${ANDROID_PLATFORM})
       set(BUILD_ROOT_____________android_toolchain_prefix x86_64)
       set(BUILD_ROOT_____________android_toolchain_suffix linux-android)
+      set(BUILD_ROOT_____________NBBY 8)
     elseif(CMAKE_ANDROID_ARCH_ABI MATCHES x86)
       set(BUILD_ROOT_____________android_machine i686)
       set(BUILD_ROOT_____________cross_host "--host=i686-linux-android")
@@ -219,6 +220,7 @@ macro(build_root_init cmake_packages_dir build_root_dir)
       set(BUILD_ROOT_____________android_compiler_suffix linux-android${ANDROID_PLATFORM})
       set(BUILD_ROOT_____________android_toolchain_prefix i686)
       set(BUILD_ROOT_____________android_toolchain_suffix linux-android)
+      set(BUILD_ROOT_____________NBBY 4)
     elseif(CMAKE_ANDROID_ARCH_ABI MATCHES armeabi-v7a)
       set(BUILD_ROOT_____________android_machine armv7)
       set(BUILD_ROOT_____________cross_host "--host=armv7a-linux-androideabi")
@@ -226,6 +228,7 @@ macro(build_root_init cmake_packages_dir build_root_dir)
       set(BUILD_ROOT_____________android_compiler_suffix linux-androideabi${ANDROID_PLATFORM})
       set(BUILD_ROOT_____________android_toolchain_prefix arm)
       set(BUILD_ROOT_____________android_toolchain_suffix linux-androideabi)
+      set(BUILD_ROOT_____________NBBY 4)
     elseif(CMAKE_ANDROID_ARCH_ABI MATCHES arm64-v8a)
       set(BUILD_ROOT_____________android_machine aarch64)
       set(BUILD_ROOT_____________cross_host "--host=aarch64-linux-android")
@@ -233,6 +236,7 @@ macro(build_root_init cmake_packages_dir build_root_dir)
       set(BUILD_ROOT_____________android_compiler_suffix linux-android${ANDROID_PLATFORM})
       set(BUILD_ROOT_____________android_toolchain_prefix aarch64)
       set(BUILD_ROOT_____________android_toolchain_suffix linux-android)
+      set(BUILD_ROOT_____________NBBY 8)
     else()
       message(FATAL_ERROR "unknown android arch: ${CMAKE_ANDROID_ARCH_ABI}")
     endif()
@@ -605,8 +609,8 @@ else()
     endif()
     build_root_add_makefile_package(${CMAKE_CURRENT_SOURCE_DIR}/libedit-20230828-3.1 . LibEdit
         # wchar_t must store ISO 10646 characters
-        "-I${LLVM_BUILD_ROOT__ROOTFS}/include/ncurses -D__STDC_ISO_10646__" # extra c flags
-        "-I${LLVM_BUILD_ROOT__ROOTFS}/include/ncurses -D__STDC_ISO_10646__" # extra cxx flags
+        "-I${LLVM_BUILD_ROOT__ROOTFS}/include/ncurses -D__STDC_ISO_10646__ -DNBBY=${BUILD_ROOT_____________NBBY}" # extra c flags
+        "-I${LLVM_BUILD_ROOT__ROOTFS}/include/ncurses -D__STDC_ISO_10646__ -DNBBY=${BUILD_ROOT_____________NBBY}" # extra cxx flags
         "
             --enable-static=yes
             --enable-shared=no
