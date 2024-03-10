@@ -395,7 +395,7 @@ macro(build_root_add_makefile_package src relative_path_to_makefile_dir build_di
     set(BUILD_ROOT_____________deps_ar "${CMAKE_ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar")
     set(BUILD_ROOT_____________deps_strip "${CMAKE_ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip")
     set(BUILD_ROOT_____________deps_strings "${CMAKE_ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strings")
-    set(BUILD_ROOT_____________FLAGS "export CC=\"${BUILD_ROOT_____________deps_cc}\" \; export CFLAGS=\"${CMAKE_C_FLAGS}\" \; export CXX=\"${BUILD_ROOT_____________deps_cxx}\" \; export CXXFLAGS=\"${CMAKE_CXX_FLAGS}\" \; export LD=${BUILD_ROOT_____________deps_ld} \; export RANLIB=${BUILD_ROOT_____________deps_ranlib} \; export AR=${BUILD_ROOT_____________deps_ar} \; export NM=${BUILD_ROOT_____________deps_nm} \; export AS=${BUILD_ROOT_____________deps_as} \; export OBJDUMP=${BUILD_ROOT_____________deps_objdump} \; export STRIP=${BUILD_ROOT_____________deps_strip} \; export INSTALL_STRIP_PROGRAM=${BUILD_ROOT_____________deps_strip} \; export STRINGS=${BUILD_ROOT_____________deps_strings}")
+    set(BUILD_ROOT_____________FLAGS "export CC=\"${BUILD_ROOT_____________deps_cc}\" \; export LDFLAGS=\"-L ${LLVM_BUILD_ROOT__ROOTFS}/lib\" \; export CFLAGS=\"-L ${LLVM_BUILD_ROOT__ROOTFS}/lib ${CMAKE_C_FLAGS}\" \; export CXX=\"${BUILD_ROOT_____________deps_cxx}\" \; export CXXFLAGS=\"-L ${LLVM_BUILD_ROOT__ROOTFS}/lib ${CMAKE_CXX_FLAGS}\" \; export LD=${BUILD_ROOT_____________deps_ld} \; export RANLIB=${BUILD_ROOT_____________deps_ranlib} \; export AR=${BUILD_ROOT_____________deps_ar} \; export NM=${BUILD_ROOT_____________deps_nm} \; export AS=${BUILD_ROOT_____________deps_as} \; export OBJDUMP=${BUILD_ROOT_____________deps_objdump} \; export STRIP=${BUILD_ROOT_____________deps_strip} \; export INSTALL_STRIP_PROGRAM=${BUILD_ROOT_____________deps_strip} \; export STRINGS=${BUILD_ROOT_____________deps_strings}")
   else()
     if (CMAKE_CROSSCOMPILING)
       set(BUILD_ROOT_____________cross_host "--host=${ARCH_TRIPLET}")
@@ -410,14 +410,11 @@ macro(build_root_add_makefile_package src relative_path_to_makefile_dir build_di
     endif()
     set(BUILD_ROOT_____________deps_cc "${CMAKE_C_COMPILER}")
     set(BUILD_ROOT_____________deps_cxx "${CMAKE_CXX_COMPILER}")
-    set(BUILD_ROOT_____________FLAGS "export CC=\"${BUILD_ROOT_____________deps_cc}\" \; export CFLAGS=\"${CMAKE_C_FLAGS}\" \; export CXX=\"${BUILD_ROOT_____________deps_cxx}\" \; export CXXFLAGS=\"${CMAKE_CXX_FLAGS}\"")
+    set(BUILD_ROOT_____________FLAGS "export CC=\"${BUILD_ROOT_____________deps_cc}\" \; export LDFLAGS=\"-L ${LLVM_BUILD_ROOT__ROOTFS}/lib\" \; export CFLAGS=\"-L ${LLVM_BUILD_ROOT__ROOTFS}/lib ${CMAKE_C_FLAGS}\" \; export CXX=\"${BUILD_ROOT_____________deps_cxx}\" \; export CXXFLAGS=\"-L ${LLVM_BUILD_ROOT__ROOTFS}/lib ${CMAKE_CXX_FLAGS}\"")
   endif()
   
   if (BUILD_ROOT_____________HAS_A)
-      build_root_message("-------- BUILDING MAKEFILE PROJECT: '${build_dir}' -- GENERATING (AUTOGEN (--help))")
-      build_root_exec_working_directory(${BUILD_ROOT_____________HAS_DIR}
-        ${BUILD_ROOT_____________BASH_PROGRAM} -c "./autogen.sh --help \; true"
-      )
+      # autogen.sh does not provide a --help option
       build_root_message("-------- BUILDING MAKEFILE PROJECT: '${build_dir}' -- GENERATING (AUTOGEN)")
       build_root_exec_working_directory(${BUILD_ROOT_____________HAS_DIR}
         ${BUILD_ROOT_____________BASH_PROGRAM} ./autogen.sh
