@@ -2,9 +2,10 @@ cmake_minimum_required(VERSION 3.12)
 
 project(llvm_18 C CXX)
 
-IF (NOT EXISTS /bin/clang++)
-    message(FATAL_ERROR "/bin/clang++ not found");
-endf()
+find_program(HOST_CLANG_C_PROGRAM NAMES clang NO_CACHE REQUIRED)
+find_program(HOST_CLANG_CXX_PROGRAM NAMES clang++ NO_CACHE REQUIRED)
+message(STATUS "found host clang at ${HOST_CLANG_C_PROGRAM}");
+message(STATUS "found host clang++ at ${HOST_CLANG_CXX_PROGRAM}");
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
