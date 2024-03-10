@@ -33,8 +33,6 @@
  * SUCH DAMAGE.
  */
 
-extern int issetugid(void);
-
 #if defined(LIBC_SCCS) && !defined(lint)
 static char sccsid[] = "@(#)glob.c	8.3 (Berkeley) 10/13/93";
 #endif /* LIBC_SCCS and not lint */
@@ -91,6 +89,10 @@ __FBSDID("$FreeBSD$");
 #include <string.h>
 #include <unistd.h>
 #include <wchar.h>
+
+extern int issetugid(void);
+
+#include "glob.h"
 
 #define DOLLAR '$'
 #define DOT '.'
