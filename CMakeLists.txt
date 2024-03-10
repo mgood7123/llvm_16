@@ -348,7 +348,7 @@ macro(build_root_add_makefile_package src relative_path_to_makefile_dir build_di
   if (BUILD_ROOT_____________HAS_A)
       build_root_message("-------- BUILDING MAKEFILE PROJECT: '${build_dir}' -- GENERATING (AUTOGEN)")
       build_root_exec_working_directory(${BUILD_ROOT_____________HAS_DIR}
-        bash -c "export CC=\"${CMAKE_C_COMPILER}\" ; export CFLAGS=\"${CMAKE_C_FLAGS}\" ; export CXX=\"${CMAKE_CXX_COMPILER}\" ; export CXXFLAGS=\"${CMAKE_CXX_FLAGS}\" ; sh ./autogen.sh"
+        bash -c "export CC=\"${CMAKE_C_COMPILER}\" \; export CFLAGS=\"${CMAKE_C_FLAGS}\" \; export CXX=\"${CMAKE_CXX_COMPILER}\" \; export CXXFLAGS=\"${CMAKE_CXX_FLAGS}\" \; sh ./autogen.sh"
       )
       if (NOT EXISTS ${BUILD_ROOT_____________HAS_DIR}/configure)
           build_root_fatal("'autogen.sh' failed to generate a 'configure' file inside the directory '${BUILD_ROOT_____________HAS_DIR}'")
@@ -360,11 +360,11 @@ macro(build_root_add_makefile_package src relative_path_to_makefile_dir build_di
   if (BUILD_ROOT_____________HAS_C)
       build_root_message("-------- BUILDING MAKEFILE PROJECT: '${build_dir}' -- CONFIGURING (--help)")
       build_root_exec_working_directory(${BUILD_ROOT_____________HAS_DIR}
-        bash -c "export CC=\"${CMAKE_C_COMPILER}\" ; export CFLAGS=\"${CMAKE_C_FLAGS}\" ; export CXX=\"${CMAKE_CXX_COMPILER}\" ; export CXXFLAGS=\"${CMAKE_CXX_FLAGS}\" ; sh ./configure --help"
+        bash -c "export CC=\"${CMAKE_C_COMPILER}\" \; export CFLAGS=\"${CMAKE_C_FLAGS}\" \; export CXX=\"${CMAKE_CXX_COMPILER}\" \; export CXXFLAGS=\"${CMAKE_CXX_FLAGS}\" \; sh ./configure --help"
       )
       build_root_message("-------- BUILDING MAKEFILE PROJECT: '${build_dir}' -- CONFIGURING")
       build_root_exec_working_directory(${BUILD_ROOT_____________HAS_DIR}
-        bash -c "export CC=\"${CMAKE_C_COMPILER}\" ; export CFLAGS=\"${CMAKE_C_FLAGS}\" ; export CXX=\"${CMAKE_CXX_COMPILER}\" ; export CXXFLAGS=\"${CMAKE_CXX_FLAGS}\" ; sh ./configure --prefix=${BUILD_ROOT_BUILD_DIRECTORY}/ROOTFS ${new_line_seperated_extra_makefile_config_list_str}"
+        bash -c "export CC=\"${CMAKE_C_COMPILER}\" \; export CFLAGS=\"${CMAKE_C_FLAGS}\" \; export CXX=\"${CMAKE_CXX_COMPILER}\" \; export CXXFLAGS=\"${CMAKE_CXX_FLAGS}\" \; sh ./configure --prefix=${BUILD_ROOT_BUILD_DIRECTORY}/ROOTFS ${new_line_seperated_extra_makefile_config_list_str}"
       )
       if (NOT EXISTS ${BUILD_ROOT_____________HAS_DIR}/Makefile)
           build_root_fatal("'configure' failed to generate a 'Makefile' file inside the directory '${BUILD_ROOT_____________HAS_DIR}'")
@@ -376,12 +376,12 @@ macro(build_root_add_makefile_package src relative_path_to_makefile_dir build_di
   if (BUILD_ROOT_____________HAS_M)
       build_root_message("-------- BUILDING MAKEFILE PROJECT: '${build_dir}' -- BUILDING")
       build_root_exec_working_directory(${BUILD_ROOT_____________HAS_DIR}
-        bash -c "export CC=\"${CMAKE_C_COMPILER}\" ; export CFLAGS=\"${CMAKE_C_FLAGS}\" ; export CXX=\"${CMAKE_CXX_COMPILER}\" ; export CXXFLAGS=\"${CMAKE_CXX_FLAGS}\" ; make"
+        bash -c "export CC=\"${CMAKE_C_COMPILER}\" \; export CFLAGS=\"${CMAKE_C_FLAGS}\" \; export CXX=\"${CMAKE_CXX_COMPILER}\" \; export CXXFLAGS=\"${CMAKE_CXX_FLAGS}\" \; make"
       )
       build_root_message("-------- BUILDING MAKEFILE PROJECT: '${build_dir}' -- BUILT")
       build_root_message("-------- BUILDING MAKEFILE PROJECT: '${build_dir}' -- INSTALLING")
       build_root_exec_working_directory(${BUILD_ROOT_____________HAS_DIR}
-        bash -c "export CC=\"${CMAKE_C_COMPILER}\" ; export CFLAGS=\"${CMAKE_C_FLAGS}\" ; export CXX=\"${CMAKE_CXX_COMPILER}\" ; export CXXFLAGS=\"${CMAKE_CXX_FLAGS}\" ; make install"
+        bash -c "export CC=\"${CMAKE_C_COMPILER}\" \; export CFLAGS=\"${CMAKE_C_FLAGS}\" \; export CXX=\"${CMAKE_CXX_COMPILER}\" \; export CXXFLAGS=\"${CMAKE_CXX_FLAGS}\" \; make install"
       )
       build_root_message("-------- BUILDING MAKEFILE PROJECT: '${build_dir}' -- INSTALLED")
   endif()
