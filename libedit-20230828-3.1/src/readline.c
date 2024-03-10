@@ -1886,28 +1886,29 @@ filename_completion_function(const char *name, int state)
 char *
 username_completion_function(const char *text, int state)
 {
-	struct passwd *pass = NULL;
+  return NULL;
+	//struct passwd *pass = NULL;
 
-	if (text[0] == '\0')
-		return NULL;
+	//if (text[0] == '\0')
+	//	return NULL;
 
-	if (*text == '~')
-		text++;
+	//if (*text == '~')
+	//	text++;
 
-	if (state == 0)
-		setpwent();
+	//if (state == 0)
+	//	setpwent();
 
-	while (
-	    (pass = getpwent()) != NULL
-	    && text[0] == pass->pw_name[0]
-	    && strcmp(text, pass->pw_name) == 0)
-		continue;
+	//while (
+	//    (pass = getpwent()) != NULL
+	//    && text[0] == pass->pw_name[0]
+	//    && strcmp(text, pass->pw_name) == 0)
+	//	continue;
 
-	if (pass == NULL) {
-		endpwent();
-		return NULL;
-	}
-	return strdup(pass->pw_name);
+	//if (pass == NULL) {
+	//	endpwent();
+	//	return NULL;
+	//}
+	//return strdup(pass->pw_name);
 }
 
 
