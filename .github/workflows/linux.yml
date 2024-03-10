@@ -210,7 +210,7 @@ jobs:
 
       - name: SYSTEMD - libiconv autopull.sh
         run: |
-          sudo docker container exec --user ubuntu --workdir /home/ubuntu git_local_ubuntu bash -c "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/\$(id -u ubuntu)/bus systemd-run --user --scope --collect /bin/bash -c \"cd git_repo ; cd libiconv ; ./autopull.sh \""
+          sudo docker container exec --user ubuntu --workdir /home/ubuntu git_local_ubuntu bash -c "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/\$(id -u ubuntu)/bus systemd-run --user --scope --collect /bin/bash -c \"cd git_repo ; cd libiconv ; ./autopull.sh --one-time\""
 
       - name: SYSTEMD - cmake build - Debug - Generate
         run: |

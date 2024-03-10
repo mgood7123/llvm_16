@@ -119,7 +119,7 @@ jobs:
       - name: libiconv autopull.sh
         run: |
           export MSYS=winsymlinks:native
-          cd libiconv ; ./autopull.sh
+          cd libiconv ; ./autopull.sh --one-time
 
       - name: cmake build - Debug - Generate
         run: |

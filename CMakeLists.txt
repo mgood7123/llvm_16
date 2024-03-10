@@ -2,8 +2,16 @@ cmake_minimum_required(VERSION 3.12)
 
 project(llvm_18 C CXX)
 
-find_program(HOST_CLANG_C_PROGRAM NAMES clang NO_CACHE REQUIRED)
-find_program(HOST_CLANG_CXX_PROGRAM NAMES clang++ NO_CACHE REQUIRED)
+if (WIN32)
+    # msys2 installs clang to different prefixes
+    find_program(HOST_CLANG_C_PROGRAM NAMES clang NO_CACHE REQUIRED)
+    find_program(HOST_CLANG_CXX_PROGRAM NAMES clang++ NO_CACHE REQUIRED)
+else()
+    # unix always installs clang to /usr/bin
+    set(HOST_CLANG_C_PROGRAM "/usr/bin/clang")
+    set(HOST_CLANG_CXX_PROGRAM "/usr/bin/clang++")
+endif()
+
 message(STATUS "found host clang at ${HOST_CLANG_C_PROGRAM}")
 message(STATUS "found host clang++ at ${HOST_CLANG_CXX_PROGRAM}")
 
@@ -53,6 +61,7 @@ endif()
 # we have make available on all platforms
 
 macro (build_root_exec)
+    message(STATUS "build_root_exec ARGN = \"${ARGN}\"")
     unset(command_list)
     unset(command_list CACHE)
     string(REGEX MATCHALL "([^\"' \r\n\t;\\]+|[\\].|\"([^\"\\]+|[\\].)*\")+( +([^\"' \r\n\t;\\]+|[\\].|\"([^\"\\]+|[\\].)*\")+)*" command_list "${ARGN}")
@@ -75,6 +84,7 @@ macro (build_root_exec)
 endmacro()
 
 macro (build_root_exec_working_directory working_directory)
+    message(STATUS "build_root_exec_working_directory ARGN = \"${ARGN}\"")
     unset(command_list)
     unset(command_list CACHE)
     string(REGEX MATCHALL "([^\"' \r\n\t;\\]+|[\\].|\"([^\"\\]+|[\\].)*\")+( +([^\"' \r\n\t;\\]+|[\\].|\"([^\"\\]+|[\\].)*\")+)*" command_list "${ARGN}")
@@ -98,6 +108,7 @@ macro (build_root_exec_working_directory working_directory)
 endmacro()
 
 macro (build_root_exec_cmake)
+    message(STATUS "build_root_exec_cmake ARGN = \"${ARGN}\"")
     unset(command_list)
     unset(command_list CACHE)
     string(REGEX MATCHALL "([^\"' \r\n\t;\\]+|[\\].|\"([^\"\\]+|[\\].)*\")+( +([^\"' \r\n\t;\\]+|[\\].|\"([^\"\\]+|[\\].)*\")+)*" command_list "${ARGN}")

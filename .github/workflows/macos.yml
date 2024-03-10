@@ -59,7 +59,7 @@ jobs:
 
       - name: libiconv autopull.sh
         run: |
-          cd libiconv ; ./autopull.sh
+          cd libiconv ; ./autopull.sh --one-time
 
       - name: install coreutils
         run: |
