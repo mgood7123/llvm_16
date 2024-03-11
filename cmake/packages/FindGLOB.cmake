@@ -54,7 +54,7 @@ if(GLOB_INCLUDE_DIRS AND EXISTS "${GLOB_INCLUDE_DIRS}/glob.h")
 endif()
 
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(glob
+find_package_handle_standard_args(GLOB
                                   FOUND_VAR
                                     GLOB_FOUND
                                   REQUIRED_VARS
