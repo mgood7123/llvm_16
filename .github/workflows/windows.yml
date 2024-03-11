@@ -83,6 +83,9 @@ jobs:
       - name: install findutils
         run: |
           pacboy -S --noconfirm --needed findutils
+          which find
+          ls -l /usr/bin/find.exe
+          find .
 
       - name: install clang 17
         run: |
