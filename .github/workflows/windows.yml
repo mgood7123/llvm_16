@@ -56,6 +56,7 @@ jobs:
         with:
           msystem: ${{matrix.sys}}
           update: true
+          path-type: strict
 
       - name: test symlink support
         run: |
