@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.5)
 project(glob LANGUAGES C)
 
 add_library(glob STATIC glob.c)
-target_include_directories(Glob PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(glob PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 set(INSTALL_BIN_DIR "${CMAKE_INSTALL_PREFIX}/bin" CACHE PATH "Installation directory for executables")
 set(INSTALL_LIB_DIR "${CMAKE_INSTALL_PREFIX}/lib" CACHE PATH "Installation directory for libraries")
