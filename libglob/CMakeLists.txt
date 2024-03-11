@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.5)
 
 project(Glob LANGUAGES C)
 
-add_library(Glob STATIC ${SOURCES})
+add_library(Glob STATIC glob.c)
 target_include_directories(Glob PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 set(INSTALL_BIN_DIR "${CMAKE_INSTALL_PREFIX}/bin" CACHE PATH "Installation directory for executables")
