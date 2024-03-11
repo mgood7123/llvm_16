@@ -1043,7 +1043,7 @@ ENDIF()
 IF(LIBXML2_FOUND)
   CMAKE_PUSH_CHECK_STATE()	# Save the state of the variables
   INCLUDE_DIRECTORIES(${LIBXML2_INCLUDE_DIRS})
-  # xml2 depends on lzma and zlib and iconv
+  # xml2 depends on lzma and zlib and iconv, and dl and m
   # since they are static libraries we need to invert the link order
   # iconv does not depend on any libs
   # lzma does not depend on any libs
@@ -1075,6 +1075,7 @@ IF(LIBXML2_FOUND)
       "#include <stddef.h>\n#include <libxml/xmlreader.h>\nint main() {return xmlTextReaderRead((xmlTextReaderPtr)(void *)0);}"
       "WITHOUT_LIBXML_STATIC;LIBXML_STATIC")
   else()
+    LIST(APPEND ADDITIONAL_LIBS dl)
     TRY_MACRO_FOR_LIBRARY(
       "${ZLIB_INCLUDE_DIRS};${LZMA_INCLUDE_DIRS};${ICONV_INCLUDE_DIRS};${LIBXML2_INCLUDE_DIRS}"
       "${ZLIB_LIBRARIES};${LZMA_LIBRARIES};${ICONV_LIBRARIES};${LIBXML2_LIBRARIES}"
@@ -1084,14 +1085,10 @@ IF(LIBXML2_FOUND)
   endif()
 
   IF(NOT WITHOUT_LIBXML_STATIC)
-    IF(LIBXML_STATIC)
-      ADD_DEFINITIONS(-DLIBXML_STATIC)
-    ELSE(LIBXML_STATIC)
-      MESSAGE(FATAL_ERROR "CANNOT LINK XML2")
-    ENDIF(LIBXML_STATIC)
-  ELSE(NOT WITHOUT_LIBXML_STATIC)
     IF(NOT LIBXML_STATIC)
       MESSAGE(FATAL_ERROR "CANNOT LINK XML2")
+    ELSE(LIBXML_STATIC)
+      ADD_DEFINITIONS(-DLIBXML_STATIC)
     ENDIF(LIBXML_STATIC)
   ENDIF(NOT WITHOUT_LIBXML_STATIC)
   CMAKE_POP_CHECK_STATE()	# Restore the state of the variables
