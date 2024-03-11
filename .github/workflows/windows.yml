@@ -80,6 +80,10 @@ jobs:
         run: |
           pacboy -Sy
 
+      - name: install findutils
+        run: |
+          pacboy -S --noconfirm --needed findutils
+
       - name: install clang 17
         run: |
           pacboy -S --noconfirm --needed clang:p
