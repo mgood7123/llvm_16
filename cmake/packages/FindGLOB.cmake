@@ -64,10 +64,10 @@ find_package_handle_standard_args(GLOB
                                     GLOB_VERSION_STRING)
 mark_as_advanced(GLOB_INCLUDE_DIRS GLOB_LIBRARIES)
 
-if (GLOB_FOUND AND NOT TARGET LLVM_STATIC_glob)
-  add_library(LLVM_STATIC_glob UNKNOWN IMPORTED)
-  set_target_properties(LLVM_STATIC_glob PROPERTIES
+if (GLOB_FOUND AND NOT TARGET LLVM_STATIC_GLOB)
+  add_library(LLVM_STATIC_GLOB UNKNOWN IMPORTED)
+  set_target_properties(LLVM_STATIC_GLOB PROPERTIES
                         IMPORTED_LOCATION ${GLOB_LIBRARIES}
                         INTERFACE_INCLUDE_DIRECTORIES ${GLOB_INCLUDE_DIRS})
-  set(GLOB_TARGET LLVM_STATIC_glob)
+  set(GLOB_TARGET LLVM_STATIC_GLOB)
 endif()
