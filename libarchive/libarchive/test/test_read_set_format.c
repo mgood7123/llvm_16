@@ -26,6 +26,14 @@
  */
 #include "test.h"
 
+#if ANDROID && ANDROID_API < 24
+typedef off_t fpos_t;
+int fgetpos(FILE *, fpos_t *);
+int fsetpos(FILE *, const fpos_t *);
+int fseeko(FILE *, off_t, int);
+off_t ftello(FILE *);
+#endif
+
 DEFINE_TEST(test_read_set_format)
 {
   char buff[64];

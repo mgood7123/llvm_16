@@ -131,11 +131,11 @@ macro (build_root_exec_cmake)
         "-DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}"
         "-DCMAKE_C_STANDARD=${CMAKE_C_STANDARD}"
         "-DCMAKE_C_STANDARD_REQUIRED=${CMAKE_C_STANDARD_REQUIRED}"
-        "-DCMAKE_C_FLAGS=${CMAKE_C_FLAGS} ${new_line_seperated_extra_c_flags}"
+        "-DCMAKE_C_FLAGS=${CMAKE_C_FLAGS} ${new_line_seperated_extra_c_flags} ${BUILD_ROOT_____________ADDITIONAL_C_FLAGS}"
         "-DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}"
         "-DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD}"
         "-DCMAKE_CXX_STANDARD_REQUIRED=${CMAKE_CXX_STANDARD_REQUIRED}"
-        "-DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS} ${new_line_seperated_extra_cxx_flags}"
+        "-DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS} ${new_line_seperated_extra_cxx_flags} ${BUILD_ROOT_____________ADDITIONAL_C_FLAGS}"
         "-DCMAKE_MODULE_LINKER_FLAGS=${CMAKE_MODULE_LINKER_FLAGS}"
         "-DCMAKE_SHARED_LINKER_FLAGS=${CMAKE_SHARED_LINKER_FLAGS}"
         "-DCMAKE_EXE_LINKER_FLAGS=${CMAKE_EXE_LINKER_FLAGS}"
@@ -158,12 +158,6 @@ macro (build_root_exec_cmake)
     if (EXEC_FAILED)
         message(FATAL_ERROR "failed to execute command: '${command_str}'")
     endif()
-endmacro()
-
-macro(build_root_set_var var value)
-  unset(${var})
-  unset(${var} CACHE)
-  set(${var} ${value})
 endmacro()
 
 macro(build_root_message str)
@@ -194,8 +188,12 @@ macro(build_root_init cmake_packages_dir build_root_dir)
     endif()
   endif()
 
-  build_root_set_var(BUILD_ROOT_CMAKE_PACKAGE_DIRECTORY "${cmake_packages_dir}")
-  build_root_set_var(BUILD_ROOT_BUILD_DIRECTORY "${build_root_dir}")
+  unset((BUILD_ROOT_CMAKE_PACKAGE_DIRECTORY)
+  unset((BUILD_ROOT_CMAKE_PACKAGE_DIRECTORY CACHE)
+  set(BUILD_ROOT_CMAKE_PACKAGE_DIRECTORY "${cmake_packages_dir}")
+  unset((BUILD_ROOT_BUILD_DIRECTORY)
+  unset((BUILD_ROOT_BUILD_DIRECTORY CACHE)
+  set(BUILD_ROOT_BUILD_DIRECTORY "${build_root_dir}")
 
   set(BUILD_ROOT_____________BASH_PROGRAM sh)
 
@@ -270,12 +268,23 @@ macro(build_root_init cmake_packages_dir build_root_dir)
   set(BUILD_ROOT_____________COMMON_LINK_FLAGS "-L${LLVM_BUILD_ROOT__ROOTFS}/lib")
   set(BUILD_ROOT_____________COMMON_INCLUDE_FLAGS "-I${LLVM_BUILD_ROOT__ROOTFS}/include")
   set(BUILD_ROOT_____________COMMON_FLAGS "${BUILD_ROOT_____________COMMON_INCLUDE_FLAGS} ${BUILD_ROOT_____________COMMON_LINK_FLAGS}")
+  if (ANDROID)
+    unset(BUILD_ROOT_____________ADDITIONAL_C_FLAGS)
+    unset(BUILD_ROOT_____________ADDITIONAL_C_FLAGS CACHE)
+    set(BUILD_ROOT_____________ADDITIONAL_C_FLAGS "-DANDROID_API=${ANDROID_PLATFORM}"
+  else()
+    unset(BUILD_ROOT_____________ADDITIONAL_C_FLAGS)
+    unset(BUILD_ROOT_____________ADDITIONAL_C_FLAGS CACHE)
+    set(BUILD_ROOT_____________ADDITIONAL_C_FLAGS "")
+  endif()
 endmacro()
 
 macro(build_root_add_cmake_package src relative_path_to_cmake_dir build_dir new_line_seperated_extra_c_flags new_line_seperated_extra_cxx_flags new_line_seperated_extra_cmake_config)
   build_root_message("BUILD_ROOT_CMAKE_PACKAGE_DIRECTORY is '${BUILD_ROOT_CMAKE_PACKAGE_DIRECTORY}'")
   build_root_message("BUILD_ROOT_BUILD_DIRECTORY is '${BUILD_ROOT_BUILD_DIRECTORY}'")
-  build_root_set_var(${build_dir}_ROOT "${build_dir}")
+  unset(${build_dir}_ROOT)
+  unset(${build_dir}_ROOT CACHE)
+  set(${build_dir}_ROOT "${build_dir}")
   if (NOT EXISTS "${src}")
     build_root_fatal("source directory '${src}' does not exist")
   endif()
@@ -348,7 +357,9 @@ endmacro()
 
 macro(build_root_add_makefile_package src relative_path_to_makefile_dir build_dir new_line_seperated_extra_c_flags new_line_seperated_extra_cxx_flags new_line_seperated_extra_makefile_config)
   build_root_message("BUILD_ROOT_BUILD_DIRECTORY is '${BUILD_ROOT_BUILD_DIRECTORY}'")
-  build_root_set_var(${build_dir}_ROOT ${build_dir})
+  unset(${build_dir}_ROOT)
+  unset(${build_dir}_ROOT CACHE)
+  set(${build_dir}_ROOT "${build_dir}")
   if (NOT EXISTS ${src})
     build_root_fatal("source directory '${src}' does not exist")
   endif()
@@ -412,7 +423,7 @@ macro(build_root_add_makefile_package src relative_path_to_makefile_dir build_di
 
   unset(BUILD_ROOT_____________FLAGS)
   unset(BUILD_ROOT_____________FLAGS CACHE)
-  set(BUILD_ROOT_____________FLAGS "${BUILD_ROOT_____________FLAGS_CORE} \; export PKG_CONFIG_PATH=\"${LLVM_BUILD_ROOT__ROOTFS}/lib/pkgconfig:${LLVM_BUILD_ROOT__ROOTFS}/share/pkgconfig:\$PKG_CONFIG_PATH\" \; export CC=\"${BUILD_ROOT_____________deps_cc}\" \; export LDFLAGS=\"${BUILD_ROOT_____________COMMON_LINK_FLAGS}\" \; export CFLAGS=\"${BUILD_ROOT_____________COMMON_FLAGS} ${new_line_seperated_extra_c_flags_list_str} ${CMAKE_C_FLAGS}\" \; export CXX=\"${BUILD_ROOT_____________deps_cxx}\" \; export CXXFLAGS=\"${BUILD_ROOT_____________COMMON_FLAGS} ${new_line_seperated_extra_cxx_flags_list_str} ${CMAKE_CXX_FLAGS}\"")
+  set(BUILD_ROOT_____________FLAGS "${BUILD_ROOT_____________FLAGS_CORE} \; export PKG_CONFIG_PATH=\"${LLVM_BUILD_ROOT__ROOTFS}/lib/pkgconfig:${LLVM_BUILD_ROOT__ROOTFS}/share/pkgconfig:\$PKG_CONFIG_PATH\" \; export CC=\"${BUILD_ROOT_____________deps_cc}\" \; export LDFLAGS=\"${BUILD_ROOT_____________COMMON_LINK_FLAGS}\" \; export CFLAGS=\"${BUILD_ROOT_____________COMMON_FLAGS} ${BUILD_ROOT_____________ADDITIONAL_C_FLAGS} ${new_line_seperated_extra_c_flags_list_str} ${CMAKE_C_FLAGS}\" \; export CXX=\"${BUILD_ROOT_____________deps_cxx}\" \; export CXXFLAGS=\"${BUILD_ROOT_____________COMMON_FLAGS} ${BUILD_ROOT_____________ADDITIONAL_C_FLAGS} ${new_line_seperated_extra_cxx_flags_list_str} ${CMAKE_CXX_FLAGS}\"")
 
   build_root_message("-------- BUILDING MAKEFILE PROJECT: '${build_dir}'")
 
