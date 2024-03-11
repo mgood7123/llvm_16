@@ -63,7 +63,7 @@ if(OPENSSL_INCLUDE_DIRS AND EXISTS "${OPENSSL_INCLUDE_DIRS}/openssl/ssl.h")
 endif()
 
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(OPENSSL
+find_package_handle_standard_args(OpenSSL
                                   FOUND_VAR
                                     OPENSSL_FOUND
                                   REQUIRED_VARS
