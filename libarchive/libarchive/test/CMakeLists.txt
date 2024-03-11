@@ -294,11 +294,11 @@ IF(ENABLE_TEST)
   # ALWAYS see what libarchive is linking against and the link order to debug possible link errors on multiple platforms
   # DO NOT REMOVE THIS
   message(STATUS "linking C executable 'libarchive_test' against these additional libraries:")
-  message(status "${BUILD_ROOT_LINK_GROUP_START}")
+  message(STATUS "${BUILD_ROOT_LINK_GROUP_START}")
   foreach(lib archive_static;${ADDITIONAL_LIBS};m)
     message(STATUS "lib: ${lib}")
   endforeach()
-  message(status "${BUILD_ROOT_LINK_GROUP_END}")
+  message(STATUS "${BUILD_ROOT_LINK_GROUP_END}")
   
 
   #
