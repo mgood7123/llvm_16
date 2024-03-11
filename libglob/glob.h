@@ -36,7 +36,7 @@
 #ifndef _GLOB_H_
 #define _GLOB_H_
 
-#include <sys/_types.h>
+#include <sys/types.h>
 #include <sys/cdefs.h>
 
 #ifndef _SIZE_T_DECLARED
