@@ -277,13 +277,6 @@ macro(build_root_init cmake_packages_dir build_root_dir)
     unset(BUILD_ROOT_____________ADDITIONAL_C_FLAGS CACHE)
     set(BUILD_ROOT_____________ADDITIONAL_C_FLAGS "")
   endif()
-  unset(BUILD_ROOT_____________FIND_EXE)
-  unset(BUILD_ROOT_____________FIND_EXE CACHE)
-  if (WIN32)
-    set(BUILD_ROOT_____________FIND_EXE "D:/a/_temp/msys64/clang64/bin/find")
-  else()
-    set(BUILD_ROOT_____________FIND_EXE "/usr/bin/find")
-  endif()
 endmacro()
 
 macro(build_root_add_cmake_package src relative_path_to_cmake_dir build_dir new_line_seperated_extra_c_flags new_line_seperated_extra_cxx_flags new_line_seperated_extra_cmake_config)
@@ -358,7 +351,7 @@ macro(build_root_add_cmake_package src relative_path_to_cmake_dir build_dir new_
     "${BUILD_ROOT_BUILD_DIRECTORY}/BUILD/${build_dir}"
   )
   build_root_message("-------- BUILDING CMAKE PROJECT: '${build_dir}' -- INSTALLED")
-  build_root_exec_working_directory("${BUILD_ROOT_BUILD_DIRECTORY}" ${BUILD_ROOT_____________FIND_EXE} ROOTFS)
+  build_root_exec_working_directory("${BUILD_ROOT_BUILD_DIRECTORY}" sh -c "/usr/bin/find ROOTFS")
   build_root_message("-------- BUILT CMAKE PROJECT: '${build_dir}'")
 endmacro()
 
@@ -522,7 +515,7 @@ macro(build_root_add_makefile_package src relative_path_to_makefile_dir build_di
         ${BUILD_ROOT_____________BASH_PROGRAM} -c "${BUILD_ROOT_____________FLAGS} make install"
       )
       build_root_message("-------- BUILDING MAKEFILE PROJECT: '${build_dir}' -- INSTALLED")
-      build_root_exec_working_directory("${BUILD_ROOT_BUILD_DIRECTORY}" ${BUILD_ROOT_____________FIND_EXE} ROOTFS)
+      build_root_exec_working_directory("${BUILD_ROOT_BUILD_DIRECTORY}" sh -c "/usr/bin/find ROOTFS")
   endif()
   build_root_message("-------- BUILT MAKEFILE PROJECT: '${build_dir}'")
 endmacro()
