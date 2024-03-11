@@ -317,12 +317,11 @@ IF(ENABLE_TEST)
   endforeach()
   message(STATUS "${BUILD_ROOT_LINK_GROUP_END}")
   
-
   #
   # Register target
   #
   ADD_EXECUTABLE(libarchive_test ${libarchive_test_SOURCES})
-  TARGET_LINK_LIBRARIES(libarchive_test ${BUILD_ROOT_LINK_GROUP_START} archive_static ${ADDITIONAL_LIBS} m archive_static ${ADDITIONAL_LIBS} m archive_static ${ADDITIONAL_LIBS} m archive_static ${ADDITIONAL_LIBS} m archive_static ${ADDITIONAL_LIBS} m archive_static ${ADDITIONAL_LIBS} m archive_static ${ADDITIONAL_LIBS} m archive_static ${ADDITIONAL_LIBS} m archive_static ${ADDITIONAL_LIBS} m archive_static ${ADDITIONAL_LIBS} m ${BUILD_ROOT_LINK_GROUP_END})
+  TARGET_LINK_LIBRARIES(libarchive_test ${BUILD_ROOT_LINK_GROUP_START} archive_static ${ADDITIONAL_LIBS} m ${BUILD_ROOT_LINK_GROUP_END})
   TARGET_COMPILE_DEFINITIONS(libarchive_test PRIVATE LIBARCHIVE_STATIC)
   TARGET_COMPILE_DEFINITIONS(libarchive_test PRIVATE LIST_H)
 
