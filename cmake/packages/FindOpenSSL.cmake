@@ -59,9 +59,6 @@ set(CMAKE_FIND_DEBUG_MODE FALSE)
 
 if(OPENSSL_INCLUDE_DIRS AND EXISTS "${OPENSSL_INCLUDE_DIRS}/openssl/ssl.h")
     set(OPENSSL_VERSION_STRING "1.1")
-endif()
-
-if(OPENSSL_CRYPTO_INCLUDE_DIRS AND EXISTS "${OPENSSL_CRYPTO_INCLUDE_DIRS}/openssl/cypto.h")
     set(OPENSSL_CRYPTO_VERSION_STRING "1.1")
 endif()
 
@@ -72,18 +69,11 @@ find_package_handle_standard_args(OPENSSL
                                   REQUIRED_VARS
                                     OPENSSL_INCLUDE_DIRS
                                     OPENSSL_LIBRARIES
-                                  VERSION_VAR
-                                    OPENSSL_VERSION_STRING)
-mark_as_advanced(OPENSSL_INCLUDE_DIRS OPENSSL_LIBRARIES)
-
-find_package_handle_standard_args(OPENSSL_CRYPTO
-                                  FOUND_VAR
-                                    OPENSSL_CRYPTO_FOUND
-                                  REQUIRED_VARS
                                     OPENSSL_CRYPTO_INCLUDE_DIRS
                                     OPENSSL_CRYPTO_LIBRARIES
                                   VERSION_VAR
-                                    OPENSSL_CRYPTO_VERSION_STRING)
+                                    OPENSSL_VERSION_STRING)
+mark_as_advanced(OPENSSL_INCLUDE_DIRS OPENSSL_LIBRARIES)
 mark_as_advanced(OPENSSL_CRYPTO_INCLUDE_DIRS OPENSSL_CRYPTO_LIBRARIES)
 
 if (OPENSSL_FOUND AND NOT TARGET LLVM_STATIC_OPENSSL)
