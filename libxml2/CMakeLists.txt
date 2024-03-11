@@ -121,6 +121,11 @@ if(LIBXML2_WITH_ZLIB)
 	find_package(ZLIB REQUIRED)
 endif()
 
+if (ANDROID)
+    # android bionic libc does not contain glob/globfree
+	find_package(GLOB REQUIRED)
+endif()
+
 if (NOT MSVC)
 	check_c_source_compiles("
 		void __attribute__((destructor))
@@ -318,11 +323,6 @@ set(
 	xzlib.c
 )
 
-if(ANDROID)
-	list(APPEND LIBXML2_SRCS android/issetugid.c)
-	list(APPEND LIBXML2_SRCS android/glob.c)
-endif()
-
 if(WIN32)
 	list(APPEND LIBXML2_SRCS win32/libxml2.rc)
 	file(
@@ -432,6 +432,19 @@ if(LIBXML2_WITH_ZLIB)
 		list(APPEND XML_PC_REQUIRES zlib)
 	else()
 		list(APPEND XML_PC_LIBS "${ZLIB_LDFLAGS}")
+	endif()
+endif()
+
+if(ANDROID)
+	target_link_libraries(LibXml2 PRIVATE ${GLOB_LIBRARIES})
+	target_include_directories(LibXml2 PRIVATE ${GLOB_INCLUDE_DIRS})
+	set(GLOB_LDFLAGS "-lglob")
+	list(APPEND XML_PRIVATE_LIBS "${GLOB_LDFLAGS}")
+	pkg_check_modules(GLOB_PC IMPORTED_TARGET glob)
+	if(GLOB_PC_FOUND)
+		list(APPEND XML_PC_REQUIRES glob)
+	else()
+		list(APPEND XML_PC_LIBS "${GLOB_LDFLAGS}")
 	endif()
 endif()
 

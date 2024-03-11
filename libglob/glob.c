@@ -37,7 +37,6 @@
 static char sccsid[] = "@(#)glob.c	8.3 (Berkeley) 10/13/93";
 #endif /* LIBC_SCCS and not lint */
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD$");
 
 /*
  * glob(3) -- a superset of the one defined in POSIX 1003.2.
@@ -89,10 +88,6 @@ __FBSDID("$FreeBSD$");
 #include <string.h>
 #include <unistd.h>
 #include <wchar.h>
-
-extern int issetugid(void);
-
-#include "glob.h"
 
 #define DOLLAR '$'
 #define DOT '.'
@@ -163,6 +158,11 @@ static int match(Char *, Char *, Char *);
 #ifdef DEBUG
 static void qprintf(const char *, Char *);
 #endif
+
+static int issetugid(void) {
+  /* for Bionic, this is sufficient, bionic does not implement setuid/setugid binaries */
+  return 0;
+}
 
 int glob(const char *pattern, int flags, int (*errfunc)(const char *, int),
          glob_t *pglob) {
@@ -588,7 +588,7 @@ static int glob3(Char *pathbuf, Char *pathend, Char *pathend_last,
    * and dirent.h as taking pointers to differently typed opaque
    * structures.
    */
-  struct dirent *(*readdirfunc)();
+  struct dirent *(*readdirfunc)(void);
 
   if (pathend > pathend_last)
     return (GLOB_ABORTED);

@@ -135,6 +135,14 @@ if(LibXml2_FOUND AND NOT TARGET LLVM_STATIC_LibXml2::LibXml2)
   unset(LLVM_STATIC_LibXml2_____LIBS)
   unset(LLVM_STATIC_LibXml2_____LIBS CACHE)
   set(LLVM_STATIC_LibXml2_____LIBS m)
+  if (ANDROID)
+      # libxml2 depends on glob
+      find_package(GLOB)
+      if (GLOB_FOUND)
+          set(LLVM_STATIC_LibXml2_____LIBS ${GLOB_TARGET};${LLVM_STATIC_LibXml2_____LIBS})
+      endif()
+  endif()
+
   # libxml2 depends on iconv
   find_package(ICONV)
   if (ICONV_FOUND)
