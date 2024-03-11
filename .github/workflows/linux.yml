@@ -50,13 +50,9 @@ jobs:
           ref: ${{needs.should_run.outputs.output1}}
           submodules: recursive
 
-      - name: download systemd docker image
-        run: |
-          curl -s -o ubuntu_systemd.tar https://github.com/mgood7123/SystemD-docker/releases/download/1.0/ubuntu_systemd.tar
-
       - name: load docker image
         run: |
-          sudo docker image load -i ./ubuntu_systemd.tar
+          sudo sh -c 'curl -L https://github.com/mgood7123/SystemD-docker/releases/download/1.0/ubuntu_systemd.tar | docker image load'
 
       # THIS ONLY NEED TO BE DONE ONCE
       #
