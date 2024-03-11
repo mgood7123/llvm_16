@@ -303,7 +303,7 @@ IF(ENABLE_TEST)
   # Register target
   #
   ADD_EXECUTABLE(libarchive_test ${libarchive_test_SOURCES})
-  TARGET_LINK_LIBRARIES(libarchive_test -Wl,--whole-archive archive_static ${ADDITIONAL_LIBS} m -Wl,--no-whole-archive)
+  TARGET_LINK_LIBRARIES(libarchive_test -Wl,--start-group archive_static ${ADDITIONAL_LIBS} m -Wl,--end-group)
   TARGET_COMPILE_DEFINITIONS(libarchive_test PRIVATE LIBARCHIVE_STATIC)
   TARGET_COMPILE_DEFINITIONS(libarchive_test PRIVATE LIST_H)
 
