@@ -588,7 +588,7 @@ static int glob3(Char *pathbuf, Char *pathend, Char *pathend_last,
    * and dirent.h as taking pointers to differently typed opaque
    * structures.
    */
-  struct dirent *(*readdirfunc)(void);
+  struct dirent *(*readdirfunc)(DIR*);
 
   if (pathend > pathend_last)
     return (GLOB_ABORTED);
@@ -613,7 +613,7 @@ static int glob3(Char *pathbuf, Char *pathend, Char *pathend_last,
     readdirfunc = pglob->gl_readdir;
   else
     readdirfunc = readdir;
-  while ((dp = (*readdirfunc)(dirp))) {
+  while ((dp = readdirfunc(dirp))) {
     char *sc;
     Char *dc;
     wchar_t wc;

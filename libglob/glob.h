@@ -38,11 +38,7 @@
 
 #include <sys/types.h>
 #include <sys/cdefs.h>
-
-#ifndef _SIZE_T_DECLARED
-typedef __size_t size_t;
-#define _SIZE_T_DECLARED
-#endif
+#include <dirent.h>
 
 struct stat;
 typedef struct {
@@ -59,8 +55,8 @@ typedef struct {
    * versions of closedir(3), readdir(3), opendir(3), stat(2)
    * and lstat(2).
    */
-  void (*gl_closedir)(void *);
-  struct dirent *(*gl_readdir)(void *);
+  void (*gl_closedir)(DIR *);
+  struct dirent *(*gl_readdir)(DIR *);
   void *(*gl_opendir)(const char *);
   int (*gl_lstat)(const char *, struct stat *);
   int (*gl_stat)(const char *, struct stat *);
