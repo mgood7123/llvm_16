@@ -50,54 +50,16 @@ jobs:
           ref: ${{needs.should_run.outputs.output1}}
           submodules: recursive
 
-      - name: uncompress docker image
+      - name: download systemd docker image
         run: |
-          xz -d ./ubuntu.tar.xz
+          wget https://github.com/mgood7123/SystemD-docker/releases/download/1.0/ubuntu_systemd.tar
 
       - name: load docker image
         run: |
-          sudo docker image load -i ./ubuntu.tar
+          sudo docker image load -i ./ubuntu_systemd.tar
 
-      - name: create docker container
-        run: |
-          sudo docker container create --user ubuntu --workdir /home/ubuntu --init --tty --tmpfs /tmp --ulimit nofile=262144:262144 --name git_local_ubuntu git_local_ubuntu:23.10
-
-      - name: start docker container
-        run: |
-          sudo docker container start git_local_ubuntu
-
-      - name: allow ubuntu user to sudo
-        run: |
-          sudo docker container exec --user root git_local_ubuntu bash -c "echo 'ubuntu ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/ubuntu"
-
-      - name: update packages
-        run: |
-          sudo docker container exec git_local_ubuntu bash -c "sudo apt update"
-
-      - name: install apt-utils
-        run: |
-          sudo docker container exec git_local_ubuntu bash -c "sudo apt install -y apt-utils"
-
-      - name: install perl-readline
-        run: |
-          sudo docker container exec git_local_ubuntu bash -c "sudo apt install -y libterm-readline-gnu-perl"
-
-      - name: install systemd
-        run: |
-          sudo docker container exec git_local_ubuntu bash -c "sudo apt install -y systemd systemd-sysv systemd-dev"
-
-      - name: boot systemd - commit image
-        run: |
-          sudo docker container commit git_local_ubuntu git_local_ubuntu:23.10
-
-      - name: boot systemd - stop container
-        run: |
-          sudo docker container stop git_local_ubuntu
-
-      - name: boot systemd - remove container
-        run: |
-          sudo docker container rm git_local_ubuntu
-
+      # THIS ONLY NEED TO BE DONE ONCE
+      #
       - name: boot systemd - host remount cgroup
         run: |
           sudo mount -o remount,rw,nosuid,nodev,noexec,relatime /sys/fs/cgroup
@@ -105,56 +67,27 @@ jobs:
       - name: boot systemd - create systemd container
         run: |
           sudo docker container create --user root --workdir /home/root --tmpfs /tmp --tty --cap-add SYS_ADMIN --cap-add NET_ADMIN --cgroup-parent docker.slice --security-opt apparmor:unconfined --security-opt seccomp=unconfined --ulimit nofile=262144:262144 -v /sys/fs/cgroup:/sys/fs/cgroup:rw --cgroupns host --name git_local_ubuntu git_local_ubuntu:23.10 /sbin/init
-
+      
       - name: boot systemd - start systemd container
         run: |
           sudo docker container start git_local_ubuntu
           sudo docker container exec git_local_ubuntu bash -c "sleep 5 ; systemctl --wait is-system-running || sysctl --failed"
-
+      
       - name: boot systemd - verify
         run: |
           sudo docker container exec git_local_ubuntu bash -c "systemctl status"
-
+      
       - name: boot systemd - create user session
         run: |
           sudo docker container exec git_local_ubuntu bash -c "mkdir -p /run/user/\$(id -u ubuntu)"
           sudo docker container exec git_local_ubuntu bash -c "chown ubuntu:ubuntu /run/user/\$(id -u ubuntu)"
           sudo docker container exec git_local_ubuntu bash -c "systemctl start user@\$(id -u ubuntu)"
 
-      - name: SYSTEMD - install polkitd
+      - name: copy GITHUB_WORKSPACE directory to docker
         run: |
-          sudo docker container exec --user ubuntu --workdir /home/ubuntu git_local_ubuntu bash -c "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/\$(id -u ubuntu)/bus systemd-run --user --scope --collect /bin/bash -c \"sudo apt install -y polkitd pkexec polkitd-pkla\""
-
-      - name: reboot systemd - commit image
-        run: |
-          sudo docker container commit git_local_ubuntu git_local_ubuntu:23.10
-
-      - name: reboot systemd - stop container
-        run: |
-          sudo docker container stop git_local_ubuntu
-
-      - name: reboot systemd - remove container
-        run: |
-          sudo docker container rm git_local_ubuntu
-
-      - name: reboot systemd - create systemd container
-        run: |
-          sudo docker container create --user root --workdir /home/root --tmpfs /tmp --tty --cap-add SYS_ADMIN --cap-add NET_ADMIN --cgroup-parent docker.slice --security-opt apparmor:unconfined --security-opt seccomp=unconfined --ulimit nofile=262144:262144 -v /sys/fs/cgroup:/sys/fs/cgroup:rw --cgroupns host --name git_local_ubuntu git_local_ubuntu:23.10 /sbin/init
-
-      - name: reboot systemd - start systemd container
-        run: |
-          sudo docker container start git_local_ubuntu
-          sudo docker container exec git_local_ubuntu bash -c "sleep 5 ; systemctl --wait is-system-running || sysctl --failed"
-
-      - name: reboot systemd - verify
-        run: |
-          sudo docker container exec git_local_ubuntu bash -c "systemctl status"
-
-      - name: reboot systemd - create user session
-        run: |
-          sudo docker container exec git_local_ubuntu bash -c "mkdir -p /run/user/\$(id -u ubuntu)"
-          sudo docker container exec git_local_ubuntu bash -c "chown ubuntu:ubuntu /run/user/\$(id -u ubuntu)"
-          sudo docker container exec git_local_ubuntu bash -c "systemctl start user@\$(id -u ubuntu)"
+          echo "copying $GITHUB_WORKSPACE to docker"
+          sudo docker cp $GITHUB_WORKSPACE git_local_ubuntu:/home/ubuntu/git_repo
+          sudo docker container exec --user ubuntu --workdir /home/ubuntu git_local_ubuntu bash -c "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/\$(id -u ubuntu)/bus systemd-run --user --scope --collect /bin/bash -c \"sudo chown -R ubuntu:ubuntu git_repo\""
 
       - name: SYSTEMD - install clang-17
         run: |
@@ -195,15 +128,6 @@ jobs:
         run: |
           sudo docker container exec --user ubuntu --workdir /home/ubuntu git_local_ubuntu bash -c "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/\$(id -u ubuntu)/bus systemd-run --user --scope --collect /bin/bash -c \"sudo apt install -y gettext\""
 
-      - name: copy GITHUB_WORKSPACE directory to docker
-        run: |
-          echo "copying $GITHUB_WORKSPACE to docker"
-          sudo docker cp $GITHUB_WORKSPACE git_local_ubuntu:/home/ubuntu/git_repo
-
-      - name: SYSTEMD - chown docker GITHUB_WORKSPACE directory
-        run: |
-          sudo docker container exec --user ubuntu --workdir /home/ubuntu git_local_ubuntu bash -c "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/\$(id -u ubuntu)/bus systemd-run --user --scope --collect /bin/bash -c \"sudo chown -R ubuntu:ubuntu git_repo\""
-
       - name: SYSTEMD - clone libiconv
         run: |
           sudo docker container exec --user ubuntu --workdir /home/ubuntu git_local_ubuntu bash -c "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/\$(id -u ubuntu)/bus systemd-run --user --scope --collect /bin/bash -c \"cd git_repo ; git clone git://git.savannah.gnu.org/libiconv.git libiconv --recursive --depth=1\""
@@ -223,22 +147,6 @@ jobs:
       - name: SYSTEMD - cmake build - Debug - Install
         run: |
           sudo docker container exec --user ubuntu --workdir /home/ubuntu git_local_ubuntu bash -c "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/\$(id -u ubuntu)/bus systemd-run --user --scope --collect /bin/bash -c \"cd git_repo ; export TERM=xterm-256color; cmake --install BUILD_DEBUG\""
-
-      # - name: compile program
-      #   run: |
-      #     sudo docker container exec --user ubuntu --workdir /home/ubuntu git_local_ubuntu bash -c "clang program.c -O3 -g0 -o program-linux"
-
-      # - name: lld program-linux
-      #   run: |
-      #     sudo docker container exec --user ubuntu --workdir /home/ubuntu git_local_ubuntu bash -c "ldd program-linux"
-
-      # - name: execute program
-      #   run: |
-      #     sudo docker container exec --user ubuntu --workdir /home/ubuntu git_local_ubuntu bash -c "./program-linux"
-
-      # - name: copy program
-      #   run: |
-      #     sudo docker cp git_local_ubuntu:/home/ubuntu/program-linux ./program-linux
 
       # - name: SYSTEMD - install flatpak
       #   run: |
