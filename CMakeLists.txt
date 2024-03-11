@@ -271,7 +271,7 @@ macro(build_root_init cmake_packages_dir build_root_dir)
   if (ANDROID)
     unset(BUILD_ROOT_____________ADDITIONAL_C_FLAGS)
     unset(BUILD_ROOT_____________ADDITIONAL_C_FLAGS CACHE)
-    set(BUILD_ROOT_____________ADDITIONAL_C_FLAGS "-DANDROID_API=${ANDROID_PLATFORM}"
+    set(BUILD_ROOT_____________ADDITIONAL_C_FLAGS "-DANDROID_API=${ANDROID_PLATFORM}")
   else()
     unset(BUILD_ROOT_____________ADDITIONAL_C_FLAGS)
     unset(BUILD_ROOT_____________ADDITIONAL_C_FLAGS CACHE)
