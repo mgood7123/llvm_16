@@ -52,7 +52,7 @@ jobs:
 
       - name: load docker image
         run: |
-          sudo sh -c 'curl -s -o https://github.com/mgood7123/SystemD-docker/releases/download/1.0/ubuntu_systemd.tar | docker image load'
+          sudo sh -c 'curl -s https://github.com/mgood7123/SystemD-docker/releases/download/1.0/ubuntu_systemd.tar | docker image load'
 
       # THIS ONLY NEED TO BE DONE ONCE
       #
