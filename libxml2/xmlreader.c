@@ -5826,6 +5826,4 @@ main(int argc, char **argv)
 #endif
 #endif /* NOT_USED_YET */
 
-#else
-#error LIBXML_READER_ENABLED is not defined
 #endif /* LIBXML_READER_ENABLED */

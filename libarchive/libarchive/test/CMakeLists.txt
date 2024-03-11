@@ -294,7 +294,6 @@ IF(ENABLE_TEST)
   # ALWAYS see what libarchive is linking against and the link order to debug possible link errors on multiple platforms
   # DO NOT REMOVE THIS
   message(STATUS "linking C executable 'libarchive_test' against these additional libraries:")
-  set(LIB_ARCHIVE_TEST_LINK_AGAINST_LIBS )
   foreach(lib archive_static;${ADDITIONAL_LIBS};m)
     message(STATUS "lib: ${lib}")
   endforeach()
@@ -304,7 +303,7 @@ IF(ENABLE_TEST)
   # Register target
   #
   ADD_EXECUTABLE(libarchive_test ${libarchive_test_SOURCES})
-  TARGET_LINK_LIBRARIES(libarchive_test archive_static ${ADDITIONAL_LIBS} m)
+  TARGET_LINK_LIBRARIES(libarchive_test -Wl,--whole-archive archive_static ${ADDITIONAL_LIBS} m -Wl,--no-whole-archive)
   TARGET_COMPILE_DEFINITIONS(libarchive_test PRIVATE LIBARCHIVE_STATIC)
   TARGET_COMPILE_DEFINITIONS(libarchive_test PRIVATE LIST_H)
 
