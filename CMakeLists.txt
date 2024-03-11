@@ -555,6 +555,19 @@ message("-DANDROID_STL=${ANDROID_STL}")
 
 build_root_init(${CMAKE_CURRENT_SOURCE_DIR}/cmake/packages ${CMAKE_CURRENT_BINARY_DIR}/BUILD_ROOT)
 
+if (ANDROID)
+    # android does not have glob/globfree, build it early
+    #
+    # glob does not depend on any libs
+    build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/libglob . glob
+        "" # no extra c flags
+        "" # no extra cxx flags
+        "
+            -D BUILD_SHARED_LIBS=OFF
+        " # extra configure arguments
+    )
+endif()
+
 # 7z does not depend on any libs
 build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/lzma2301 . 7z
     "" # no extra c flags
@@ -689,17 +702,6 @@ build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/bzip2 . bzip2
       -D BUILD_SHARED_LIBS=OFF
     "
 )
-
-if (ANDROID)
-    # android does not have glob/globfree
-    build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/libglob . glob
-        "" # no extra c flags
-        "" # no extra cxx flags
-        "
-            -D BUILD_SHARED_LIBS=OFF
-        " # extra configure arguments
-    )
-endif()
 
 # libxml2 depends on xz (lzma) and zlib and iconv (and glob (android only))
 build_root_add_cmake_package(${CMAKE_CURRENT_SOURCE_DIR}/libxml2 . xml2
